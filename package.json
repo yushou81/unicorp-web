@@ -1,0 +1,42 @@
+{
+  "name": "hr-platform-vue",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+  },
+  "dependencies": {
+    "@heroicons/vue": "^2.2.0",
+    "@vee-validate/zod": "^4.12.0",
+    "@vueuse/core": "^10.7.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "lucide-vue-next": "^0.294.0",
+    "pinia": "^2.1.7",
+    "recharts": "^2.15.0",
+    "tailwind-merge": "^2.5.5",
+    "vee-validate": "^4.12.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "vue-sonner": "^1.0.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/tsconfig": "^0.5.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.20.1",
+    "postcss": "^8.5",
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5",
+    "vite": "^5.0.0"
+  }
+}
