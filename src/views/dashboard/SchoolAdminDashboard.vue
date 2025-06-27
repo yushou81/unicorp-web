@@ -60,7 +60,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-import { BriefcaseIcon, AcademicCapIcon, DocumentTextIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
+import { BriefcaseIcon, AcademicCapIcon, DocumentTextIcon, ShieldCheckIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 const school = {
   logo: 'https://randomuser.me/api/portraits/lego/2.jpg',
   name: '清华大学',
@@ -80,6 +80,19 @@ const teachers = [
   { id: 2, name: '王老师', account: 'teacher02' }
 ]
 const blocks = ref([
+  {
+    title: '学校信息管理',
+    icon: BuildingOffice2Icon,
+    color: 'text-blue-600',
+    data: [
+      { id: 1, label: '简介', extra: '已完善' },
+      { id: 2, label: '专业设置', extra: '已完善' },
+      { id: 3, label: '科研成果', extra: '3项' },
+      { id: 4, label: '师资力量', extra: '20人' }
+    ],
+    empty: '暂无信息',
+    footer: { text: '编辑学校信息', link: '/school/info/edit' }
+  },
   {
     title: '项目管理',
     icon: BriefcaseIcon,
@@ -117,6 +130,22 @@ const blocks = ref([
     ],
     empty: '未认证',
     footer: { text: '查看认证详情', link: '/profile' }
+  },
+  {
+    title: '学校信息浏览',
+    icon: AcademicCapIcon,
+    color: 'text-green-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部学校', link: '/school/list' }
+  },
+  {
+    title: '企业信息浏览',
+    icon: BuildingOffice2Icon,
+    color: 'text-yellow-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部企业', link: '/company/list' }
   }
 ])
 function onAddTeacher() {

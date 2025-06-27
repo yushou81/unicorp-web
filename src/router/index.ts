@@ -20,11 +20,6 @@ const router = createRouter({
       component: () => import('@/views/RegisterView.vue')
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: () => import('@/views/UserDashboardView.vue')
-    },
-    {
       path: '/dashboard/student',
       name: 'dashboard-student',
       component: () => import('@/views/dashboard/StudentDashboard.vue')
@@ -94,6 +89,16 @@ const router = createRouter({
       name: 'project-fund',
       component: () => import('@/views/project/ProjectFundView.vue')
     },
+    {
+        path: '/logs',
+        name: 'logs',
+        component: () => import('@/views/dashboard/OperationLogs.vue')
+      },
+      {
+        path: '/accounts',
+        name: 'accounts',
+        component: () => import('@/views/dashboard/Accounts.vue')
+      },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',

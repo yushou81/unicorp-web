@@ -37,7 +37,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
+import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 
 const mentor = {
   avatar: 'https://randomuser.me/api/portraits/men/34.jpg',
@@ -98,6 +98,22 @@ const blocks = ref([
     data: [],
     empty: '暂无上传资源',
     footer: { text: '上传资源', link: '/resources' }
+  },
+  {
+    title: '学校信息浏览',
+    icon: AcademicCapIcon,
+    color: 'text-green-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部学校', link: '/school/list' }
+  },
+  {
+    title: '企业信息浏览',
+    icon: BuildingOffice2Icon,
+    color: 'text-yellow-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部企业', link: '/company/list' }
   }
 ])
 </script> 

@@ -23,6 +23,43 @@
           </div>
         </div>
       </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <!-- 操作日志卡片 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+          <div class="flex items-center mb-2">
+            <ClipboardDocumentListIcon class="w-7 h-7 mr-2 text-yellow-500" />
+            <span class="font-semibold text-lg">操作日志</span>
+          </div>
+          <div class="flex-1 text-gray-500 text-sm mb-2">点击下方进入</div>
+          <router-link to="/logs" class="text-blue-600 hover:underline text-xs font-medium mt-auto">查看操作日志</router-link>
+        </div>
+        <!-- 账户管理卡片 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+          <div class="flex items-center mb-2">
+            <UserGroupIcon class="w-7 h-7 mr-2 text-blue-500" />
+            <span class="font-semibold text-lg">账户管理</span>
+          </div>
+          <ul class="flex-1 mb-2">
+            <li class="flex justify-between items-center text-gray-700 text-sm mb-1"><span>admin</span><span class="text-xs text-gray-400">平台管理员</span></li>
+            <li class="flex justify-between items-center text-gray-700 text-sm mb-1"><span>school_admin</span><span class="text-xs text-gray-400">学校管理员</span></li>
+            <li class="flex justify-between items-center text-gray-700 text-sm mb-1"><span>company_admin</span><span class="text-xs text-gray-400">企业管理员</span></li>
+          </ul>
+          <router-link to="/accounts" class="text-blue-600 hover:underline text-xs font-medium mt-auto">管理所有账户</router-link>
+        </div>
+        <!-- 常见操作卡片 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
+          <div class="flex items-center mb-2">
+            <Cog6ToothIcon class="w-7 h-7 mr-2 text-green-500" />
+            <span class="font-semibold text-lg">常见操作</span>
+          </div>
+          <ul class="flex-1 mb-2">
+            <li class="text-gray-700 text-sm mb-1">添加学校</li>
+            <li class="text-gray-700 text-sm mb-1">添加企业</li>
+            <li class="text-gray-700 text-sm mb-1">重置用户密码</li>
+          </ul>
+          <router-link to="/admin/actions" class="text-blue-600 hover:underline text-xs font-medium mt-auto">查看更多操作</router-link>
+        </div>
+      </div>
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold text-blue-700">学校与企业列表</h2>
         <Button class="ml-2" @click="showAddSchoolDialog = true">添加学校</Button>
@@ -64,19 +101,31 @@
           <form @submit.prevent="onAddSchool">
             <div class="mb-4">
               <label class="block text-gray-700 mb-1 font-medium">学校名称</label>
-              <input v-model="newSchool.name" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入学校名称" />
+              <input v-model="newSchool.organization_name" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入学校名称" />
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-1 font-medium">学校简介</label>
-              <textarea v-model="newSchool.desc" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入简介"></textarea>
+              <textarea v-model="newSchool.description" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入简介"></textarea>
             </div>
             <div class="mb-4">
-              <label class="block text-gray-700 mb-1 font-medium">管理员账号</label>
-              <input v-model="newSchool.adminAccount" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入账号" />
+              <label class="block text-gray-700 mb-1 font-medium">地址</label>
+              <input v-model="newSchool.address" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入地址" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-1 font-medium">网址</label>
+              <input v-model="newSchool.website" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入网址" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-1 font-medium">管理员邮箱</label>
+              <input v-model="newSchool.admin_email" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员邮箱" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-1 font-medium">管理员昵称</label>
+              <input v-model="newSchool.admin_nickname" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员昵称（可选）" />
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 mb-1 font-medium">初始密码</label>
-              <input v-model="newSchool.adminPassword" type="password" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入初始密码" />
+              <input v-model="newSchool.admin_password" type="password" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入初始密码" />
             </div>
             <div class="flex justify-end space-x-2 mt-4">
               <button type="button" @click="showAddSchoolDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">取消</button>
@@ -93,23 +142,49 @@
 import { ref } from 'vue'
 import { Building2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
+import { ClipboardDocumentListIcon, UserGroupIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
+import { apiRequest } from '@/lib/api/apiClient'
 
 const showAddSchoolDialog = ref(false)
 const newSchool = ref({
-  name: '',
-  desc: '',
-  adminAccount: '',
-  adminPassword: ''
+  organization_name: '',
+  description: '',
+  address: '',
+  website: '',
+  admin_email: '',
+  admin_nickname: '',
+  admin_password: ''
 })
 const organizations = [
   { id: 1, name: '清华大学', type: '高校', status: '已审核' },
   { id: 2, name: '字节跳动科技有限公司', type: '企业', status: '已审核' },
   { id: 3, name: '某某服务有限公司', type: '服务企业', status: '待审核' },
 ]
-function onAddSchool() {
-  // TODO: 调用API添加学校和分配账号
-  alert(`已添加学校：${newSchool.value.name}，管理员账号：${newSchool.value.adminAccount}`)
-  showAddSchoolDialog.value = false
-  newSchool.value = { name: '', desc: '', adminAccount: '', adminPassword: '' }
+
+async function onAddSchool() {
+  // 简单校验
+  if (!newSchool.value.organization_name || !newSchool.value.admin_email || !newSchool.value.admin_password) {
+    alert('学校名称、管理员邮箱和初始密码为必填项！')
+    return
+  }
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      alert('请先登录管理员账号！')
+      return
+    }
+    await apiRequest('/admin/organizations/schools', {
+      method: 'POST',
+      body: JSON.stringify(newSchool.value),
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    alert(`已添加学校：${newSchool.value.organization_name}`)
+    showAddSchoolDialog.value = false
+    newSchool.value = { organization_name: '', description: '', address: '', website: '', admin_email: '', admin_nickname: '', admin_password: '' }
+  } catch (e: any) {
+    alert('添加失败：' + (e.message || '未知错误'))
+  }
 }
 </script> 

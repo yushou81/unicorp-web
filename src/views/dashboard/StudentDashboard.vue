@@ -130,6 +130,22 @@ const blocks = ref([
     data: [],
     empty: '如有意向加入企业项目，请点击下方入口',
     footer: { text: '申请加入企业项目', link: '/apply' }
+  },
+  {
+    title: '学校信息浏览',
+    icon: AcademicCapIcon,
+    color: 'text-green-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部学校', link: '/school/list' }
+  },
+  {
+    title: '企业信息浏览',
+    icon: BuildingOffice2Icon,
+    color: 'text-yellow-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部企业', link: '/company/list' }
   }
 ])
 </script> 

@@ -2,10 +2,31 @@
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
     <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
       <h2 class="text-2xl font-bold text-center text-blue-700 mb-6">校企联盟平台登录</h2>
+      <div v-if="errorMsg" class="mb-4 px-4 py-2 rounded bg-red-50 border border-red-200 text-red-700 text-sm flex items-center">
+        <svg class="w-5 h-5 mr-2 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" /></svg>
+        {{ errorMsg }}
+      </div>
       <form @submit.prevent="onLogin">
         <div class="mb-4">
-          <label class="block text-gray-700 mb-1">邮箱/手机号/用户名</label>
-          <input v-model="account" type="text" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入账号" />
+          <div class="flex mb-2">
+            <button
+              v-for="type in loginTypes"
+              :key="type.value"
+              :class="['px-4 py-1 rounded-t', loginType === type.value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600']"
+              @click.prevent="loginType = type.value"
+              type="button"
+            >
+              {{ type.label }}
+            </button>
+          </div>
+          <label class="block text-gray-700 mb-1">{{ currentLabel }}</label>
+          <input
+            v-model="account"
+            type="text"
+            required
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :placeholder="currentPlaceholder"
+          />
         </div>
         <div class="mb-4">
           <label class="block text-gray-700 mb-1">密码</label>
@@ -33,17 +54,70 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { login, getMe } from '@/lib/api/auth'
+import { setToken } from '@/lib/api/apiClient'
+import { useAppStore } from '@/stores/app'
 
+const loginTypes = [
+  { value: 'account', label: '账号登录' },
+  { value: 'email', label: '邮箱登录' },
+  { value: 'phone', label: '手机号登录' }
+]
+const loginType = ref('account')
 const account = ref('')
 const password = ref('')
 const router = useRouter()
+const errorMsg = ref('')
 
-function onLogin() {
-  if (account.value && password.value) {
-    // TODO: 调用API登录
-    router.push('/dashboard')
+const currentLabel = computed(() => {
+  if (loginType.value === 'account') return '账号'
+  if (loginType.value === 'email') return '邮箱'
+  return '手机号'
+})
+const currentPlaceholder = computed(() => {
+  if (loginType.value === 'account') return '请输入账号'
+  if (loginType.value === 'email') return '请输入邮箱'
+  return '请输入手机号'
+})
+
+async function onLogin() {
+  const payload = {
+    loginType: loginType.value,
+    principal: account.value,
+    password: password.value
+  }
+  console.log('[登录] 登录参数:', payload)
+  try {
+    const res = await login(payload)
+    errorMsg.value = '' // 登录成功清空错误
+    console.log('[登录] 登录成功:', res)
+    // 保存 token
+    setToken(res.data.token)
+    localStorage.setItem('token', res.data.token)
+    // 获取用户信息（如有需要）
+    let role = res.data.role
+    // 兼容 getMe 返回的 role
+    try {
+      const userInfo = await getMe()
+      useAppStore().setUser(userInfo)
+      if (userInfo.role) role = userInfo.role
+    } catch (e) {
+      // getMe 失败时依然用登录返回的 role
+    }
+    // 跳转到对应 dashboard
+    let target = '/dashboard'
+    if (role === 'SYSADMIN') target = '/dashboard/admin'
+    else if (role === 'SCH_ADMIN') target = '/dashboard/school'
+    else if (role === 'EN_ADMIN') target = '/dashboard/company'
+    else if (role === 'TEACHER') target = '/dashboard/teacher'
+    else if (role === 'MENTOR') target = '/dashboard/mentor'
+    else if (role === 'STUDENT') target = '/dashboard/student'
+    router.push(target)
+  } catch (e: any) {
+    console.error('[登录] 登录失败:', e)
+    errorMsg.value = e && e.message ? e.message : '登录失败，请检查账号、邮箱、手机号或密码是否正确'
   }
 }
 

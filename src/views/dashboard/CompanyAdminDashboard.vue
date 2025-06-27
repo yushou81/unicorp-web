@@ -60,7 +60,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-import { BriefcaseIcon, ClipboardDocumentListIcon, BanknotesIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
+import { BriefcaseIcon, ClipboardDocumentListIcon, BanknotesIcon, ShieldCheckIcon, BuildingOffice2Icon, AcademicCapIcon } from '@heroicons/vue/24/outline'
 const company = {
   logo: 'https://randomuser.me/api/portraits/lego/1.jpg',
   name: '字节跳动科技有限公司',
@@ -80,6 +80,19 @@ const mentors = [
   { id: 2, name: '赵导师', account: 'mentor02' }
 ]
 const blocks = ref([
+  {
+    title: '企业信息管理',
+    icon: BuildingOffice2Icon,
+    color: 'text-blue-600',
+    data: [
+      { id: 1, label: '概况', extra: '已完善' },
+      { id: 2, label: '产业领域', extra: '互联网' },
+      { id: 3, label: '招聘需求', extra: '2个岗位' },
+      { id: 4, label: '合作案例', extra: '5个' }
+    ],
+    empty: '暂无信息',
+    footer: { text: '编辑企业信息', link: '/company/info/edit' }
+  },
   {
     title: '项目管理',
     icon: BriefcaseIcon,
@@ -119,6 +132,22 @@ const blocks = ref([
     ],
     empty: '未认证',
     footer: { text: '查看认证详情', link: '/profile' }
+  },
+  {
+    title: '学校信息浏览',
+    icon: AcademicCapIcon,
+    color: 'text-green-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部学校', link: '/school/list' }
+  },
+  {
+    title: '企业信息浏览',
+    icon: BuildingOffice2Icon,
+    color: 'text-yellow-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部企业', link: '/company/list' }
   }
 ])
 function onAddMentor() {
