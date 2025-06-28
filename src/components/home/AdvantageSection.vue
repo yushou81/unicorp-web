@@ -16,12 +16,10 @@
 </template>
 
 <script setup lang="ts">
-import { Component } from 'vue'
-
 interface Advantage {
   title: string;
   desc: string;
-  icon: Component;
+  icon: any; // 使用any类型表示组件
 }
 
 defineProps<{

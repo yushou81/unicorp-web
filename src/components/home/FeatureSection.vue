@@ -18,12 +18,10 @@
 </template>
 
 <script setup lang="ts">
-import { Component } from 'vue'
-
 interface Feature {
   title: string;
   desc: string;
-  icon: Component;
+  icon: any; // 使用any类型表示组件
   bg: string;
 }
 
