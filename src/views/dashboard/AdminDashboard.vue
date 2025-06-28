@@ -1,5 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 relative">
+    <div class="absolute top-6 right-8 z-50 flex items-center space-x-3">
+      <!-- 用户信息 -->
+      <div class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 px-3 py-1.5">
+        <img :src="userAvatar" class="w-6 h-6 rounded-full border border-gray-300" alt="avatar" />
+        <div class="text-xs">
+          <div class="font-medium text-gray-800">{{ userInfo.nickname || userInfo.username || '管理员' }}</div>
+          <div class="text-gray-500">{{ roleText }}</div>
+        </div>
+      </div>
+      <Button @click="onLogout" variant="outline" size="sm" class="text-xs">退出登录</Button>
+    </div>
     <div class="container mx-auto px-4">
       <div class="bg-white rounded-xl shadow-lg p-6 mb-10">
         <h1 class="text-3xl font-bold mb-2 text-blue-700">平台管理后台</h1>
@@ -64,35 +75,92 @@
         <h2 class="text-2xl font-bold text-blue-700">学校与企业列表</h2>
         <Button class="ml-2" @click="showAddSchoolDialog = true">添加学校</Button>
       </div>
-      <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="overflow-x-auto">
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4 text-blue-700">待审核企业</h2>
+        <div v-if="pendingEnterprises.length === 0" class="text-gray-400 text-center py-8">暂无待审核企业</div>
+        <div v-else class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">企业名称</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">简介</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">网址</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">地址</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
-              <tr v-for="org in organizations" :key="org.id" class="hover:bg-blue-50 transition">
-                <td class="px-4 py-2 flex items-center space-x-2">
-                  <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg mr-2">
-                    <Building2 class="w-5 h-5 text-blue-600" />
-                  </span>
-                  <span class="font-medium text-gray-900">{{ org.name }}</span>
-                </td>
-                <td class="px-4 py-2 text-gray-700">{{ org.type }}</td>
+              <tr v-for="org in pendingEnterprises" :key="org.id">
+                <td class="px-4 py-2">{{ org.organizationName }}</td>
+                <td class="px-4 py-2">{{ org.description || '-' }}</td>
+                <td class="px-4 py-2">{{ org.website || '-' }}</td>
+                <td class="px-4 py-2">{{ org.address || '-' }}</td>
                 <td class="px-4 py-2">
-                  <span :class="org.status === '已审核' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" class="px-2 py-0.5 rounded text-xs font-semibold">{{ org.status }}</span>
-                </td>
-                <td class="px-4 py-2">
-                  <Button variant="outline" size="sm">编辑</Button>
+                  <Button variant="outline" size="sm" :loading="approveLoadingId === org.id" @click="onApproveEnterprise(org.id)">审核</Button>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4 text-blue-700">学校列表</h2>
+        <div v-if="publicSchoolsLoading" class="text-center text-gray-400 py-8">加载中...</div>
+        <div v-else-if="publicSchoolsError" class="text-center text-red-500 py-8">{{ publicSchoolsError }}</div>
+        <div v-else>
+          <div v-if="publicSchools.length === 0" class="text-gray-400 text-center py-8">暂无已批准学校</div>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th v-for="key in schoolTableKeys" :key="key" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ schoolTableHeaders[key] }}</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-100">
+                <tr v-for="school in publicSchools" :key="school.id">
+                  <td v-for="key in schoolTableKeys" :key="key" class="px-4 py-2">
+                    <template v-if="key === 'website'">
+                      <a v-if="school[key]" :href="school[key]" target="_blank" class="text-blue-600 hover:underline">{{ school[key] }}</a>
+                      <span v-else>-</span>
+                    </template>
+                    <template v-else>
+                      {{ school[key] ?? '-' }}
+                    </template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4 text-blue-700">企业列表</h2>
+        <div v-if="publicEnterprisesLoading" class="text-center text-gray-400 py-8">加载中...</div>
+        <div v-else-if="publicEnterprisesError" class="text-center text-red-500 py-8">{{ publicEnterprisesError }}</div>
+        <div v-else>
+          <div v-if="publicEnterprises.length === 0" class="text-gray-400 text-center py-8">暂无已批准企业</div>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th v-for="key in enterpriseTableKeys" :key="key" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ enterpriseTableHeaders[key] }}</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-100">
+                <tr v-for="enterprise in publicEnterprises" :key="enterprise.id">
+                  <td v-for="key in enterpriseTableKeys" :key="key" class="px-4 py-2">
+                    <template v-if="key === 'website'">
+                      <a v-if="enterprise[key]" :href="enterprise[key]" target="_blank" class="text-blue-600 hover:underline">{{ enterprise[key] }}</a>
+                      <span v-else>-</span>
+                    </template>
+                    <template v-else>
+                      {{ enterprise[key] ?? '-' }}
+                    </template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
       <div v-if="showAddSchoolDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
@@ -101,7 +169,7 @@
           <form @submit.prevent="onAddSchool">
             <div class="mb-4">
               <label class="block text-gray-700 mb-1 font-medium">学校名称</label>
-              <input v-model="newSchool.organization_name" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入学校名称" />
+              <input v-model="newSchool.organizationName" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入学校名称" />
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-1 font-medium">学校简介</label>
@@ -117,15 +185,15 @@
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-1 font-medium">管理员邮箱</label>
-              <input v-model="newSchool.admin_email" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员邮箱" />
+              <input v-model="newSchool.adminEmail" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员邮箱" />
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-1 font-medium">管理员昵称</label>
-              <input v-model="newSchool.admin_nickname" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员昵称（可选）" />
+              <input v-model="newSchool.adminNickname" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员昵称（可选）" />
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 mb-1 font-medium">初始密码</label>
-              <input v-model="newSchool.admin_password" type="password" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入初始密码" />
+              <input v-model="newSchool.adminPassword" type="password" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入初始密码" />
             </div>
             <div class="flex justify-end space-x-2 mt-4">
               <button type="button" @click="showAddSchoolDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">取消</button>
@@ -139,31 +207,123 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Building2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import { ClipboardDocumentListIcon, UserGroupIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
 import { apiRequest } from '@/lib/api/apiClient'
+import { createSchool, getPendingOrganizations, approveEnterprise, getPendingEnterprises } from '@/lib/api/admin'
+import { setToken } from '@/lib/api/apiClient'
+import { useRouter } from 'vue-router'
+import { useAppStore } from '@/stores/app'
+import { getAllSchools, getAllEnterprises } from '@/lib/api/organization'
 
 const showAddSchoolDialog = ref(false)
 const newSchool = ref({
-  organization_name: '',
+  organizationName: '',
   description: '',
   address: '',
   website: '',
-  admin_email: '',
-  admin_nickname: '',
-  admin_password: ''
+  adminEmail: '',
+  adminNickname: '',
+  adminPassword: ''
 })
-const organizations = [
-  { id: 1, name: '清华大学', type: '高校', status: '已审核' },
-  { id: 2, name: '字节跳动科技有限公司', type: '企业', status: '已审核' },
-  { id: 3, name: '某某服务有限公司', type: '服务企业', status: '待审核' },
-]
+const organizations = ref([])
+const publicSchools = ref<any[]>([])
+const publicSchoolsLoading = ref(true)
+const publicSchoolsError = ref('')
+const schoolTableKeys = ref<string[]>([])
+const schoolTableHeaders = ref<Record<string, string>>({})
+const approveLoadingId = ref<number | null>(null)
+const publicEnterprises = ref<any[]>([])
+const publicEnterprisesLoading = ref(true)
+const publicEnterprisesError = ref('')
+const enterpriseTableKeys = ref<string[]>([])
+const enterpriseTableHeaders = ref<Record<string, string>>({})
+
+const router = useRouter()
+const appStore = useAppStore()
+
+// 页面加载时自动设置 token
+const token = localStorage.getItem('token')
+if (token) setToken(token)
+
+onMounted(async () => {
+  try {
+    const res = await getPendingOrganizations()
+    organizations.value = res.data || []
+  } catch (e) {
+    organizations.value = []
+  }
+  // 获取公开学校列表
+  publicSchoolsLoading.value = true
+  publicSchoolsError.value = ''
+  try {
+    const res = await getAllSchools('detailed')
+    publicSchools.value = res.data || []
+    // 自动提取所有字段作为表头，过滤掉id字段
+    if (publicSchools.value.length > 0) {
+      const allKeys = Object.keys(publicSchools.value[0])
+      schoolTableKeys.value = allKeys.filter(key => key !== 'id')
+      // 设置中文表头映射
+      schoolTableHeaders.value = {
+        organizationName: '学校名称',
+        description: '简介',
+        website: '网址',
+        address: '地址',
+        adminEmail: '管理员邮箱',
+        adminNickname: '管理员昵称',
+        status: '状态',
+        type: '类型',
+        createdAt: '创建时间',
+        updatedAt: '更新时间'
+      }
+    }
+  } catch (e: any) {
+    publicSchoolsError.value = e.message || '获取学校列表失败'
+  } finally {
+    publicSchoolsLoading.value = false
+  }
+  // 获取公开企业列表
+  publicEnterprisesLoading.value = true
+  publicEnterprisesError.value = ''
+  try {
+    const res = await getAllEnterprises('detailed')
+    publicEnterprises.value = res.data || []
+    // 自动提取所有字段作为表头，过滤掉id字段
+    if (publicEnterprises.value.length > 0) {
+      const allKeys = Object.keys(publicEnterprises.value[0])
+      enterpriseTableKeys.value = allKeys.filter(key => key !== 'id')
+      // 设置中文表头映射
+      enterpriseTableHeaders.value = {
+        organizationName: '企业名称',
+        description: '简介',
+        website: '网址',
+        address: '地址',
+        industry: '行业',
+        companySize: '企业规模',
+        adminEmail: '管理员邮箱',
+        adminNickname: '管理员昵称',
+        status: '状态',
+        type: '类型',
+        createdAt: '创建时间',
+        updatedAt: '更新时间'
+      }
+    }
+  } catch (e: any) {
+    publicEnterprisesError.value = e.message || '获取企业列表失败'
+  } finally {
+    publicEnterprisesLoading.value = false
+  }
+})
+
+const pendingEnterprises = computed(() =>
+  organizations.value.filter(org => org.type === 'Enterprise')
+)
 
 async function onAddSchool() {
   // 简单校验
-  if (!newSchool.value.organization_name || !newSchool.value.admin_email || !newSchool.value.admin_password) {
+  if (!newSchool.value.organizationName || !newSchool.value.adminEmail || !newSchool.value.adminPassword) {
     alert('学校名称、管理员邮箱和初始密码为必填项！')
     return
   }
@@ -173,18 +333,53 @@ async function onAddSchool() {
       alert('请先登录管理员账号！')
       return
     }
-    await apiRequest('/admin/organizations/schools', {
-      method: 'POST',
-      body: JSON.stringify(newSchool.value),
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-    alert(`已添加学校：${newSchool.value.organization_name}`)
+    await createSchool(newSchool.value)
+    alert(`已添加学校：${newSchool.value.organizationName}`)
     showAddSchoolDialog.value = false
-    newSchool.value = { organization_name: '', description: '', address: '', website: '', admin_email: '', admin_nickname: '', admin_password: '' }
+    newSchool.value = { organizationName: '', description: '', address: '', website: '', adminEmail: '', adminNickname: '', adminPassword: '' }
   } catch (e: any) {
     alert('添加失败：' + (e.message || '未知错误'))
   }
 }
+
+function onLogout() {
+  appStore.logout()
+  router.push('/login')
+}
+
+async function onApproveEnterprise(id: number) {
+  if (approveLoadingId.value) return
+  approveLoadingId.value = id
+  try {
+    await approveEnterprise(id)
+    // 审核成功后刷新待审核企业列表
+    const res = await getPendingEnterprises()
+    organizations.value = res.data || []
+  } catch (e: any) {
+    alert(e.message || '审核失败')
+  } finally {
+    approveLoadingId.value = null
+  }
+}
+
+const userInfo = computed(() => appStore.user || {})
+const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg')
+const roleText = computed(() => {
+  const role = userInfo.value.role
+  const roleMap: Record<string, string> = {
+    'admin': '系统管理员',
+    'SYSADMIN': '系统管理员',
+    'schoolAdmin': '学校管理员',
+    'SCH_ADMIN': '学校管理员',
+    'companyAdmin': '企业管理员',
+    'EN_ADMIN': '企业管理员',
+    'teacher': '教师',
+    'TEACHER': '教师',
+    'mentor': '企业导师',
+    'MENTOR': '企业导师',
+    'student': '学生',
+    'STUDENT': '学生'
+  }
+  return roleMap[role] || '未知角色'
+})
 </script> 

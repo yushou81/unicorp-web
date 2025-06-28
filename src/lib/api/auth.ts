@@ -31,17 +31,18 @@ export function registerStudent(data: {
 
 // 企业注册
 export function registerEnterprise(data: {
-  organization_name: string
+  organizationName: string
+  companyCode: string
   description?: string
   address?: string
   website?: string
   industry?: string
-  company_size?: string
-  business_license_url: string
-  admin_email: string
-  admin_nickname?: string
-  admin_password: string
-  admin_phone?: string
+  companySize?: string
+  businessLicenseUrl: string
+  adminEmail: string
+  adminNickname?: string
+  adminPassword: string
+  adminPhone?: string
 }) {
   return apiRequest('/auth/register/enterprise', {
     method: 'POST',
