@@ -1,16 +1,5 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 relative">
-    <div class="absolute top-6 right-8 z-50 flex items-center space-x-3">
-      <!-- 用户信息 -->
-      <div class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 px-3 py-1.5">
-        <img :src="userAvatar" class="w-6 h-6 rounded-full border border-gray-300" alt="avatar" />
-        <div class="text-xs">
-          <div class="font-medium text-gray-800">{{ userInfo.nickname || userInfo.username || '学校管理员' }}</div>
-          <div class="text-gray-500">{{ roleText }}</div>
-        </div>
-      </div>
-      <Button @click="onLogout" variant="outline" size="sm" class="text-xs">退出登录</Button>
-    </div>
     <div class="container mx-auto px-4">
       <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
         <img :src="school.logo" class="w-20 h-20 rounded border-2 border-blue-200 mr-6" alt="logo" />
@@ -19,8 +8,8 @@
             <span class="text-2xl font-bold text-gray-900 mr-2">{{ school.name }}</span>
             <span v-if="school.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
           </div>
-          <div class="text-gray-500 text-sm mb-1">学校代码：{{ school.code }}</div>
-          <div class="text-gray-500 text-sm">联系人：{{ school.contact }}</div>
+          <div class="text-gray-500 text-sm mb-1">学校代码：{{ school.code || '暂无' }}</div>
+          <div class="text-gray-500 text-sm">联系人：{{ school.contact || '暂无' }}</div>
         </div>
         <Button class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow ml-2">编辑学校信息</Button>
       </div>
@@ -42,18 +31,79 @@
           </div>
         </div>
       </div>
-      <Button class="mb-4" @click="showAddTeacherDialog = true">添加教师账号</Button>
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xl font-bold text-blue-700">用户列表</h2>
+          <Button @click="showAddTeacherDialog = true">添加用户账号</Button>
+        </div>
+        <div v-if="teacherLoading" class="text-center text-gray-400 py-8">加载中...</div>
+        <div v-else-if="teacherError" class="text-center text-red-500 py-8">{{ teacherError }}</div>
+        <div v-else>
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">邮箱</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">昵称</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">手机号</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">身份</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+              <tr v-for="teacher in teachers" :key="teacher.id">
+                <td class="px-4 py-2">{{ teacher.email }}</td>
+                <td class="px-4 py-2">{{ teacher.nickname || '-' }}</td>
+                <td class="px-4 py-2">{{ teacher.phone || '-' }}</td>
+                <td class="px-4 py-2">{{ teacher.roleName || teacher.role || (teacher.roles ? teacher.roles.join(',') : '-') }}</td>
+                <td class="px-4 py-2">{{ teacher.status || '-' }}</td>
+                <td class="px-4 py-2 space-x-2">
+                  <Button size="sm" @click="onEditUser(teacher)">编辑</Button>
+                  <Button 
+                    v-if="teacher.status === 'active'" 
+                    size="sm" 
+                    variant="destructive" 
+                    @click="onUpdateTeacherStatus(teacher, 'inactive')"
+                  >
+                    禁用
+                  </Button>
+                  <Button 
+                    v-else 
+                    size="sm" 
+                    variant="default" 
+                    @click="onUpdateTeacherStatus(teacher, 'active')"
+                  >
+                    启用
+                  </Button>
+                </td>
+              </tr>
+              <tr v-if="teachers.length === 0">
+                <td colspan="6" class="text-center text-gray-400 py-4">暂无用户</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="flex justify-end mt-4" v-if="teacherTotal > teacherSize">
+            <button @click="teacherPage > 0 && (teacherPage--, fetchTeachers())" :disabled="teacherPage === 0" class="px-3 py-1 rounded bg-gray-200 text-gray-700 mr-2">上一页</button>
+            <span class="text-sm text-gray-500">第 {{ teacherPage + 1 }} 页 / 共 {{ Math.ceil(teacherTotal / teacherSize) }} 页</span>
+            <button @click="(teacherPage + 1) * teacherSize < teacherTotal && (teacherPage++, fetchTeachers())" :disabled="(teacherPage + 1) * teacherSize >= teacherTotal" class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2">下一页</button>
+          </div>
+        </div>
+      </div>
       <div v-if="showAddTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-          <h2 class="text-xl font-bold mb-4">添加教师账号</h2>
+          <h2 class="text-xl font-bold mb-4">添加用户账号</h2>
           <form @submit.prevent="onAddTeacher">
             <div class="mb-3">
-              <label class="block text-gray-700 mb-1">教师姓名</label>
-              <input v-model="newTeacher.name" required class="w-full px-3 py-2 border rounded" placeholder="请输入教师姓名" />
+              <label class="block text-gray-700 mb-1">邮箱</label>
+              <input v-model="newTeacher.email" required class="w-full px-3 py-2 border rounded" placeholder="请输入用户邮箱" />
             </div>
             <div class="mb-3">
-              <label class="block text-gray-700 mb-1">账号</label>
-              <input v-model="newTeacher.account" required class="w-full px-3 py-2 border rounded" placeholder="请输入账号" />
+              <label class="block text-gray-700 mb-1">昵称</label>
+              <input v-model="newTeacher.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入用户昵称（可选）" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">手机号</label>
+              <input v-model="newTeacher.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号（可选）" />
             </div>
             <div class="mb-3">
               <label class="block text-gray-700 mb-1">初始密码</label>
@@ -61,106 +111,255 @@
             </div>
             <div class="flex justify-end space-x-2 mt-4">
               <button type="button" @click="showAddTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-              <button type="submit" class="px-4 py-1 rounded bg-blue-600 text-white">添加</button>
+              <button type="submit" :disabled="addTeacherLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ addTeacherLoading ? '添加中...' : '添加' }}</button>
             </div>
           </form>
         </div>
       </div>
+      <div v-if="showEditTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+          <h2 class="text-xl font-bold mb-4">编辑用户信息</h2>
+          <form @submit.prevent="onUpdateTeacher">
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">邮箱</label>
+              <input v-model="editTeacher.email" required class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">昵称</label>
+              <input v-model="editTeacher.nickname" class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">手机号</label>
+              <input v-model="editTeacher.phone" class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="flex justify-end space-x-2 mt-4">
+              <button type="button" @click="showEditTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+              <button type="submit" :disabled="editTeacherLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ editTeacherLoading ? '保存中...' : '保存' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div v-if="showDisableTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm text-center">
+          <h2 class="text-xl font-bold mb-4">确认{{ statusActionText }}该用户账号？</h2>
+          <div class="mb-6 text-gray-700">{{ statusActionDescription }}</div>
+          <div class="flex justify-center space-x-4">
+            <button @click="showDisableTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button @click="onConfirmUpdateStatus" :disabled="statusUpdateLoading" class="px-4 py-1 rounded bg-red-600 text-white">{{ statusUpdateLoading ? '处理中...' : '确认' }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="absolute top-14 right-8 z-50">
+      <Button @click="onLogout" variant="outline" size="sm" class="text-xs">退出登录</Button>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { BriefcaseIcon, AcademicCapIcon, DocumentTextIcon, ShieldCheckIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-const school = {
+import { getAllUsers, createTeacher, updateUserInfo, updateUserStatus } from '@/lib/api/schoolAdmin'
+import { getMe } from '@/lib/api/auth'
+import Button from '@/components/ui/Button.vue'
+
+const school = ref({
   logo: 'https://randomuser.me/api/portraits/lego/2.jpg',
-  name: '清华大学',
-  code: '10003',
-  contact: '王五',
-  verified: true
-}
+  name: '加载中...',
+  code: '',
+  contact: '',
+  verified: false
+})
 const partnerCompanies = [
   '字节跳动科技有限公司',
   '阿里巴巴集团',
   '腾讯科技有限公司'
 ]
-const showAddTeacherDialog = ref(false)
-const newTeacher = ref({ name: '', account: '', password: '' })
-const teachers = [
-  { id: 1, name: '李老师', account: 'teacher01' },
-  { id: 2, name: '王老师', account: 'teacher02' }
-]
+
 const blocks = ref([
   {
-    title: '学校信息管理',
-    icon: BuildingOffice2Icon,
-    color: 'text-blue-600',
+    title: '用户管理',
+    icon: AcademicCapIcon,
+    color: 'text-blue-500',
     data: [
-      { id: 1, label: '简介', extra: '已完善' },
-      { id: 2, label: '专业设置', extra: '已完善' },
-      { id: 3, label: '科研成果', extra: '3项' },
-      { id: 4, label: '师资力量', extra: '20人' }
+      { id: 1, label: '用户总数', extra: '12人' }
     ],
-    empty: '暂无信息',
-    footer: { text: '编辑学校信息', link: '/school/info/edit' }
+    empty: '暂无用户',
+    footer: { text: '管理用户', link: '/users' }
+  },
+  {
+    title: '学生管理',
+    icon: DocumentTextIcon,
+    color: 'text-green-500',
+    data: [
+      { id: 1, label: '学生总数', extra: '156人' }
+    ],
+    empty: '暂无学生',
+    footer: { text: '管理学生', link: '/students' }
   },
   {
     title: '项目管理',
     icon: BriefcaseIcon,
-    color: 'text-blue-500',
-    data: [
-      { id: 1, label: '智慧校园课题', extra: '进行中' }
-    ],
-    empty: '暂无项目',
-    footer: { text: '管理项目', link: '/project' }
-  },
-  {
-    title: '教师管理',
-    icon: AcademicCapIcon,
-    color: 'text-green-500',
-    data: [
-      { id: 1, label: '李老师', extra: 'teacher01' }
-    ],
-    empty: '暂无教师账号',
-    footer: { text: '管理教师', link: '/teachers' }
-  },
-  {
-    title: '资源管理',
-    icon: DocumentTextIcon,
-    color: 'text-purple-500',
-    data: [],
-    empty: '暂无资源',
-    footer: { text: '管理资源', link: '/resources' }
-  },
-  {
-    title: '认证状态',
-    icon: ShieldCheckIcon,
     color: 'text-indigo-500',
     data: [
-      { id: 1, label: '已认证', extra: '2024-01-01' }
+      { id: 1, label: '进行中项目', extra: '8个' }
     ],
-    empty: '未认证',
-    footer: { text: '查看认证详情', link: '/profile' }
+    empty: '暂无项目',
+    footer: { text: '管理项目', link: '/projects' }
   },
   {
-    title: '学校信息浏览',
-    icon: AcademicCapIcon,
-    color: 'text-green-600',
-    data: [],
-    empty: '点击下方进入',
-    footer: { text: '查看全部学校', link: '/school/list' }
-  },
-  {
-    title: '企业信息浏览',
+    title: '企业合作',
     icon: BuildingOffice2Icon,
-    color: 'text-yellow-600',
-    data: [],
-    empty: '点击下方进入',
-    footer: { text: '查看全部企业', link: '/company/list' }
+    color: 'text-purple-500',
+    data: partnerCompanies.map((company, index) => ({ id: index + 1, label: company })),
+    empty: '暂无合作企业',
+    footer: { text: '管理合作', link: '/partners' }
+  },
+  {
+    title: '系统设置',
+    icon: ShieldCheckIcon,
+    color: 'text-yellow-500',
+    data: [
+      { id: 1, label: '学校信息', extra: '已配置' }
+    ],
+    empty: '需要配置',
+    footer: { text: '系统设置', link: '/settings' }
   }
 ])
+
+// 用户相关
+const teachers = ref<any[]>([])
+const teacherTotal = ref(0)
+const teacherPage = ref(0)
+const teacherSize = ref(10)
+const teacherLoading = ref(false)
+const teacherError = ref('')
+
+async function fetchTeachers() {
+  teacherLoading.value = true
+  teacherError.value = ''
+  try {
+    const res = await getAllUsers({ page: teacherPage.value, size: teacherSize.value })
+    teachers.value = res.data?.records || []
+    teacherTotal.value = res.data?.total || teachers.value.length
+  } catch (e: any) {
+    teacherError.value = e.message || '获取用户列表失败'
+    teachers.value = []
+  } finally {
+    teacherLoading.value = false
+  }
+}
+
+const showAddTeacherDialog = ref(false)
+const newTeacher = ref({ email: '', nickname: '', password: '', phone: '' })
+const addTeacherLoading = ref(false)
+
+async function onAddTeacher() {
+  addTeacherLoading.value = true
+  try {
+    await createTeacher(newTeacher.value)
+    showAddTeacherDialog.value = false
+    newTeacher.value = { email: '', nickname: '', password: '', phone: '' }
+    await fetchTeachers()
+    alert('用户账号创建成功')
+  } catch (e: any) {
+    alert('创建失败：' + (e.message || '未知错误'))
+  } finally {
+    addTeacherLoading.value = false
+  }
+}
+
+const showEditTeacherDialog = ref(false)
+const editTeacher = ref<any>({})
+const editTeacherLoading = ref(false)
+const showDisableTeacherDialog = ref(false)
+const statusUpdateId = ref<number | null>(null)
+const statusUpdateTarget = ref<'active' | 'inactive' | 'pending_approval' | null>(null)
+const statusUpdateLoading = ref(false)
+
+const statusActionText = computed(() => {
+  if (statusUpdateTarget.value === 'inactive') return '禁用'
+  if (statusUpdateTarget.value === 'active') return '启用'
+  return '更新状态'
+})
+
+const statusActionDescription = computed(() => {
+  if (statusUpdateTarget.value === 'inactive') return '禁用后该用户将无法登录，操作可逆。'
+  if (statusUpdateTarget.value === 'active') return '启用后该用户可以正常登录。'
+  return '更新用户状态。'
+})
+
+function onEditUser(teacher: any) {
+  editTeacher.value = { ...teacher }
+  showEditTeacherDialog.value = true
+}
+
+async function onUpdateTeacher() {
+  editTeacherLoading.value = true
+  try {
+    await updateUserInfo(editTeacher.value.id, {
+      email: editTeacher.value.email,
+      nickname: editTeacher.value.nickname,
+      phone: editTeacher.value.phone
+    })
+    showEditTeacherDialog.value = false
+    await fetchTeachers()
+    alert('用户信息已更新')
+  } catch (e: any) {
+    alert('更新失败：' + (e.message || '未知错误'))
+  } finally {
+    editTeacherLoading.value = false
+  }
+}
+
+function onUpdateTeacherStatus(teacher: any, status: 'active' | 'inactive' | 'pending_approval') {
+  statusUpdateId.value = teacher.id
+  statusUpdateTarget.value = status
+  showDisableTeacherDialog.value = true
+}
+
+async function onConfirmUpdateStatus() {
+  if (!statusUpdateId.value || !statusUpdateTarget.value) return
+  statusUpdateLoading.value = true
+  try {
+    await updateUserStatus(statusUpdateId.value, statusUpdateTarget.value)
+    showDisableTeacherDialog.value = false
+    await fetchTeachers()
+    alert(`用户账号已${statusActionText.value}`)
+  } catch (e: any) {
+    alert(`${statusActionText.value}失败：` + (e.message || '未知错误'))
+  } finally {
+    statusUpdateLoading.value = false
+    statusUpdateId.value = null
+    statusUpdateTarget.value = null
+  }
+}
+
+async function fetchSchoolInfo() {
+  try {
+    const res = await getMe()
+    const userData = res.data
+    if (userData) {
+      school.value = {
+        logo: userData.avatarUrl || 'https://randomuser.me/api/portraits/lego/2.jpg',
+        name: userData.organizationName || userData.nickname || '未知学校',
+        code: userData.organizationCode || '',
+        contact: userData.nickname || userData.email || '',
+        verified: userData.verified || false
+      }
+    }
+  } catch (e: any) {
+    console.error('获取学校信息失败:', e)
+    // 保持默认值
+  }
+}
+
+onMounted(() => {
+  fetchSchoolInfo()
+  fetchTeachers()
+})
+
 const router = useRouter()
 const appStore = useAppStore()
 const userInfo = computed(() => appStore.user || {})
@@ -186,11 +385,5 @@ const roleText = computed(() => {
 function onLogout() {
   appStore.logout()
   router.push('/login')
-}
-function onAddTeacher() {
-  // TODO: 调用API添加教师账号
-  alert(`已添加教师：${newTeacher.value.name}，账号：${newTeacher.value.account}`)
-  showAddTeacherDialog.value = false
-  newTeacher.value = { name: '', account: '', password: '' }
 }
 </script> 

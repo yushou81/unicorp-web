@@ -112,7 +112,7 @@ async function onLogin() {
     else if (role === 'SCH_ADMIN') target = '/dashboard/school'
     else if (role === 'EN_ADMIN') target = '/dashboard/company'
     else if (role === 'TEACHER') target = '/dashboard/teacher'
-    else if (role === 'MENTOR') target = '/dashboard/mentor'
+    else if (role === 'EN_TEACHER') target = '/dashboard/mentor'
     else if (role === 'STUDENT') target = '/dashboard/student'
     router.push(target)
   } catch (e: any) {

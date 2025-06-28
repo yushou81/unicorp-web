@@ -1,16 +1,5 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 relative">
-    <div class="absolute top-6 right-8 z-50 flex items-center space-x-3">
-      <!-- 用户信息 -->
-      <div class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 px-3 py-1.5">
-        <img :src="userAvatar" class="w-6 h-6 rounded-full border border-gray-300" alt="avatar" />
-        <div class="text-xs">
-          <div class="font-medium text-gray-800">{{ userInfo.nickname || userInfo.username || '学生' }}</div>
-          <div class="text-gray-500">{{ roleText }}</div>
-        </div>
-      </div>
-      <Button @click="onLogout" variant="outline" size="sm" class="text-xs">退出登录</Button>
-    </div>
     <div class="container mx-auto px-4">
       <!-- 个人资料卡片 -->
       <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
@@ -60,6 +49,9 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="absolute top-14 right-8 z-50">
+      <Button @click="onLogout" variant="outline">退出登录</Button>
     </div>
   </div>
 </template>

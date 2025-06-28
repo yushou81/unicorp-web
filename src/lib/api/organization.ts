@@ -13,4 +13,9 @@ export function getAllSchools(view: 'simple' | 'detailed' = 'simple') {
 // 获取企业列表（公开接口）
 export function getAllEnterprises(view: 'simple' | 'detailed' = 'simple') {
   return apiRequest(`/organizations/enterprises?view=${view}`)
+}
+
+// 获取企业详情（公开接口）
+export function getEnterpriseById(id: number) {
+  return apiRequest(`/organizations/enterprises/${id}`)
 } 

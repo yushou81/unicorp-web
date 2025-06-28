@@ -1,28 +1,14 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 relative">
-    <div class="absolute top-6 right-8 z-50 flex items-center space-x-3">
-      <!-- 用户信息 -->
-      <div class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 px-3 py-1.5">
-        <img :src="userAvatar" class="w-6 h-6 rounded-full border border-gray-300" alt="avatar" />
-        <div class="text-xs">
-          <div class="font-medium text-gray-800">{{ userInfo.nickname || userInfo.username || '企业管理员' }}</div>
-          <div class="text-gray-500">{{ roleText }}</div>
-        </div>
-      </div>
-      <Button @click="onLogout" variant="outline" size="sm" class="text-xs">退出登录</Button>
-    </div>
     <div class="container mx-auto px-4">
       <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
-        <img :src="company.logo" class="w-20 h-20 rounded border-2 border-blue-200 mr-6" alt="logo" />
         <div class="flex-1">
           <div class="flex items-center mb-2">
-            <span class="text-2xl font-bold text-gray-900 mr-2">{{ company.name }}</span>
-            <span v-if="company.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
+            <span class="text-2xl font-bold text-gray-900 mr-2">{{ company.value?.organizationName || '—' }}</span>
           </div>
-          <div class="text-gray-500 text-sm mb-1">统一社会信用代码：{{ company.code }}</div>
-          <div class="text-gray-500 text-sm">联系人：{{ company.contact }}</div>
+          <div class="text-gray-500 text-sm">{{ company.value?.address || '—' }}</div>
         </div>
-        <button class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑企业信息</button>
+        <Button class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑企业信息</Button>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
         <div v-for="(block, idx) in blocks" :key="idx" class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-200 flex flex-col mb-2">
@@ -42,18 +28,57 @@
           </div>
         </div>
       </div>
-      <Button class="mb-4" @click="showAddMentorDialog = true">添加企业导师账号</Button>
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xl font-bold text-blue-700">企业导师列表</h2>
+          <Button @click="showAddMentorDialog = true">添加企业导师账号</Button>
+        </div>
+        <div v-if="mentorLoading" class="text-center text-gray-400 py-8">加载中...</div>
+        <div v-else-if="mentorError" class="text-center text-red-500 py-8">{{ mentorError }}</div>
+        <div v-else>
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">邮箱</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">昵称</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">手机号</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+              <tr v-for="mentor in mentors" :key="mentor.id">
+                <td class="px-4 py-2">{{ mentor.email }}</td>
+                <td class="px-4 py-2">{{ mentor.nickname || '-' }}</td>
+                <td class="px-4 py-2">{{ mentor.phone || '-' }}</td>
+                <td class="px-4 py-2">{{ mentor.status || '-' }}</td>
+              </tr>
+              <tr v-if="mentors.length === 0">
+                <td colspan="4" class="text-center text-gray-400 py-4">暂无导师</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="flex justify-end mt-4" v-if="mentorTotal > mentorSize">
+            <button @click="mentorPage > 0 && (mentorPage--, fetchMentors())" :disabled="mentorPage === 0" class="px-3 py-1 rounded bg-gray-200 text-gray-700 mr-2">上一页</button>
+            <span class="text-sm text-gray-500">第 {{ mentorPage + 1 }} 页 / 共 {{ Math.ceil(mentorTotal / mentorSize) }} 页</span>
+            <button @click="(mentorPage + 1) * mentorSize < mentorTotal && (mentorPage++, fetchMentors())" :disabled="(mentorPage + 1) * mentorSize >= mentorTotal" class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2">下一页</button>
+          </div>
+        </div>
+      </div>
       <div v-if="showAddMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
           <h2 class="text-xl font-bold mb-4">添加企业导师账号</h2>
           <form @submit.prevent="onAddMentor">
             <div class="mb-3">
-              <label class="block text-gray-700 mb-1">导师姓名</label>
-              <input v-model="newMentor.name" required class="w-full px-3 py-2 border rounded" placeholder="请输入导师姓名" />
+              <label class="block text-gray-700 mb-1">邮箱</label>
+              <input v-model="newMentor.email" required class="w-full px-3 py-2 border rounded" placeholder="请输入导师邮箱" />
             </div>
             <div class="mb-3">
-              <label class="block text-gray-700 mb-1">账号</label>
-              <input v-model="newMentor.account" required class="w-full px-3 py-2 border rounded" placeholder="请输入账号" />
+              <label class="block text-gray-700 mb-1">昵称</label>
+              <input v-model="newMentor.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入导师昵称（可选）" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">手机号</label>
+              <input v-model="newMentor.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号（可选）" />
             </div>
             <div class="mb-3">
               <label class="block text-gray-700 mb-1">初始密码</label>
@@ -61,40 +86,101 @@
             </div>
             <div class="flex justify-end space-x-2 mt-4">
               <button type="button" @click="showAddMentorDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-              <button type="submit" class="px-4 py-1 rounded bg-blue-600 text-white">添加</button>
+              <button type="submit" :disabled="addMentorLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ addMentorLoading ? '添加中...' : '添加' }}</button>
             </div>
           </form>
         </div>
       </div>
     </div>
+    <div class="absolute top-14 right-8 z-50">
+      <Button @click="onLogout" variant="outline" size="sm" class="text-xs">退出登录</Button>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { BriefcaseIcon, ClipboardDocumentListIcon, BanknotesIcon, ShieldCheckIcon, BuildingOffice2Icon, AcademicCapIcon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { getEnterpriseById } from '@/lib/api/organization'
+import { getMentorList, createMentor } from '@/lib/api/enterpriseAdmin'
+import Button from '@/components/ui/Button.vue'
 
 const router = useRouter()
 const appStore = useAppStore()
 
-const company = {
-  logo: 'https://randomuser.me/api/portraits/lego/1.jpg',
-  name: '字节跳动科技有限公司',
-  code: '91310000MA1K4XXXX',
-  contact: '李四',
-  verified: false
+const company = ref<any>({})
+const user = computed(() => appStore.user || {})
+
+// 企业导师相关
+const mentors = ref<any[]>([])
+const mentorTotal = ref(0)
+const mentorPage = ref(0)
+const mentorSize = ref(10)
+const mentorLoading = ref(false)
+const mentorError = ref('')
+
+async function fetchMentors() {
+  mentorLoading.value = true
+  mentorError.value = ''
+  try {
+    const res = await getMentorList({ page: mentorPage.value, size: mentorSize.value })
+    mentors.value = res.data?.records || []
+    mentorTotal.value = res.data?.total || mentors.value.length
+  } catch (e: any) {
+    mentorError.value = e.message || '获取导师列表失败'
+    mentors.value = []
+  } finally {
+    mentorLoading.value = false
+  }
 }
+
+const showAddMentorDialog = ref(false)
+const newMentor = ref({ email: '', nickname: '', password: '', phone: '' })
+const addMentorLoading = ref(false)
+
+async function onAddMentor() {
+  addMentorLoading.value = true
+  try {
+    await createMentor(newMentor.value)
+    showAddMentorDialog.value = false
+    newMentor.value = { email: '', nickname: '', password: '', phone: '' }
+    await fetchMentors()
+    alert('导师账号创建成功')
+  } catch (e: any) {
+    alert('创建失败：' + (e.message || '未知错误'))
+  } finally {
+    addMentorLoading.value = false
+  }
+}
+
+async function fetchCompany() {
+  console.log('[企业dashboard] 当前user:', user.value)
+  if (user.value.organization_id) {
+    try {
+      const res = await getEnterpriseById(user.value.organization_id)
+      company.value = res.data || {}
+      console.log('[企业dashboard] 获取到企业信息:', company.value)
+    } catch (e) {
+      company.value = { organizationName: '企业信息获取失败', address: '' }
+      console.error('[企业dashboard] 获取企业信息失败:', e)
+    }
+  } else {
+    company.value = { organizationName: '未找到企业ID', address: '' }
+    console.warn('[企业dashboard] user.organization_id 为空')
+  }
+}
+
+onMounted(() => {
+  fetchCompany()
+  fetchMentors()
+})
+watch(user, fetchCompany)
+
 const partnerSchools = [
   '清华大学',
   '北京大学',
   '上海交通大学'
-]
-const showAddMentorDialog = ref(false)
-const newMentor = ref({ name: '', account: '', password: '' })
-const mentors = [
-  { id: 1, name: '王导师', account: 'mentor01' },
-  { id: 2, name: '赵导师', account: 'mentor02' }
 ]
 const blocks = ref([
   {
@@ -192,12 +278,5 @@ const roleText = computed(() => {
 function onLogout() {
   appStore.logout()
   router.push('/login')
-}
-
-function onAddMentor() {
-  // TODO: 调用API添加企业导师账号
-  alert(`已添加导师：${newMentor.value.name}，账号：${newMentor.value.account}`)
-  showAddMentorDialog.value = false
-  newMentor.value = { name: '', account: '', password: '' }
 }
 </script> 
