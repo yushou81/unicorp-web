@@ -1,5 +1,5 @@
 <template>
-  <section class="relative flex-1 flex items-center justify-center py-16 md:py-24">
+  <section class="relative py-16 md:py-24 overflow-hidden">
     <div class="container mx-auto flex flex-col md:flex-row items-center gap-10 px-4">
       <div class="flex-1 text-center md:text-left">
         <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
@@ -18,7 +18,10 @@
         <img :src="imageUrl" :alt="imageAlt" class="w-80 md:w-[28rem] drop-shadow-xl" />
       </div>
     </div>
-    <div class="absolute left-0 right-0 bottom-0 h-16 bg-gradient-to-t from-white/80 to-transparent pointer-events-none" />
+    
+    <!-- 装饰元素 -->
+    <div class="hidden md:block absolute -top-24 -right-24 w-96 h-96 bg-blue-200 rounded-full opacity-20 blur-3xl"></div>
+    <div class="hidden md:block absolute -bottom-32 -left-32 w-96 h-96 bg-indigo-300 rounded-full opacity-20 blur-3xl"></div>
   </section>
 </template>
 

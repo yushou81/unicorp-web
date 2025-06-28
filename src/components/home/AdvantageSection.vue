@@ -1,14 +1,22 @@
 <template>
-  <section class="bg-white py-12 border-t">
+  <section class="py-16 bg-white">
     <div class="container mx-auto px-4">
-      <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">{{ title }}</h2>
+      <div class="mb-12 text-center">
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">{{ title }}</h2>
+        <div class="w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
+      </div>
+      
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <div v-for="advantage in advantages" :key="advantage.title" class="flex flex-col items-center text-center">
-          <div class="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 mb-4">
-            <component :is="advantage.icon" class="w-6 h-6 text-blue-600" />
+        <div 
+          v-for="advantage in advantages" 
+          :key="advantage.title" 
+          class="p-6 rounded-xl flex flex-col items-center text-center group hover:-translate-y-1 transition-all duration-300"
+        >
+          <div class="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 mb-5 shadow-md shadow-blue-100">
+            <component :is="advantage.icon" class="w-7 h-7 text-blue-600" />
           </div>
-          <h4 class="font-semibold text-base mb-1">{{ advantage.title }}</h4>
-          <p class="text-gray-500 text-sm">{{ advantage.desc }}</p>
+          <h4 class="font-bold text-xl mb-3 text-gray-800">{{ advantage.title }}</h4>
+          <p class="text-gray-600">{{ advantage.desc }}</p>
         </div>
       </div>
     </div>

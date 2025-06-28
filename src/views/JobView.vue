@@ -1,222 +1,46 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- 页面标题 -->
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">校企招聘平台</h1>
-        <p class="text-xl text-gray-600 mb-6">
-          发现适合你的实习与就业机会
-        </p>
+  <div class="min-h-screen bg-gray-50">
+    <!-- 导航栏 -->
+    <Navbar />
+    
+    <!-- 顶部横幅 -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+      <div class="container mx-auto px-4 max-w-5xl">
+        <h1 class="text-3xl font-bold mb-4">校企人才招聘平台</h1>
+        <p class="text-lg opacity-90 mb-8 max-w-2xl">发现适合你的实习与就业机会，连接优质企业，开启职业发展新篇章</p>
         
         <!-- 搜索栏 -->
-        <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-sm p-4 mb-8 flex flex-wrap gap-3">
-          <input 
-            type="text" 
-            v-model="searchKeyword"
-            placeholder="职位名称或关键词"
-            class="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <select 
-            v-model="selectedLocation" 
-            class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">所有地区</option>
-            <option value="北京">北京</option>
-            <option value="上海">上海</option>
-            <option value="深圳">深圳</option>
-            <option value="广州">广州</option>
-            <option value="杭州">杭州</option>
-          </select>
-          <select 
-            v-model="selectedJobType" 
-            class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">所有类型</option>
-            <option value="实习">实习</option>
-            <option value="校招">校招</option>
-            <option value="全职">全职</option>
-            <option value="兼职">兼职</option>
-          </select>
-          <Button @click="searchJobs" class="bg-blue-600 hover:bg-blue-700">搜索</Button>
-        </div>
+        <JobSearch 
+          :locations="allLocations"
+          :job-types="allJobTypes"
+          @search="handleSearch"
+        />
       </div>
+    </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <!-- 筛选侧边栏 -->
-        <div class="space-y-6">
-          <!-- 职位类别 -->
-          <Card>
-            <CardHeader>
-              <CardTitle>职位类别</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div class="space-y-2">
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" class="rounded text-blue-600" v-model="filters.categories" value="技术开发" />
-                  <span>技术开发</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" class="rounded text-blue-600" v-model="filters.categories" value="产品设计" />
-                  <span>产品设计</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" class="rounded text-blue-600" v-model="filters.categories" value="市场营销" />
-                  <span>市场营销</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" class="rounded text-blue-600" v-model="filters.categories" value="运营管理" />
-                  <span>运营管理</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" class="rounded text-blue-600" v-model="filters.categories" value="人力资源" />
-                  <span>人力资源</span>
-                </label>
-              </div>
-            </CardContent>
-          </Card>
-
-          <!-- 薪资范围 -->
-          <Card>
-            <CardHeader>
-              <CardTitle>薪资范围</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div class="space-y-2">
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="radio" name="salary" class="text-blue-600" v-model="filters.salary" value="0-5k" />
-                  <span>5k以下</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="radio" name="salary" class="text-blue-600" v-model="filters.salary" value="5k-10k" />
-                  <span>5k-10k</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="radio" name="salary" class="text-blue-600" v-model="filters.salary" value="10k-15k" />
-                  <span>10k-15k</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="radio" name="salary" class="text-blue-600" v-model="filters.salary" value="15k-20k" />
-                  <span>15k-20k</span>
-                </label>
-                <label class="flex items-center space-x-2 cursor-pointer">
-                  <input type="radio" name="salary" class="text-blue-600" v-model="filters.salary" value="20k+" />
-                  <span>20k以上</span>
-                </label>
-              </div>
-            </CardContent>
-          </Card>
-
-          <!-- 统计数据 -->
-          <Card>
-            <CardHeader>
-              <CardTitle>招聘统计</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div class="space-y-4">
-                <div class="flex justify-between">
-                  <span>发布职位</span>
-                  <span class="font-semibold">156</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>合作企业</span>
-                  <span class="font-semibold">42</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>成功就业</span>
-                  <span class="font-semibold">89</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    <!-- 主要内容区 -->
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- 左侧筛选栏 -->
+        <div class="lg:w-64 flex-shrink-0">
+          <FilterSidebar 
+            :categories="['技术开发', '产品设计', '市场营销', '运营管理', '人力资源']"
+            :locations="allLocations"
+            :job-types="allJobTypes"
+            v-model:filters="filters"
+          />
         </div>
 
-        <!-- 职位列表 -->
-        <div class="lg:col-span-3">
-          <!-- 排序选项 -->
-          <div class="flex justify-between items-center mb-4">
-            <div class="text-sm text-gray-500">
-              共找到 <span class="font-semibold text-blue-600">{{ filteredJobs.length }}</span> 个职位
-            </div>
-            <select 
-              v-model="sortOption" 
-              class="text-sm px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="latest">最新发布</option>
-              <option value="salary-high">薪资从高到低</option>
-              <option value="salary-low">薪资从低到高</option>
-            </select>
-          </div>
-          
-          <!-- 职位卡片列表 -->
-          <div class="space-y-4">
-            <div 
-              v-for="job in filteredJobs" 
-              :key="job.id"
-              class="bg-white rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow border border-gray-100"
-            >
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <div class="flex items-center mb-2">
-                    <h3 class="font-semibold text-lg text-gray-900">{{ job.title }}</h3>
-                    <span v-if="job.isHot" class="ml-2 px-2 py-0.5 bg-red-100 text-red-600 text-xs rounded-full">热门</span>
-                    <span v-if="job.isNew" class="ml-2 px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">新发布</span>
-                  </div>
-                  
-                  <p class="text-blue-600 font-medium mb-2">{{ job.company }}</p>
-                  
-                  <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-3">
-                    <div class="flex items-center">
-                      <MapPinIcon class="w-4 h-4 mr-1" />
-                      <span>{{ job.location }}</span>
-                    </div>
-                    <div class="flex items-center">
-                      <BanknoteIcon class="w-4 h-4 mr-1" />
-                      <span>{{ job.salary }}</span>
-                    </div>
-                    <div class="flex items-center">
-                      <BriefcaseIcon class="w-4 h-4 mr-1" />
-                      <span>{{ job.type }}</span>
-                    </div>
-                    <div class="flex items-center">
-                      <GraduationCapIcon class="w-4 h-4 mr-1" />
-                      <span>{{ job.education }}</span>
-                    </div>
-                  </div>
-                  
-                  <p class="text-gray-700 mb-3 line-clamp-2">{{ job.description }}</p>
-                  
-                  <div class="flex flex-wrap gap-2">
-                    <span 
-                      v-for="(tag, index) in job.tags" 
-                      :key="index"
-                      class="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded-full"
-                    >
-                      {{ tag }}
-                    </span>
-                  </div>
-                </div>
-                
-                <div class="flex flex-col items-end space-y-2">
-                  <router-link :to="`/job/${job.id}`">
-                    <Button size="sm">查看详情</Button>
-                  </router-link>
-                  <Button variant="outline" size="sm" @click="collectJob(job.id)">
-                    <BookmarkIcon class="w-4 h-4 mr-1" />
-                    收藏
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 分页 -->
-          <div class="flex justify-center mt-8">
-            <div class="flex space-x-1">
-              <button class="px-3 py-1 rounded border" :class="currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-50'">&lt;</button>
-              <button v-for="page in 5" :key="page" class="px-3 py-1 rounded border" :class="page === currentPage ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50'">{{ page }}</button>
-              <button class="px-3 py-1 rounded border bg-white hover:bg-gray-50">&gt;</button>
-            </div>
-          </div>
+        <!-- 右侧职位列表 -->
+        <div class="flex-1">
+          <JobList 
+            :jobs="filteredJobs" 
+            :current-page="currentPage"
+            :total-pages="5"
+            @collect="collectJob"
+            @page-change="handlePageChange"
+            @sort="handleSort"
+          />
         </div>
       </div>
     </div>
@@ -225,13 +49,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import Button from '@/components/ui/Button.vue'
-import Card from '@/components/ui/Card.vue'
-import CardHeader from '@/components/ui/CardHeader.vue'
-import CardTitle from '@/components/ui/CardTitle.vue'
-import CardDescription from '@/components/ui/CardDescription.vue'
-import CardContent from '@/components/ui/CardContent.vue'
-import { MapPinIcon, BriefcaseIcon, BanknoteIcon, BookmarkIcon, GraduationCapIcon } from 'lucide-vue-next'
+import Navbar from '@/components/layout/Navbar.vue'
+import JobSearch from '@/components/job/JobSearch.vue'
+import FilterSidebar from '@/components/job/FilterSidebar.vue'
+import JobList from '@/components/job/JobList.vue'
 
 // 搜索和筛选状态
 const searchKeyword = ref('')
@@ -240,9 +61,15 @@ const selectedJobType = ref('')
 const currentPage = ref(1)
 const sortOption = ref('latest')
 const filters = ref({
-  categories: [],
+  categories: [] as string[],
+  locations: [] as string[],
+  jobTypes: [] as string[],
   salary: ''
 })
+
+// 可选的地区和工作类型列表
+const allLocations = ['北京', '上海', '深圳', '广州', '杭州', '成都', '南京', '武汉', '西安', '重庆']
+const allJobTypes = ['实习', '校招', '全职', '兼职', '远程']
 
 // 模拟职位数据
 const jobs = [
@@ -323,30 +150,81 @@ const filteredJobs = computed(() => {
       return false
     }
     
-    // 地区筛选
+    // 地区筛选 - 下拉菜单
     if (selectedLocation.value && job.location !== selectedLocation.value) {
       return false
     }
     
-    // 职位类型筛选
+    // 职位类型筛选 - 下拉菜单
     if (selectedJobType.value && job.type !== selectedJobType.value) {
       return false
     }
     
-    // 更多筛选条件可以在这里添加
+    // 职位类别筛选 - 复选框
+    if (filters.value.categories.length > 0) {
+      // 这里简化处理，实际项目中可能需要更复杂的匹配逻辑
+      const matchesCategory = job.tags.some(tag => 
+        filters.value.categories.includes(tag) || 
+        filters.value.categories.some(cat => job.title.includes(cat))
+      );
+      if (!matchesCategory) return false;
+    }
+    
+    // 地区筛选 - 复选框
+    if (filters.value.locations.length > 0 && !filters.value.locations.includes(job.location)) {
+      return false;
+    }
+    
+    // 工作类型筛选 - 复选框
+    if (filters.value.jobTypes.length > 0 && !filters.value.jobTypes.includes(job.type)) {
+      return false;
+    }
+    
+    // 薪资范围筛选
+    if (filters.value.salary) {
+      // 简化处理，实际项目中需要更精确的薪资范围比较
+      const salary = job.salary.replace(/[^0-9-]/g, '');
+      const [min, max] = salary.split('-').map(Number);
+      
+      switch(filters.value.salary) {
+        case '0-5k':
+          if (min > 5) return false;
+          break;
+        case '5k-10k':
+          if (min > 10 || max < 5) return false;
+          break;
+        case '10k-15k':
+          if (min > 15 || max < 10) return false;
+          break;
+        case '15k-20k':
+          if (min > 20 || max < 15) return false;
+          break;
+        case '20k+':
+          if (min < 20) return false;
+          break;
+      }
+    }
     
     return true
   })
 })
 
-// 搜索职位
-const searchJobs = () => {
-  console.log('搜索职位', {
-    keyword: searchKeyword.value,
-    location: selectedLocation.value,
-    jobType: selectedJobType.value
-  })
-  // 实际项目中这里应该调用API获取数据
+// 处理搜索
+const handleSearch = (searchParams: { keyword: string, location: string, jobType: string }) => {
+  searchKeyword.value = searchParams.keyword
+  selectedLocation.value = searchParams.location
+  selectedJobType.value = searchParams.jobType
+}
+
+// 处理分页
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+}
+
+// 处理排序
+const handleSort = (option: string) => {
+  sortOption.value = option
+  // 实际项目中这里应该根据排序选项对数据进行排序
 }
 
 // 收藏职位

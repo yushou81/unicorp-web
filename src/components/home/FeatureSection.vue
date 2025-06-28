@@ -1,17 +1,23 @@
 <template>
-  <section class="container mx-auto px-4 py-12">
-    <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">{{ title }}</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-      <div 
-        v-for="feature in features" 
-        :key="feature.title" 
-        class="bg-white rounded-xl shadow hover:shadow-lg transition p-6 flex flex-col items-center text-center group cursor-pointer"
-      >
-        <div :class="`w-14 h-14 flex items-center justify-center rounded-full mb-4 text-white text-2xl ${feature.bg}`">
-          <component :is="feature.icon" class="w-8 h-8" />
+  <section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="mb-12 text-center">
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">{{ title }}</h2>
+        <div class="w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div 
+          v-for="feature in features" 
+          :key="feature.title" 
+          class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 flex flex-col items-center text-center group border border-gray-100 hover:border-blue-100 hover:-translate-y-1"
+        >
+          <div :class="`w-16 h-16 flex items-center justify-center rounded-full mb-5 text-white ${feature.bg}`">
+            <component :is="feature.icon" class="w-8 h-8" />
+          </div>
+          <h3 class="font-bold text-xl mb-3 text-gray-800">{{ feature.title }}</h3>
+          <p class="text-gray-600">{{ feature.desc }}</p>
         </div>
-        <h3 class="font-semibold text-lg mb-2">{{ feature.title }}</h3>
-        <p class="text-gray-500 text-sm">{{ feature.desc }}</p>
       </div>
     </div>
   </section>
