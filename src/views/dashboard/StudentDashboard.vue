@@ -1,5 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 relative">
+    <div class="absolute top-6 right-8 z-50 flex items-center space-x-3">
+      <!-- 用户信息 -->
+      <div class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 px-3 py-1.5">
+        <img :src="userAvatar" class="w-6 h-6 rounded-full border border-gray-300" alt="avatar" />
+        <div class="text-xs">
+          <div class="font-medium text-gray-800">{{ userInfo.nickname || userInfo.username || '学生' }}</div>
+          <div class="text-gray-500">{{ roleText }}</div>
+        </div>
+      </div>
+      <Button @click="onLogout" variant="outline" size="sm" class="text-xs">退出登录</Button>
+    </div>
     <div class="container mx-auto px-4">
       <!-- 个人资料卡片 -->
       <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
@@ -54,8 +65,9 @@
 </template>
 <script setup lang="ts">
 import { useAppStore } from '@/stores/app'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { BriefcaseIcon, BookmarkIcon, AcademicCapIcon, CalendarDaysIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
+import { useRouter } from 'vue-router'
 
 const user = useAppStore().user || {
   avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
@@ -148,4 +160,33 @@ const blocks = ref([
     footer: { text: '查看全部企业', link: '/company/list' }
   }
 ])
+
+const router = useRouter()
+const appStore = useAppStore()
+
+function onLogout() {
+  appStore.logout()
+  router.push('/login')
+}
+
+const userInfo = computed(() => appStore.user || {})
+const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/men/32.jpg')
+const roleText = computed(() => {
+  const role = userInfo.value.role
+  const roleMap: Record<string, string> = {
+    'admin': '系统管理员',
+    'SYSADMIN': '系统管理员',
+    'schoolAdmin': '学校管理员',
+    'SCH_ADMIN': '学校管理员',
+    'companyAdmin': '企业管理员',
+    'EN_ADMIN': '企业管理员',
+    'teacher': '教师',
+    'TEACHER': '教师',
+    'mentor': '企业导师',
+    'MENTOR': '企业导师',
+    'student': '学生',
+    'STUDENT': '学生'
+  }
+  return roleMap[role] || '未知角色'
+})
 </script> 

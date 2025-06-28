@@ -27,7 +27,7 @@
             <label class="block text-gray-700 mb-1">学校</label>
             <select v-model="organizationId" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">请选择学校</option>
-              <option v-for="school in schoolList" :key="school.id" :value="school.id">{{ school.name }}</option>
+              <option v-for="school in schoolList" :key="school.id" :value="school.id">{{ school.organizationName }}</option>
             </select>
           </div>
           <div class="mb-4">
@@ -45,27 +45,47 @@
             <input v-model="companyName" type="text" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业名称" />
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">企业统一社会信用代码</label>
-            <input v-model="companyCode" type="text" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入统一社会信用代码" />
+            <label class="block text-gray-700 mb-1">企业简介</label>
+            <textarea v-model="description" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业简介"></textarea>
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">联系人姓名</label>
-            <input v-model="contactName" type="text" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入联系人姓名" />
+            <label class="block text-gray-700 mb-1">企业地址</label>
+            <input v-model="address" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业地址" />
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">联系人邮箱</label>
-            <input v-model="email" type="email" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入邮箱" />
+            <label class="block text-gray-700 mb-1">企业官网</label>
+            <input v-model="website" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业官网" />
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">联系人手机号</label>
-            <input v-model="phone" type="tel" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入手机号" />
+            <label class="block text-gray-700 mb-1">所属行业</label>
+            <input v-model="industry" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入所属行业" />
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">营业执照上传</label>
-            <input type="file" accept="image/*" @change="onLicenseChange" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <div v-if="licensePreview" class="mt-2">
-              <img :src="licensePreview" alt="营业执照预览" class="max-h-32 rounded border" />
+            <label class="block text-gray-700 mb-1">企业规模</label>
+            <input v-model="companySize" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业规模" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">营业执照图片URL</label>
+            <input v-model="businessLicenseUrl" type="text" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入营业执照图片的URL" />
+            <div v-if="businessLicenseUrl" class="mt-2">
+              <img :src="businessLicenseUrl" alt="营业执照预览" class="max-h-32 rounded border" />
             </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">管理员昵称</label>
+            <input v-model="contactName" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员昵称" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">管理员邮箱</label>
+            <input v-model="email" type="email" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员邮箱" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">管理员密码</label>
+            <input v-model="password" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员密码" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">管理员手机号（选填）</label>
+            <input v-model="phone" type="tel" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员手机号" />
           </div>
         </div>
         <div class="mb-4">
@@ -92,7 +112,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { registerStudent, registerEnterprise } from '@/lib/api/auth'
-import { getSchoolList } from '@/lib/api/organization'
+import { getAllSchools } from '@/lib/api/organization'
 
 const role = ref<'student' | 'companyAdmin'>('student')
 const username = ref('')
@@ -107,45 +127,25 @@ const organizationId = ref('')
 const schoolList = ref<{ id: number, name: string }[]>([])
 // 企业管理员专属
 const companyName = ref('')
-const companyCode = ref('')
+const description = ref('')
+const address = ref('')
+const website = ref('')
+const industry = ref('')
+const companySize = ref('')
 const contactName = ref('')
 const router = useRouter()
-const licenseFile = ref<File|null>(null)
-const licensePreview = ref<string>('')
+const businessLicenseUrl = ref('')
 
 onMounted(async () => {
   if (role.value === 'student') {
     try {
-      schoolList.value = await getSchoolList()
+      const res = await getAllSchools()
+      schoolList.value = res.data
     } catch (e) {
       schoolList.value = []
     }
   }
 })
-
-async function uploadLicense(file: File): Promise<string> {
-  // TODO: 实际应调用后端上传接口，这里mock返回base64
-  return new Promise((resolve) => {
-    const reader = new FileReader()
-    reader.onload = (ev) => resolve(ev.target?.result as string)
-    reader.readAsDataURL(file)
-  })
-}
-
-function onLicenseChange(e: Event) {
-  const files = (e.target as HTMLInputElement).files
-  if (files && files[0]) {
-    licenseFile.value = files[0]
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      licensePreview.value = ev.target?.result as string
-    }
-    reader.readAsDataURL(files[0])
-  } else {
-    licenseFile.value = null
-    licensePreview.value = ''
-  }
-}
 
 function isValidPhone(phone: string) {
   return /^1[3-9]\d{9}$/.test(phone)
@@ -170,9 +170,9 @@ async function onRegister() {
       password: password.value,
       email: email.value,
       phone: phone.value,
-      organization_id: Number(organizationId.value),
-      real_name: realName.value,
-      id_card: idCard.value
+      organizationId: Number(organizationId.value),
+      realName: realName.value,
+      idCard: idCard.value
     }
     console.log('[注册] 学生注册参数:', studentPayload)
     try {
@@ -185,24 +185,27 @@ async function onRegister() {
       alert(e.message || '注册失败')
     }
   } else if (role.value === 'companyAdmin') {
-    if (!companyName.value || !companyCode.value || !contactName.value || !email.value || !phone.value || !password.value || !licenseFile.value) {
-      alert('请填写完整企业信息并上传营业执照')
+    if (!companyName.value || !email.value || !password.value || !businessLicenseUrl.value) {
+      alert('请填写企业名称、管理员邮箱、管理员密码并填写营业执照图片URL')
+      return
+    }
+    if (phone.value && !isValidPhone(phone.value)) {
+      alert('管理员手机号格式不正确')
       return
     }
     try {
-      const licenseUrl = await uploadLicense(licenseFile.value)
       const enterprisePayload = {
-        organization_name: companyName.value,
-        description: '',
-        address: '',
-        website: '',
-        industry: '',
-        company_size: '',
-        business_license_url: licenseUrl,
-        admin_email: email.value,
-        admin_nickname: contactName.value,
-        admin_password: password.value,
-        admin_phone: phone.value
+        organizationName: companyName.value,
+        description: description.value,
+        address: address.value,
+        website: website.value,
+        industry: industry.value,
+        companySize: companySize.value,
+        businessLicenseUrl: businessLicenseUrl.value,
+        adminNickname: contactName.value,
+        adminEmail: email.value,
+        adminPassword: password.value,
+        adminPhone: phone.value
       }
       console.log('[注册] 企业注册参数:', enterprisePayload)
       const res = await registerEnterprise(enterprisePayload)

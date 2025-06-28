@@ -18,12 +18,19 @@ export const useAppStore = defineStore('app', () => {
     theme.value = newTheme
   }
 
+  const logout = () => {
+    user.value = null
+    localStorage.removeItem('token')
+    // 如有其它本地存储项可一并清理
+  }
+
   return {
     isLoading,
     user,
     theme,
     setLoading,
     setUser,
-    setTheme
+    setTheme,
+    logout
   }
 }) 

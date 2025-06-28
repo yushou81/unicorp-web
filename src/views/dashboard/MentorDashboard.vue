@@ -1,5 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 relative">
+    <div class="absolute top-6 right-8 z-50 flex items-center space-x-3">
+      <!-- 用户信息 -->
+      <div class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 px-3 py-1.5">
+        <img :src="userAvatar" class="w-6 h-6 rounded-full border border-gray-300" alt="avatar" />
+        <div class="text-xs">
+          <div class="font-medium text-gray-800">{{ userInfo.nickname || userInfo.username || '导师' }}</div>
+          <div class="text-gray-500">{{ roleText }}</div>
+        </div>
+      </div>
+      <Button @click="onLogout" variant="outline" size="sm" class="text-xs">退出登录</Button>
+    </div>
     <div class="container mx-auto px-4">
       <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
         <img :src="mentor.avatar" class="w-20 h-20 rounded-full border-2 border-blue-200 mr-6" alt="avatar" />
@@ -36,26 +47,28 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
+import { useRouter } from 'vue-router'
+import { useAppStore } from '@/stores/app'
 
 const mentor = {
   avatar: 'https://randomuser.me/api/portraits/men/34.jpg',
   name: '王导师',
   email: 'mentor@example.com',
-  phone: '137****8888',
+  phone: '138****9999',
   verified: true,
-  school: '清华大学',
-  company: '字节跳动科技有限公司'
+  company: '字节跳动科技有限公司',
+  school: '清华大学'
 }
 
 const students = [
-  { id: 1, name: '张三', school: '清华大学' },
-  { id: 2, name: '李四', school: '北京大学' }
+  { id: 1, name: '李四', major: '计算机' },
+  { id: 2, name: '王五', major: '人工智能' }
 ]
 const projects = [
   { id: 1, title: 'AI创新项目', date: '2024-06-01' },
-  { id: 2, title: '大数据实训', date: '2024-05-15' }
+  { id: 2, title: '大数据分析', date: '2024-05-15' }
 ]
 const resources = [
   { id: 1, title: '企业导师手册', date: '2024-06-20' }
@@ -116,4 +129,33 @@ const blocks = ref([
     footer: { text: '查看全部企业', link: '/company/list' }
   }
 ])
+
+const router = useRouter()
+const appStore = useAppStore()
+
+const userInfo = computed(() => appStore.user || {})
+const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/men/34.jpg')
+const roleText = computed(() => {
+  const role = userInfo.value.role
+  const roleMap: Record<string, string> = {
+    'admin': '系统管理员',
+    'SYSADMIN': '系统管理员',
+    'schoolAdmin': '学校管理员',
+    'SCH_ADMIN': '学校管理员',
+    'companyAdmin': '企业管理员',
+    'EN_ADMIN': '企业管理员',
+    'teacher': '教师',
+    'TEACHER': '教师',
+    'mentor': '企业导师',
+    'MENTOR': '企业导师',
+    'student': '学生',
+    'STUDENT': '学生'
+  }
+  return roleMap[role] || '未知角色'
+})
+
+function onLogout() {
+  appStore.logout()
+  router.push('/login')
+}
 </script> 
