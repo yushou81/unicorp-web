@@ -1,17 +1,19 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div class="min-h-screen flex flex-col bg-white">
     <!-- 导航栏 -->
     <Navbar />
 
-    <!-- 横幅区 -->
-    <HeroBanner 
-      title="打造校企协作新生态"
-      description="校企联盟平台，打破信息壁垒，促进人才培养、科研合作、实习就业等多维度深度融合，实现教育链、人才链与产业链、创新链的有机衔接。"
-      ctaText="立即体验"
-      ctaLink="/project/list"
-      imageUrl="https://assets.vvhan.com/2023/07/hero-hr.svg"
-      imageAlt="平台插画"
-    />
+    <!-- 横幅区 - 使用独立的背景渐变 -->
+    <div class="bg-gradient-to-br from-blue-50 to-indigo-100">
+      <HeroBanner 
+        title="打造校企协作新生态"
+        description="校企联盟平台，打破信息壁垒，促进人才培养、科研合作、实习就业等多维度深度融合，实现教育链、人才链与产业链、创新链的有机衔接。"
+        ctaText="立即体验"
+        ctaLink="/project/list"
+        imageUrl="https://assets.vvhan.com/2023/07/hero-hr.svg"
+        imageAlt="平台插画"
+      />
+    </div>
 
     <!-- 功能区 -->
     <FeatureSection 
