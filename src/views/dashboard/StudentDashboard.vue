@@ -136,12 +136,12 @@ const blocks = ref([
     footer: { text: '查看全部课程', link: '/courses' }
   },
   {
-    title: '企业申请入口',
-    icon: BuildingOffice2Icon,
-    color: 'text-yellow-500',
+    title: '查找项目',
+    icon: BriefcaseIcon,
+    color: 'text-blue-500',
     data: [],
-    empty: '如有意向加入企业项目，请点击下方入口',
-    footer: { text: '申请加入企业项目', link: '/apply' }
+    empty: '点击下方查找并申请项目',
+    footer: { text: '查找项目', link: '/student/projects' }
   },
   {
     title: '学校信息浏览',

@@ -37,8 +37,13 @@
             </li>
             <li v-if="block.data.length === 0" class="text-gray-400 text-sm">{{ block.empty }}</li>
           </ul>
-          <div v-if="block.footer">
-            <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium mt-2">{{ block.footer.text }}</router-link>
+          <div v-if="block.footer" class="flex flex-col space-y-1">
+            <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium">
+              {{ block.footer.text }}
+            </router-link>
+            <router-link v-if="block.footer.extra" :to="block.footer.extra.link" class="text-green-600 hover:underline text-xs font-medium">
+              {{ block.footer.extra.text }}
+            </router-link>
           </div>
         </div>
       </div>
@@ -118,7 +123,11 @@ const blocks = ref([
       { id: 1, label: 'AI创新项目', extra: '进行中' }
     ],
     empty: '暂无项目',
-    footer: { text: '管理项目', link: '/project' }
+    footer: { 
+      text: '管理项目', 
+      link: '/company/projects',
+      extra: { text: '发布新项目', link: '/project/publish' }
+    }
   },
   {
     title: '职位/简历管理',

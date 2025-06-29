@@ -80,14 +80,50 @@ const router = createRouter({
       component: () => import('@/views/project/ProjectPublishView.vue')
     },
     {
-      path: '/project/:id',
-      name: 'project-detail',
-      component: () => import('@/views/project/ProjectDetailView.vue')
+      path: '/project/:id/apply',
+      name: 'ProjectApply',
+      component: () => import('@/views/project/ProjectApplyView.vue')
+    },
+    {
+      path: '/project/:id/members',
+      name: 'ProjectMemberManage',
+      component: () => import('@/views/project/ProjectMemberManageView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/project/:id/fund',
       name: 'project-fund',
       component: () => import('@/views/project/ProjectFundView.vue')
+    },
+    {
+      path: '/project/:id',
+      name: 'project-detail',
+      component: () => import('@/views/project/ProjectDetailView.vue')
+    },
+    {
+      path: '/student/projects',
+      name: 'StudentProjectSearch',
+      component: () => import('@/views/project/StudentProjectSearchView.vue'),
+      meta: { requiresAuth: true, role: 'student' }
+    },
+    // 在现有路由配置中添加
+    {
+      path: '/project/edit/:id',
+      name: 'ProjectEdit',
+      component: () => import('@/views/project/ProjectEditView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/company/projects',
+      name: 'CompanyProjectManage',
+      component: () => import('@/views/project/CompanyProjectManageView.vue'),
+      meta: { requiresAuth: true, role: 'companyAdmin' }
+    },
+    {
+      path: '/teacher/projects',
+      name: 'TeacherProjectManage',
+      component: () => import('@/views/project/TeacherProjectManageView.vue'),
+      meta: { requiresAuth: true, role: 'teacher' }
     },
     {
         path: '/logs',
@@ -99,6 +135,7 @@ const router = createRouter({
         name: 'accounts',
         component: () => import('@/views/dashboard/Accounts.vue')
       },
+    
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
