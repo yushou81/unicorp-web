@@ -1,58 +1,118 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10 relative">
-    <div class="container mx-auto px-4">
-      <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
-        <img :src="mentor.avatar" class="w-20 h-20 rounded-full border-2 border-blue-200 mr-6" alt="avatar" />
-        <div class="flex-1">
-          <div class="flex items-center mb-2">
-            <span class="text-2xl font-bold text-gray-900 mr-2">{{ mentor.name }}</span>
-            <span v-if="mentor.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <h1 class="text-xl font-semibold text-gray-900">企业导师平台</h1>
           </div>
-          <div class="text-gray-500 text-sm mb-1">{{ mentor.email }}</div>
-          <div class="text-gray-500 text-sm">{{ mentor.phone }}</div>
-          <div class="text-gray-500 text-sm mt-1">所属企业：{{ mentor.company || '未绑定' }}</div>
-        </div>
-        <button class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑资料</button>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-        <div v-for="(block, idx) in blocks" :key="idx" class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-200 flex flex-col mb-2">
-          <div class="flex items-center mb-4">
-            <component :is="block.icon" class="w-7 h-7 mr-2" :class="block.color" />
-            <span class="font-semibold text-lg">{{ block.title }}</span>
-          </div>
-          <ul>
-            <li v-for="item in block.data" :key="item.id || item" class="flex justify-between items-center mb-2 text-gray-700">
-              <span>{{ item.label || item }}</span>
-              <span v-if="item.extra" class="text-xs text-gray-400 ml-2">{{ item.extra }}</span>
-            </li>
-            <li v-if="block.data.length === 0" class="text-gray-400 text-sm">{{ block.empty }}</li>
-          </ul>
-          <div v-if="block.footer">
-            <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium mt-2">{{ block.footer.text }}</router-link>
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-600">{{ userInfo.nickname || userInfo.account || '用户' }}</span>
+            <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
           </div>
         </div>
       </div>
-      <div class="absolute top-14 right-8 z-50">
-        <Button @click="onLogout" variant="outline">退出登录</Button>
+    </nav>
+    
+    <div class="py-10">
+      <div class="container mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
+          <img :src="mentor.avatar" class="w-20 h-20 rounded-full border-2 border-blue-200 mr-6" alt="avatar" />
+          <div class="flex-1">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl font-bold text-gray-900 mr-2">{{ mentor.name }}</span>
+              <span v-if="mentor.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
+            </div>
+            <div class="text-gray-500 text-sm mb-1">{{ mentor.email }}</div>
+            <div class="text-gray-500 text-sm">{{ mentor.phone }}</div>
+            <div class="text-gray-500 text-sm mt-1">所属企业：{{ mentor.company || '未绑定' }}</div>
+          </div>
+          <button @click="onEditProfileClick" class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑资料</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+          <div v-for="(block, idx) in blocks" :key="idx" class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-200 flex flex-col mb-2">
+            <div class="flex items-center mb-4">
+              <component :is="block.icon" class="w-7 h-7 mr-2" :class="block.color" />
+              <span class="font-semibold text-lg">{{ block.title }}</span>
+            </div>
+            <ul>
+              <li v-for="item in block.data" :key="item.id || item" class="flex justify-between items-center mb-2 text-gray-700">
+                <span>{{ item.label || item }}</span>
+                <span v-if="item.extra" class="text-xs text-gray-400 ml-2">{{ item.extra }}</span>
+              </li>
+              <li v-if="block.data.length === 0" class="text-gray-400 text-sm">{{ block.empty }}</li>
+            </ul>
+            <div v-if="block.footer">
+              <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium mt-2">{{ block.footer.text }}</router-link>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 编辑个人资料对话框 -->
+        <div v-if="showEditProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">编辑个人资料</h2>
+            <form @submit.prevent="onUpdateProfile">
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">昵称</label>
+                <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
+              </div>
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">邮箱</label>
+                <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
+              </div>
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">手机号</label>
+                <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
+              </div>
+              <div class="flex justify-end space-x-2 mt-4">
+                <button type="button" @click="showEditProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
+              </div>
+            </form>
+            <div class="mt-6 pt-4 border-t">
+              <h3 class="text-lg font-semibold mb-3">修改密码</h3>
+              <form @submit.prevent="onChangePassword">
+                <div class="mb-3">
+                  <label class="block text-gray-700 mb-1">原密码</label>
+                  <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
+                </div>
+                <div class="mb-3">
+                  <label class="block text-gray-700 mb-1">新密码</label>
+                  <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
+                </div>
+                <div class="mb-3">
+                  <label class="block text-gray-700 mb-1">确认新密码</label>
+                  <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
+                </div>
+                <div class="flex justify-end space-x-2">
+                  <button type="submit" :disabled="changePasswordLoading" class="px-4 py-1 rounded bg-green-600 text-white">{{ changePasswordLoading ? '修改中...' : '修改密码' }}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
 
-const mentor = {
+const mentor = ref({
   avatar: 'https://randomuser.me/api/portraits/men/34.jpg',
-  name: '王导师',
-  email: 'mentor@example.com',
-  phone: '138****9999',
-  verified: true,
-  company: '字节跳动科技有限公司',
-  school: '清华大学'
-}
+  name: '加载中...',
+  email: '',
+  phone: '',
+  verified: false,
+  company: '加载中...',
+  school: ''
+})
 
 const students = [
   { id: 1, name: '李四', major: '计算机' },
@@ -146,8 +206,107 @@ const roleText = computed(() => {
   return roleMap[role] || '未知角色'
 })
 
+async function fetchMentorInfo() {
+  try {
+    const res = await getMe()
+    const userData = res.data
+    if (userData) {
+      mentor.value = {
+        avatar: userData.avatarUrl || 'https://randomuser.me/api/portraits/men/34.jpg',
+        name: userData.nickname || userData.account || '未知导师',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        verified: userData.verified || false,
+        company: userData.organizationName || '未绑定企业',
+        school: ''
+      }
+    }
+  } catch (e: any) {
+    console.error('获取导师信息失败:', e)
+    // 保持默认值
+  }
+}
+
+onMounted(() => {
+  fetchMentorInfo()
+})
+
 function onLogout() {
   appStore.logout()
   router.push('/login')
+}
+
+const showEditProfileDialog = ref(false)
+const editProfile = ref({
+  nickname: '',
+  email: '',
+  phone: ''
+})
+const passwordChange = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+const updateProfileLoading = ref(false)
+const changePasswordLoading = ref(false)
+
+async function onUpdateProfile() {
+  updateProfileLoading.value = true
+  try {
+    await updateUserInfo({
+      nickname: editProfile.value.nickname,
+      email: editProfile.value.email,
+      phone: editProfile.value.phone
+    })
+    showEditProfileDialog.value = false
+    await fetchMentorInfo() // 重新获取导师信息
+    // 更新store中的用户信息
+    const res = await getMe()
+    if (res.data) {
+      appStore.setUser(res.data)
+    }
+    alert('个人资料更新成功')
+  } catch (e: any) {
+    alert('更新失败：' + (e.message || '未知错误'))
+  } finally {
+    updateProfileLoading.value = false
+  }
+}
+
+async function onChangePassword() {
+  if (passwordChange.value.newPassword !== passwordChange.value.confirmPassword) {
+    alert('新密码与确认密码不一致')
+    return
+  }
+  
+  changePasswordLoading.value = true
+  try {
+    await updatePassword({
+      oldPassword: passwordChange.value.oldPassword,
+      newPassword: passwordChange.value.newPassword,
+      confirmPassword: passwordChange.value.confirmPassword
+    })
+    passwordChange.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
+    alert('密码修改成功')
+  } catch (e: any) {
+    alert('密码修改失败：' + (e.message || '未知错误'))
+  } finally {
+    changePasswordLoading.value = false
+  }
+}
+
+// 当打开编辑对话框时，初始化表单数据
+function openEditDialog() {
+  editProfile.value = {
+    nickname: userInfo.value.nickname || userInfo.value.account || '',
+    email: userInfo.value.email || '',
+    phone: userInfo.value.phone || ''
+  }
+  showEditProfileDialog.value = true
+}
+
+// 修改按钮点击事件
+function onEditProfileClick() {
+  openEditDialog()
 }
 </script> 
