@@ -1,4 +1,6 @@
-const API_BASE_URL =  'http://localhost:8081/api'
+
+const API_BASE_URL =  'http://192.168.1.6:8081/api'
+
 
 let token = ''
 export function setToken(t: string) {
@@ -55,6 +57,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     rawText
   })
 
+
   // 检查响应状态和业务状态码
   if (!response.ok) {
     const errorMsg = data?.message || '请求失败'
@@ -73,6 +76,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   if (data?.data?.pages !== undefined) {
     console.log(`[apiRequest] 分页数据: 当前页=${data.data.current}, 总页数=${data.data.pages}, 总记录数=${data.data.total}`)
   }
+
 
   return data as T
 } 

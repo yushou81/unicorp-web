@@ -131,6 +131,22 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
+  // 检查管理员路由的权限
+  if (to.path === '/dashboard/admin') {
+    const user = appStore.user as any
+    if (!user) {
+      next('/login')
+      return
+    }
+    
+    const allowedRoles = ['SYSADMIN', 'admin']
+    if (!allowedRoles.includes(user.role)) {
+      console.warn(`用户角色 ${user.role} 尝试访问管理员面板`)
+      next('/')
+      return
+    }
+  }
+  
   next()
 })
 
