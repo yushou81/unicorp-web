@@ -1,94 +1,115 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
     <!-- 顶部导航栏 -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-      <div class="container mx-auto px-4">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-xl font-semibold text-gray-900">系统管理平台</h1>
-          </div>
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-600">{{ userInfo.nickname || userInfo.account || '管理员' }}</span>
-            <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
-          </div>
+    <nav class="bg-white/90 shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      <div class="container mx-auto px-4 flex items-center justify-between h-14">
+        <div class="flex items-center space-x-4">
+          <span class="text-lg font-bold text-blue-700 tracking-wide">管理平台</span>
+          <!-- 预留导航信息位 -->
+          <span class="text-gray-400 text-sm ml-4">（可在此展示全局信息）</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
         </div>
       </div>
     </nav>
-    
-    <div class="py-10">
-      <div class="container mx-auto px-4">
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-10">
-          <h1 class="text-3xl font-bold mb-2 text-blue-700">平台管理后台</h1>
-          <p class="text-gray-600">系统概览与数据统计</p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4">
-            <div class="bg-blue-50 rounded-lg p-4 flex flex-col items-center shadow">
-              <span class="text-2xl font-bold text-blue-700">{{ totalUsers }}</span>
-              <span class="text-gray-500 mt-2">用户总数</span>
-            </div>
-            <div class="bg-blue-50 rounded-lg p-4 flex flex-col items-center shadow">
-              <span class="text-2xl font-bold text-blue-700">56</span>
-              <span class="text-gray-500 mt-2">机构数量</span>
-            </div>
-            <div class="bg-blue-50 rounded-lg p-4 flex flex-col items-center shadow">
-              <span class="text-2xl font-bold text-blue-700">789</span>
-              <span class="text-gray-500 mt-2">申报项目</span>
-            </div>
-            <div class="bg-blue-50 rounded-lg p-4 flex flex-col items-center shadow">
-              <span class="text-2xl font-bold text-blue-700">98%</span>
-              <span class="text-gray-500 mt-2">系统活跃度</span>
-            </div>
-          </div>
+    <!-- 顶部渐变大标题 -->
+    <div class="w-full py-12 bg-gradient-to-r from-blue-400 to-indigo-400 mb-8 shadow-lg">
+      <div class="container mx-auto px-4 flex flex-col items-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow mb-2 tracking-wide">人力资源管理平台</h1>
+        <p class="text-lg md:text-xl text-blue-100 font-medium mb-2">欢迎来到平台管理后台</p>
+        <p class="text-base text-blue-200">高效管理企业、学校与用户，提升服务体验</p>
+      </div>
+    </div>
+    <!-- 个人信息板块 -->
+    <div class="flex flex-col items-center mb-8">
+      <img :src="userAvatar" class="w-20 h-20 rounded-full shadow-lg border-4 border-white mb-2" />
+      <div class="text-xl font-bold text-gray-800">{{ userInfo.nickname || userInfo.account || '管理员' }}</div>
+      <div class="mt-1">
+        <span class="inline-block px-3 py-1 rounded-full text-sm font-medium"
+              :class="userInfo.role === 'SYSADMIN' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'">
+          {{ roleText }}
+        </span>
+      </div>
+      <div class="text-gray-400 text-sm mt-1">上次登录：{{ userInfo.lastLoginTime ? new Date(userInfo.lastLoginTime).toLocaleString() : '-' }}</div>
+    </div>
+    <div class="container mx-auto px-4">
+      <!-- 数据统计区 -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-10">
+        <div class="bg-white/80 rounded-2xl shadow flex flex-col items-center p-6">
+          <UserGroupIcon class="w-8 h-8 text-blue-500 mb-2" />
+          <span class="text-2xl font-bold text-blue-700">{{ totalUsers }}</span>
+          <span class="text-gray-500 mt-1">用户总数</span>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <!-- 操作日志卡片 -->
-          <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-            <div class="flex items-center mb-2">
-              <ClipboardDocumentListIcon class="w-7 h-7 mr-2 text-yellow-500" />
-              <span class="font-semibold text-lg">操作日志</span>
-            </div>
-            <div class="flex-1 text-gray-500 text-sm mb-2">点击下方进入</div>
-            <router-link to="/logs" class="text-blue-600 hover:underline text-xs font-medium mt-auto">查看操作日志</router-link>
-          </div>
-          <!-- 账户管理卡片 -->
-          <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-            <div class="flex items-center mb-2">
-              <UserGroupIcon class="w-7 h-7 mr-2 text-blue-500" />
-              <span class="font-semibold text-lg">账户管理</span>
-            </div>
-            <div v-if="usersLoading" class="flex-1 text-gray-500 text-sm mb-2">加载中...</div>
-            <div v-else-if="usersError" class="flex-1 text-red-500 text-sm mb-2">{{ usersError }}</div>
-            <div v-else class="flex-1 mb-2">
-              <div v-if="safeUsers.length === 0" class="text-gray-500 text-sm">暂无用户数据</div>
-              <div v-else class="space-y-1">
-                <div v-for="user in safeUsers.slice(0, 3)" :key="user.id" class="flex justify-between items-center text-gray-700 text-sm">
-                  <span>{{ user.nickname || user.account || '未设置昵称' }}</span>
-                  <span class="text-xs text-gray-400">{{ getUserRoleText(user.role) }}</span>
-                </div>
-                <div v-if="safeUsers.length > 3" class="text-xs text-gray-400">...还有 {{ safeUsers.length - 3 }} 个用户</div>
-              </div>
-            </div>
-            <router-link to="/accounts" class="text-blue-600 hover:underline text-xs font-medium mt-auto">管理所有账户</router-link>
-          </div>
-          <!-- 常见操作卡片 -->
-          <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col">
-            <div class="flex items-center mb-2">
-              <Cog6ToothIcon class="w-7 h-7 mr-2 text-green-500" />
-              <span class="font-semibold text-lg">常见操作</span>
-            </div>
-            <ul class="flex-1 mb-2">
-              <li class="text-gray-700 text-sm mb-1">添加学校</li>
-              <li class="text-gray-700 text-sm mb-1">添加企业</li>
-              <li class="text-gray-700 text-sm mb-1">重置用户密码</li>
-            </ul>
-            <router-link to="/admin/actions" class="text-blue-600 hover:underline text-xs font-medium mt-auto">查看更多操作</router-link>
-          </div>
+        <div class="bg-white/80 rounded-2xl shadow flex flex-col items-center p-6">
+          <Building2 class="w-8 h-8 text-green-500 mb-2" />
+          <span class="text-2xl font-bold text-green-700">{{ publicEnterprises.length }}</span>
+          <span class="text-gray-500 mt-1">企业数量</span>
         </div>
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-blue-700">学校与企业列表</h2>
-          <Button class="ml-2" @click="showAddSchoolDialog = true">添加学校</Button>
+        <div class="bg-white/80 rounded-2xl shadow flex flex-col items-center p-6">
+          <Building2 class="w-8 h-8 text-indigo-500 mb-2" />
+          <span class="text-2xl font-bold text-indigo-700">{{ publicSchools.length }}</span>
+          <span class="text-gray-500 mt-1">学校数量</span>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 class="text-xl font-bold mb-4 text-blue-700">待审核企业</h2>
+        <div class="bg-white/80 rounded-2xl shadow flex flex-col items-center p-6">
+          <ClipboardDocumentListIcon class="w-8 h-8 text-yellow-500 mb-2" />
+          <span class="text-2xl font-bold text-yellow-700">{{ pendingEnterprises.length }}</span>
+          <span class="text-gray-500 mt-1">待审核企业</span>
+        </div>
+        <div class="bg-white/80 rounded-2xl shadow flex flex-col items-center p-6">
+          <TagIcon class="w-8 h-8 text-orange-500 mb-2" />
+          <span class="text-2xl font-bold text-orange-700">{{ jobCategories.length }}</span>
+          <span class="text-gray-500 mt-1">岗位分类</span>
+        </div>
+      </div>
+      <!-- 管理入口卡片区 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-12">
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-blue-100 to-blue-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="showPendingDialog = true"
+        >
+          <ClipboardDocumentListIcon class="w-12 h-12 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-blue-800 mb-1">待审核企业</span>
+          <span class="text-sm text-blue-500">审核新注册企业，保障平台安全</span>
+        </div>
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="showEnterpriseDialog = true"
+        >
+          <Building2 class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-green-800 mb-1">企业列表</span>
+          <span class="text-sm text-green-500">管理所有入驻企业信息</span>
+        </div>
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-indigo-100 to-indigo-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="showSchoolDialog = true"
+        >
+          <Building2 class="w-12 h-12 text-indigo-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-indigo-800 mb-1">学校列表</span>
+          <span class="text-sm text-indigo-500">管理所有合作学校信息</span>
+        </div>
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-purple-100 to-purple-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="showUserDialog = true"
+        >
+          <UserGroupIcon class="w-12 h-12 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-purple-800 mb-1">用户列表</span>
+          <span class="text-sm text-purple-500">查看和管理平台所有用户</span>
+        </div>
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-orange-100 to-orange-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="onJobCategoryCardClick"
+        >
+          <TagIcon class="w-12 h-12 text-orange-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-orange-800 mb-1">岗位分类管理</span>
+          <span class="text-sm text-orange-500">管理岗位分类，规范岗位发布</span>
+        </div>
+      </div>
+      <!-- 待审核企业弹窗 -->
+      <div v-if="showPendingDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-4xl">
+          <h2 class="text-2xl font-bold mb-4 text-blue-700">待审核企业</h2>
+          <!-- 原待审核企业表格内容 -->
           <div v-if="pendingEnterprises.length === 0" class="text-gray-400 text-center py-8">暂无待审核企业</div>
           <div v-else class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -114,39 +135,14 @@
               </tbody>
             </table>
           </div>
+          <Button @click="showPendingDialog = false" class="mt-4">关闭</Button>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 class="text-xl font-bold mb-4 text-blue-700">学校列表</h2>
-          <div v-if="publicSchoolsLoading" class="text-center text-gray-400 py-8">加载中...</div>
-          <div v-else-if="publicSchoolsError" class="text-center text-red-500 py-8">{{ publicSchoolsError }}</div>
-          <div v-else>
-            <div v-if="publicSchools.length === 0" class="text-gray-400 text-center py-8">暂无已批准学校</div>
-            <div v-else class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th v-for="key in schoolTableKeys" :key="key" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ schoolTableHeaders[key] }}</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
-                  <tr v-for="school in publicSchools" :key="school.id">
-                    <td v-for="key in schoolTableKeys" :key="key" class="px-4 py-2">
-                      <template v-if="key === 'website'">
-                        <a v-if="school[key]" :href="school[key]" target="_blank" class="text-blue-600 hover:underline">{{ school[key] }}</a>
-                        <span v-else>-</span>
-                      </template>
-                      <template v-else>
-                        {{ school[key] ?? '-' }}
-                      </template>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 class="text-xl font-bold mb-4 text-blue-700">企业列表</h2>
+      </div>
+      <!-- 企业列表弹窗 -->
+      <div v-if="showEnterpriseDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-5xl">
+          <h2 class="text-2xl font-bold mb-4 text-blue-700">企业列表</h2>
+          <!-- 原企业列表表格内容（含分页、筛选） -->
           <div v-if="publicEnterprisesLoading" class="text-center text-gray-400 py-8">加载中...</div>
           <div v-else-if="publicEnterprisesError" class="text-center text-red-500 py-8">{{ publicEnterprisesError }}</div>
           <div v-else>
@@ -174,10 +170,50 @@
               </table>
             </div>
           </div>
+          <Button @click="showEnterpriseDialog = false" class="mt-4">关闭</Button>
         </div>
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      </div>
+      <!-- 学校列表弹窗 -->
+      <div v-if="showSchoolDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-5xl">
+          <h2 class="text-2xl font-bold mb-4 text-blue-700">学校列表</h2>
+          <!-- 原学校列表表格内容（含分页、筛选） -->
+          <div v-if="publicSchoolsLoading" class="text-center text-gray-400 py-8">加载中...</div>
+          <div v-else-if="publicSchoolsError" class="text-center text-red-500 py-8">{{ publicSchoolsError }}</div>
+          <div v-else>
+            <div v-if="publicSchools.length === 0" class="text-gray-400 text-center py-8">暂无已批准学校</div>
+            <div v-else class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th v-for="key in schoolTableKeys" :key="key" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ schoolTableHeaders[key] }}</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                  <tr v-for="school in publicSchools" :key="school.id">
+                    <td v-for="key in schoolTableKeys" :key="key" class="px-4 py-2">
+                      <template v-if="key === 'website'">
+                        <a v-if="school[key]" :href="school[key]" target="_blank" class="text-blue-600 hover:underline">{{ school[key] }}</a>
+                        <span v-else>-</span>
+                      </template>
+                      <template v-else>
+                        {{ school[key] ?? '-' }}
+                      </template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <Button @click="showSchoolDialog = false" class="mt-4">关闭</Button>
+        </div>
+      </div>
+      <!-- 用户列表弹窗 -->
+      <div v-if="showUserDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-6xl">
+          <h2 class="text-2xl font-bold mb-4 text-blue-700">用户列表</h2>
+          <!-- 原用户列表表格内容（含分页、筛选、操作） -->
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-700">用户列表管理</h2>
             <div class="flex items-center space-x-4">
               <select 
                 v-model="selectedRole" 
@@ -191,7 +227,6 @@
               <Button @click="fetchUsers" variant="outline" size="sm" :loading="usersLoading">刷新</Button>
             </div>
           </div>
-          
           <div v-if="usersLoading" class="text-center text-gray-400 py-8">加载中...</div>
           <div v-else-if="usersError" class="text-center text-red-500 py-8">{{ usersError }}</div>
           <div v-else>
@@ -238,8 +273,7 @@
                   </tr>
                 </tbody>
               </table>
-              
-              <!-- 分页控件 -->
+              <!-- 分页控件 ... 保持原有分页逻辑 ... -->
               <div class="flex items-center justify-between mt-4">
                 <div class="flex items-center space-x-2">
                   <span class="text-sm text-gray-700">每页显示:</span>
@@ -254,7 +288,6 @@
                   </select>
                   <span class="text-sm text-gray-700">条</span>
                 </div>
-                
                 <div class="flex items-center space-x-2">
                   <span class="text-sm text-gray-700">
                     第 {{ currentPage }} 页，共 {{ totalPages }} 页，总计 {{ totalUsers }} 条记录
@@ -281,55 +314,269 @@
               </div>
             </div>
           </div>
-        </div>
-        <div v-if="showAddSchoolDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md border-t-4 border-blue-600">
-            <h2 class="text-2xl font-bold mb-4 text-blue-700 flex items-center"><Building2 class="w-6 h-6 mr-2" />添加新学校</h2>
-            <form @submit.prevent="onAddSchool">
-              <div class="mb-4">
-                <label class="block text-gray-700 mb-1 font-medium">学校名称</label>
-                <input v-model="newSchool.organizationName" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入学校名称" />
-              </div>
-              <div class="mb-4">
-                <label class="block text-gray-700 mb-1 font-medium">学校简介</label>
-                <textarea v-model="newSchool.description" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入简介"></textarea>
-              </div>
-              <div class="mb-4">
-                <label class="block text-gray-700 mb-1 font-medium">地址</label>
-                <input v-model="newSchool.address" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入地址" />
-              </div>
-              <div class="mb-4">
-                <label class="block text-gray-700 mb-1 font-medium">网址</label>
-                <input v-model="newSchool.website" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入网址" />
-              </div>
-              <div class="mb-4">
-                <label class="block text-gray-700 mb-1 font-medium">管理员邮箱</label>
-                <input v-model="newSchool.adminEmail" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员邮箱" />
-              </div>
-              <div class="mb-4">
-                <label class="block text-gray-700 mb-1 font-medium">管理员昵称</label>
-                <input v-model="newSchool.adminNickname" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员昵称（可选）" />
-              </div>
-              <div class="mb-6">
-                <label class="block text-gray-700 mb-1 font-medium">初始密码</label>
-                <input v-model="newSchool.adminPassword" type="password" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="请输入初始密码" />
-              </div>
+          <!-- 启用/禁用确认对话框 ... 保持原有逻辑 ... -->
+          <div v-if="showStatusDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+            <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm border-t-4 border-blue-600">
+              <h2 class="text-xl font-bold mb-4 text-blue-700">{{ statusTargetAction === 'inactive' ? '禁用' : '启用' }}用户</h2>
+              <div class="mb-6 text-gray-700">确定要{{ statusTargetAction === 'inactive' ? '禁用' : '启用' }}该用户账号（{{ statusTargetUser?.nickname || statusTargetUser?.account }}）吗？</div>
               <div class="flex justify-end space-x-2 mt-4">
-                <button type="button" @click="showAddSchoolDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">取消</button>
-                <button type="submit" class="px-4 py-1 rounded bg-blue-600 text-white hover:bg-blue-700">添加</button>
+                <button type="button" @click="showStatusDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                <button type="button" @click="onConfirmStatusChange" :disabled="statusLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ statusLoading ? '处理中...' : '确认' }}</button>
               </div>
-            </form>
+            </div>
+          </div>
+          <Button @click="showUserDialog = false" class="mt-4">关闭</Button>
+        </div>
+      </div>
+      <!-- 岗位分类管理弹窗 -->
+      <div v-if="showJobCategoryDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-orange-700">岗位分类管理</h2>
+            <button @click="showJobCategoryDialog = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
+          
+          <!-- 操作栏 -->
+          <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-4">
+              <input 
+                v-model="jobCategorySearch" 
+                placeholder="搜索分类名称..." 
+                class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                @input="onJobCategorySearch"
+              />
+              <Button @click="fetchJobCategories" variant="outline" size="sm" :loading="jobCategoriesLoading">刷新</Button>
+            </div>
+            <Button @click="showAddJobCategoryDialog = true" class="bg-orange-600 hover:bg-orange-700">
+              新增分类
+            </Button>
+          </div>
+
+          <!-- 岗位分类列表 -->
+          <div v-if="jobCategoriesLoading" class="text-center text-gray-400 py-8">加载中...</div>
+          <div v-else-if="jobCategoriesError" class="text-center text-red-500 py-8">{{ jobCategoriesError }}</div>
+          <div v-else>
+            <div v-if="jobCategories.length === 0" class="text-gray-400 text-center py-8">暂无岗位分类</div>
+            <div v-else class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">分类名称</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">描述</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">排序</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">子分类</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">创建时间</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                  <template v-for="category in jobCategories" :key="category.id">
+                    <!-- 主分类行 -->
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-3">
+                        <div class="flex items-center space-x-2">
+                          <button 
+                            v-if="category.hasChildren || (Array.isArray(category.children) && category.children.length > 0)"
+                            @click="toggleCategory(category.id)"
+                            class="text-gray-400 hover:text-gray-600"
+                          >
+                            <svg v-if="!expandedCategories.includes(category.id)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                          </button>
+                          <div v-else class="w-4 h-4 flex items-center justify-center">
+                            <div class="w-1 h-1 bg-gray-300 rounded-full"></div>
+                          </div>
+                          <span class="text-sm font-medium text-gray-900">{{ category.name }}</span>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 text-sm text-gray-500">{{ category.description || '-' }}</td>
+                      <td class="px-4 py-3 text-sm text-gray-500">{{ category.sortOrder || 0 }}</td>
+                      <td class="px-4 py-3 text-sm text-gray-500">
+                        <span v-if="Array.isArray(category.children) && category.children.length > 0" class="text-blue-600">
+                          {{ category.children.length }} 个子分类
+                        </span>
+                        <span v-else-if="category.hasChildren" class="text-blue-600">
+                          有子分类
+                        </span>
+                        <span v-else class="text-gray-400">无</span>
+                      </td>
+                      <td class="px-4 py-3 text-sm text-gray-500">{{ category.createdAt ? new Date(category.createdAt).toLocaleString() : '-' }}</td>
+                      <td class="px-4 py-3 text-sm space-x-2">
+                        <Button size="sm" variant="outline" @click="onEditJobCategory(category)">编辑</Button>
+                        <Button size="sm" variant="outline" @click="onDeleteJobCategory(category)" class="text-red-600 hover:text-red-700">删除</Button>
+                      </td>
+                    </tr>
+                    <!-- 子分类行 -->
+                    <template v-if="expandedCategories.includes(category.id)">
+                      <tr v-if="category.childrenLoading" class="hover:bg-gray-50 bg-gray-50">
+                        <td colspan="6" class="px-4 py-3 text-center text-gray-500">
+                          <div class="flex items-center justify-center space-x-2">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                            <span>加载子分类中...</span>
+                          </div>
+                        </td>
+                      </tr>
+                      <template v-else-if="Array.isArray(category.children) && category.children.length > 0">
+                        <tr v-for="child in (Array.isArray(category.children) ? category.children.filter(item => item && item.id) : [])" :key="`child-${child?.id || 'unknown'}`" class="hover:bg-gray-50 bg-gray-50">
+                          <td class="px-4 py-3">
+                            <div class="flex items-center space-x-2 pl-8">
+                              <button 
+                                v-if="child?.hasChildren || (Array.isArray(child?.children) && child.children.length > 0)"
+                                @click="toggleChildCategory(category.id, child.id)"
+                                class="text-gray-400 hover:text-gray-600"
+                                :disabled="!child"
+                              >
+                                <svg v-if="!expandedChildCategories.includes(`${category.id}-${child.id}`)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                              </button>
+                              <div v-else class="w-4 h-4 flex items-center justify-center">
+                                <div class="w-1 h-1 bg-gray-300 rounded-full"></div>
+                              </div>
+                              <span class="text-sm text-gray-900">└ {{ child?.name || '未知分类' }}</span>
+                            </div>
+                          </td>
+                          <td class="px-4 py-3 text-sm text-gray-500">{{ child?.description || '-' }}</td>
+                          <td class="px-4 py-3 text-sm text-gray-500">{{ child?.sortOrder || 0 }}</td>
+                          <td class="px-4 py-3 text-sm text-gray-500">
+                            <span v-if="Array.isArray(child?.children) && child.children.length > 0" class="text-blue-600">
+                              {{ child.children.length }} 个子分类
+                            </span>
+                            <span v-else-if="child?.hasChildren" class="text-blue-600">
+                              有子分类
+                            </span>
+                            <span v-else class="text-gray-400">无</span>
+                          </td>
+                          <td class="px-4 py-3 text-sm text-gray-500">{{ child?.createdAt ? new Date(child.createdAt).toLocaleString() : '-' }}</td>
+                          <td class="px-4 py-3 text-sm space-x-2">
+                            <Button size="sm" variant="outline" @click="onEditJobCategory(child)" :disabled="!child">编辑</Button>
+                            <Button size="sm" variant="outline" @click="onDeleteJobCategory(child)" class="text-red-600 hover:text-red-700" :disabled="!child">删除</Button>
+                          </td>
+                        </tr>
+                        <!-- 孙分类行 -->
+                        <template v-if="child && expandedChildCategories.includes(`${category.id}-${child.id}`) && Array.isArray(child.children) && child.children.length > 0">
+                          <tr v-for="grandChild in (Array.isArray(child.children) ? child.children.filter(item => item && item.id) : [])" :key="`grandchild-${grandChild?.id || 'unknown'}`" class="hover:bg-gray-50 bg-gray-100">
+                            <td class="px-4 py-3">
+                              <div class="flex items-center space-x-2 pl-12">
+                                <span class="text-sm text-gray-900">└ └ {{ grandChild?.name || '未知分类' }}</span>
+                              </div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ grandChild?.description || '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ grandChild?.sortOrder || 0 }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">
+                              <span v-if="Array.isArray(grandChild?.children) && grandChild.children.length > 0" class="text-blue-600">
+                                {{ grandChild.children.length }} 个子分类
+                              </span>
+                              <span v-else class="text-gray-400">无</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">{{ grandChild?.createdAt ? new Date(grandChild.createdAt).toLocaleString() : '-' }}</td>
+                            <td class="px-4 py-3 text-sm space-x-2">
+                              <Button size="sm" variant="outline" @click="onEditJobCategory(grandChild)" :disabled="!grandChild">编辑</Button>
+                              <Button size="sm" variant="outline" @click="onDeleteJobCategory(grandChild)" class="text-red-600 hover:text-red-700" :disabled="!grandChild">删除</Button>
+                            </td>
+                          </tr>
+                        </template>
+                      </template>
+                      <tr v-else-if="category.childrenError" class="hover:bg-gray-50 bg-gray-50">
+                        <td colspan="6" class="px-4 py-3 text-center text-red-500">
+                          加载子分类失败: {{ category.childrenError }}
+                        </td>
+                      </tr>
+                      <tr v-else class="hover:bg-gray-50 bg-gray-50">
+                        <td colspan="6" class="px-4 py-3 text-center text-gray-500">
+                          暂无子分类
+                        </td>
+                      </tr>
+                    </template>
+                  </template>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <!-- 启用/禁用确认对话框 -->
-        <div v-if="showStatusDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm border-t-4 border-blue-600">
-            <h2 class="text-xl font-bold mb-4 text-blue-700">{{ statusTargetAction === 'inactive' ? '禁用' : '启用' }}用户</h2>
-            <div class="mb-6 text-gray-700">确定要{{ statusTargetAction === 'inactive' ? '禁用' : '启用' }}该用户账号（{{ statusTargetUser?.nickname || statusTargetUser?.account }}）吗？</div>
-            <div class="flex justify-end space-x-2 mt-4">
-              <button type="button" @click="showStatusDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-              <button type="button" @click="onConfirmStatusChange" :disabled="statusLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ statusLoading ? '处理中...' : '确认' }}</button>
+      </div>
+
+      <!-- 新增/编辑岗位分类弹窗 -->
+      <div v-if="showAddJobCategoryDialog || showEditJobCategoryDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-orange-700">{{ showEditJobCategoryDialog ? '编辑' : '新增' }}岗位分类</h3>
+            <button @click="closeJobCategoryForm" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          </div>
+          
+          <form @submit.prevent="onSubmitJobCategory" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">分类名称 *</label>
+              <input 
+                v-model="jobCategoryForm.name" 
+                type="text" 
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                placeholder="请输入分类名称"
+              />
             </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">父分类</label>
+              <select 
+                v-model="jobCategoryForm.parentId" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option :value="null">顶级分类</option>
+                <option v-for="category in availableParentCategories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">描述</label>
+              <textarea 
+                v-model="jobCategoryForm.description" 
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                placeholder="请输入分类描述"
+              ></textarea>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">排序</label>
+              <input 
+                v-model.number="jobCategoryForm.sortOrder" 
+                type="number" 
+                min="0"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                placeholder="数字越小排序越靠前"
+              />
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+              <Button type="button" variant="outline" @click="closeJobCategoryForm">取消</Button>
+              <Button type="submit" :loading="jobCategorySubmitting" class="bg-orange-600 hover:bg-orange-700">
+                {{ jobCategorySubmitting ? '提交中...' : (showEditJobCategoryDialog ? '更新' : '创建') }}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 删除确认对话框 -->
+      <div v-if="showDeleteJobCategoryDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-sm border-t-4 border-red-600">
+          <h2 class="text-xl font-bold mb-4 text-red-700">删除岗位分类</h2>
+          <div class="mb-6 text-gray-700">确定要删除岗位分类"{{ deleteTargetCategory?.name }}"吗？此操作不可恢复。</div>
+          <div class="flex justify-end space-x-2 mt-4">
+            <Button variant="outline" @click="showDeleteJobCategoryDialog = false">取消</Button>
+            <Button @click="onConfirmDeleteJobCategory" :loading="deleteJobCategoryLoading" class="bg-red-600 hover:bg-red-700">
+              {{ deleteJobCategoryLoading ? '删除中...' : '确认删除' }}
+            </Button>
           </div>
         </div>
       </div>
@@ -341,9 +588,9 @@
 import { ref, onMounted, computed } from 'vue'
 import { Building2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
-import { ClipboardDocumentListIcon, UserGroupIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
+import { ClipboardDocumentListIcon, UserGroupIcon, Cog6ToothIcon, TagIcon } from '@heroicons/vue/24/outline'
 import { apiRequest } from '@/lib/api/apiClient'
-import { createSchool, getPendingOrganizations, approveEnterprise, getPendingEnterprises, getUsers, updateUserStatus } from '@/lib/api/admin'
+import { createSchool, getPendingOrganizations, approveEnterprise, getPendingEnterprises, getUsers, updateUserStatus, getJobCategories, createJobCategory, updateJobCategory, deleteJobCategory, getRootJobCategories, getJobCategoryChildren } from '@/lib/api/admin'
 import { setToken } from '@/lib/api/apiClient'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -386,6 +633,16 @@ const showStatusDialog = ref(false)
 const statusTargetUser = ref<any>(null)
 const statusTargetAction = ref<'active' | 'inactive' | null>(null)
 const statusLoading = ref(false)
+
+// 弹窗显示状态
+const showPendingDialog = ref(false)
+const showEnterpriseDialog = ref(false)
+const showSchoolDialog = ref(false)
+const showUserDialog = ref(false)
+const showJobCategoryDialog = ref(false)
+const showAddJobCategoryDialog = ref(false)
+const showEditJobCategoryDialog = ref(false)
+const showDeleteJobCategoryDialog = ref(false)
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -653,5 +910,325 @@ async function onConfirmStatusChange() {
     statusTargetUser.value = null
     statusTargetAction.value = null
   }
+}
+
+// 岗位分类相关状态
+const jobCategories = ref<any[]>([])
+const jobCategoriesLoading = ref(false)
+const jobCategoriesError = ref('')
+const jobCategorySearch = ref('')
+const expandedCategories = ref<number[]>([])
+const expandedChildCategories = ref<string[]>([])
+const jobCategoryForm = ref({
+  name: '',
+  description: '',
+  sortOrder: 0,
+  parentId: null as number | null
+})
+const jobCategorySubmitting = ref(false)
+const deleteTargetCategory = ref<any>(null)
+const deleteJobCategoryLoading = ref(false)
+
+// 计算可用的父分类（排除自己和自己的子分类）
+const availableParentCategories = computed(() => {
+  if (!showEditJobCategoryDialog.value || !deleteTargetCategory.value) {
+    return jobCategories.value
+  }
+  
+  // 在编辑模式下，排除当前分类和其子分类
+  const excludeIds = new Set<number>()
+  excludeIds.add(deleteTargetCategory.value.id)
+  
+  // 递归收集所有子分类ID
+  const collectChildIds = (category: any) => {
+    if (category.children) {
+      category.children.forEach((child: any) => {
+        excludeIds.add(child.id)
+        collectChildIds(child)
+      })
+    }
+  }
+  collectChildIds(deleteTargetCategory.value)
+  
+  return jobCategories.value.filter(category => !excludeIds.has(category.id))
+})
+
+// 岗位分类管理函数
+async function fetchJobCategories() {
+  jobCategoriesLoading.value = true
+  jobCategoriesError.value = ''
+  try {
+    // 使用新的根分类API
+    const res = await getRootJobCategories()
+    console.log('获取根分类API响应:', res)
+    if (res.data && Array.isArray(res.data)) {
+      // 处理返回的数据，确保每个分类都有正确的状态
+      jobCategories.value = res.data.map(category => ({
+        ...category,
+        children: category.children || null,
+        hasChildren: category.hasChildren || false, // 确保hasChildren字段存在
+        childrenLoading: false,
+        childrenError: null
+      }))
+      console.log('处理后的分类数据:', jobCategories.value)
+    } else {
+      jobCategories.value = []
+    }
+  } catch (e: any) {
+    console.error('获取岗位分类列表失败:', e)
+    jobCategoriesError.value = e.message || '获取岗位分类列表失败'
+    jobCategories.value = []
+  } finally {
+    jobCategoriesLoading.value = false
+  }
+}
+
+// 获取所有分类及其子分类信息
+async function fetchJobCategoriesWithChildren() {
+  jobCategoriesLoading.value = true
+  jobCategoriesError.value = ''
+  try {
+    // 首先获取根分类
+    const res = await getRootJobCategories()
+    console.log('获取根分类API响应:', res)
+    if (res.data && Array.isArray(res.data)) {
+      // 处理返回的数据，确保每个分类都有正确的状态
+      jobCategories.value = res.data.map(category => ({
+        ...category,
+        children: category.children || null,
+        hasChildren: category.hasChildren || false, // 确保hasChildren字段存在
+        childrenLoading: false,
+        childrenError: null
+      }))
+      console.log('处理后的分类数据:', jobCategories.value)
+      
+      // 预加载所有分类的子分类信息（不判断hasChildren）
+      const loadPromises = jobCategories.value
+        .map(async (category) => {
+          try {
+            const childrenRes = await getJobCategoryChildren(category.id)
+            console.log(`获取分类 ${category.id} 的子分类API响应:`, childrenRes)
+            if (childrenRes.data && Array.isArray(childrenRes.data)) {
+              category.children = childrenRes.data
+                .filter(item => item && typeof item === 'object' && item.id)
+                .map(child => ({
+                  ...child,
+                  children: child.children || null,
+                  hasChildren: child.hasChildren || false, // 确保hasChildren字段存在
+                  childrenLoading: false,
+                  childrenError: null
+                }))
+              console.log(`处理后的分类 ${category.id} 子分类数据:`, category.children)
+            } else {
+              category.children = []
+            }
+          } catch (e: any) {
+            console.error(`获取分类 ${category.id} 的子分类失败:`, e)
+            category.childrenError = e.message || '加载子分类失败'
+            category.children = []
+          }
+        })
+      
+      // 等待所有子分类加载完成
+      await Promise.all(loadPromises)
+      console.log('所有子分类加载完成')
+    } else {
+      jobCategories.value = []
+    }
+  } catch (e: any) {
+    console.error('获取岗位分类列表失败:', e)
+    jobCategoriesError.value = e.message || '获取岗位分类列表失败'
+    jobCategories.value = []
+  } finally {
+    jobCategoriesLoading.value = false
+  }
+}
+
+function toggleCategory(categoryId: number) {
+  console.log('toggleCategory 被调用，categoryId:', categoryId)
+  const index = expandedCategories.value.indexOf(categoryId)
+  if (index > -1) {
+    console.log('收起分类:', categoryId)
+    expandedCategories.value.splice(index, 1)
+  } else {
+    console.log('展开分类:', categoryId)
+    expandedCategories.value.push(categoryId)
+    // 加载子分类
+    loadCategoryChildren(categoryId)
+  }
+}
+
+function toggleChildCategory(parentId: number, childId: number) {
+  const key = `${parentId}-${childId}`
+  const index = expandedChildCategories.value.indexOf(key)
+  if (index > -1) {
+    expandedChildCategories.value.splice(index, 1)
+  } else {
+    expandedChildCategories.value.push(key)
+    // 加载孙分类
+    loadChildCategoryChildren(parentId, childId)
+  }
+}
+
+async function loadCategoryChildren(categoryId: number) {
+  const category = jobCategories.value.find(c => c.id === categoryId)
+  if (!category) return
+  // 如果已经有子分类数据，不再重复加载
+  if (category.children && Array.isArray(category.children)) return
+  // 设置加载状态
+  category.childrenLoading = true
+  category.childrenError = null
+  try {
+    const res = await getJobCategoryChildren(categoryId)
+    console.log('获取子分类API响应:', res)
+    if (res.data && Array.isArray(res.data)) {
+      category.children = res.data
+        .filter(item => item && typeof item === 'object' && item.id)
+        .map(child => ({
+          ...child,
+          children: child.children || null,
+          hasChildren: child.hasChildren || false, // 确保hasChildren字段存在
+          childrenLoading: false,
+          childrenError: null
+        }))
+      console.log('处理后的子分类数据:', category.children)
+    } else {
+      category.children = []
+    }
+  } catch (e: any) {
+    category.childrenError = e.message || '加载子分类失败'
+    category.children = []
+  } finally {
+    category.childrenLoading = false
+  }
+}
+
+async function loadChildCategoryChildren(parentId: number, childId: number) {
+  const parentCategory = jobCategories.value.find(c => c.id === parentId)
+  if (!parentCategory || !parentCategory.children) return
+  const childCategory = parentCategory.children.find(c => c.id === childId)
+  if (!childCategory) return
+  // 如果已经有子分类数据，不再重复加载
+  if (childCategory.children && Array.isArray(childCategory.children)) return
+  // 设置加载状态
+  childCategory.childrenLoading = true
+  childCategory.childrenError = null
+  try {
+    const res = await getJobCategoryChildren(childId)
+    console.log('获取孙分类API响应:', res)
+    if (res.data && Array.isArray(res.data)) {
+      childCategory.children = res.data
+        .filter(item => item && typeof item === 'object' && item.id)
+        .map(grandChild => ({
+          ...grandChild,
+          children: grandChild.children || null,
+          hasChildren: grandChild.hasChildren || false, // 确保hasChildren字段存在
+          childrenLoading: false,
+          childrenError: null
+        }))
+      console.log('处理后的孙分类数据:', childCategory.children)
+    } else {
+      childCategory.children = []
+    }
+  } catch (e: any) {
+    childCategory.childrenError = e.message || '加载孙分类失败'
+    childCategory.children = []
+  } finally {
+    childCategory.childrenLoading = false
+  }
+}
+
+function onJobCategorySearch() {
+  // 可以添加防抖逻辑
+  fetchJobCategories()
+}
+
+function onEditJobCategory(category: any) {
+  jobCategoryForm.value = {
+    name: category.name,
+    description: category.description || '',
+    sortOrder: category.sortOrder || 0,
+    parentId: category.parentId || null
+  }
+  deleteTargetCategory.value = category
+  showEditJobCategoryDialog.value = true
+}
+
+function onDeleteJobCategory(category: any) {
+  deleteTargetCategory.value = category
+  showDeleteJobCategoryDialog.value = true
+}
+
+function closeJobCategoryForm() {
+  showAddJobCategoryDialog.value = false
+  showEditJobCategoryDialog.value = false
+  jobCategoryForm.value = {
+    name: '',
+    description: '',
+    sortOrder: 0,
+    parentId: null
+  }
+  deleteTargetCategory.value = null
+}
+
+async function onSubmitJobCategory() {
+  if (!jobCategoryForm.value.name.trim()) {
+    alert('请输入分类名称')
+    return
+  }
+  
+  jobCategorySubmitting.value = true
+  try {
+    const formData = {
+      name: jobCategoryForm.value.name,
+      description: jobCategoryForm.value.description,
+      sortOrder: jobCategoryForm.value.sortOrder
+    }
+    
+    // 只有当选择了父分类时才添加parentId
+    if (jobCategoryForm.value.parentId !== null) {
+      formData.parentId = jobCategoryForm.value.parentId
+    }
+    
+    if (showEditJobCategoryDialog.value) {
+      // 编辑模式
+      await updateJobCategory(deleteTargetCategory.value.id, formData)
+      alert('岗位分类更新成功')
+    } else {
+      // 新增模式
+      await createJobCategory(formData)
+      alert('岗位分类创建成功')
+    }
+    
+    closeJobCategoryForm()
+    fetchJobCategories()
+  } catch (e: any) {
+    alert(showEditJobCategoryDialog.value ? '更新失败：' + e.message : '创建失败：' + e.message)
+  } finally {
+    jobCategorySubmitting.value = false
+  }
+}
+
+async function onConfirmDeleteJobCategory() {
+  if (!deleteTargetCategory.value) return
+  
+  deleteJobCategoryLoading.value = true
+  try {
+    await deleteJobCategory(deleteTargetCategory.value.id)
+    alert('岗位分类删除成功')
+    showDeleteJobCategoryDialog.value = false
+    deleteTargetCategory.value = null
+    fetchJobCategories()
+  } catch (e: any) {
+    alert('删除失败：' + e.message)
+  } finally {
+    deleteJobCategoryLoading.value = false
+  }
+}
+
+function onJobCategoryCardClick() {
+  showJobCategoryDialog.value = true
+  // 获取岗位分类数据并预加载子分类信息
+  fetchJobCategoriesWithChildren()
 }
 </script> 

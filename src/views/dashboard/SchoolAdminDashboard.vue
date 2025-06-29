@@ -1,60 +1,73 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
     <!-- 顶部导航栏 -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-      <div class="container mx-auto px-4">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-xl font-semibold text-gray-900">学校管理平台</h1>
-          </div>
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-600">{{ userInfo.nickname || userInfo.account || '用户' }}</span>
-            <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
-          </div>
+    <nav class="bg-white/90 shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      <div class="container mx-auto px-4 flex items-center justify-between h-14">
+        <div class="flex items-center space-x-4">
+          <span class="text-lg font-bold text-blue-700 tracking-wide">学校管理平台</span>
+          <span class="text-gray-400 text-sm ml-4">（可在此展示全局信息）</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
         </div>
       </div>
     </nav>
-    
-    <div class="py-10">
-      <div class="container mx-auto px-4">
-        <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
-          <img :src="school.logo" class="w-20 h-20 rounded border-2 border-blue-200 mr-6" alt="logo" />
-          <div class="flex-1">
-            <div class="flex items-center mb-2">
-              <span class="text-2xl font-bold text-gray-900 mr-2">{{ school.name }}</span>
-              <span v-if="school.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
-            </div>
-            <div class="text-gray-500 text-sm mb-1">学校代码：{{ school.code || '暂无' }}</div>
-            <div class="text-gray-500 text-sm">联系人：{{ school.contact || '暂无' }}</div>
-          </div>
-          <div class="flex space-x-2">
-            <Button class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑学校信息</Button>
-            <Button @click="onEditProfileClick" class="px-4 py-1 rounded bg-gray-600 text-white font-semibold hover:bg-gray-700 transition shadow">编辑个人资料</Button>
-          </div>
+    <!-- 大标题区 -->
+    <div class="w-full py-10 bg-gradient-to-r from-blue-400 to-indigo-400 mb-8 shadow-lg">
+      <div class="container mx-auto px-4 flex flex-col items-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow mb-2 tracking-wide">学校管理后台</h1>
+        <p class="text-lg md:text-xl text-blue-100 font-medium mb-2">欢迎来到学校管理平台</p>
+        <p class="text-base text-blue-200">高效管理学校用户与个人信息</p>
+      </div>
+    </div>
+    <!-- 个人信息板块 -->
+    <div class="flex flex-col items-center mb-8">
+      <img :src="school.logo || 'https://randomuser.me/api/portraits/lego/2.jpg'" class="w-20 h-20 rounded-full shadow-lg border-4 border-white mb-2" />
+      <div class="text-xl font-bold text-gray-800">{{ userInfo.nickname || userInfo.account || '学校管理员' }}</div>
+      <div class="mt-1 flex items-center space-x-2">
+        <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">学校管理员</span>
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{{ school.name || '加载中...' }}</span>
+        <span v-if="school.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
+      </div>
+    </div>
+    <!-- 数据统计区 -->
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+        <div class="bg-white/80 rounded-2xl shadow flex flex-col items-center p-6">
+          <UserGroupIcon class="w-8 h-8 text-blue-500 mb-2" />
+          <span class="text-2xl font-bold text-blue-700">{{ teacherTotal }}</span>
+          <span class="text-gray-500 mt-1">用户数</span>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-          <div v-for="(block, idx) in blocks" :key="idx" class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-200 flex flex-col mb-2">
-            <div class="flex items-center mb-4">
-              <component :is="block.icon" class="w-7 h-7 mr-2" :class="block.color" />
-              <span class="font-semibold text-lg">{{ block.title }}</span>
-            </div>
-            <ul>
-              <li v-for="item in block.data" :key="item.id || item" class="flex justify-between items-center mb-2 text-gray-700">
-                <span>{{ item.label || item }}</span>
-                <span v-if="item.extra" class="text-xs text-gray-400 ml-2">{{ item.extra }}</span>
-              </li>
-              <li v-if="block.data.length === 0" class="text-gray-400 text-sm">{{ block.empty }}</li>
-            </ul>
-            <div v-if="block.footer">
-              <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium mt-2">{{ block.footer.text }}</router-link>
-            </div>
-          </div>
+        <!-- 可扩展更多统计卡片 -->
+      </div>
+      <!-- 功能入口卡片区 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-12">
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-blue-100 to-blue-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="showUserDialog = true"
+        >
+          <UserGroupIcon class="w-12 h-12 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-blue-800 mb-1">用户列表</span>
+          <span class="text-sm text-blue-500">管理学校所有用户账号</span>
         </div>
-        <div class="mb-8">
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-purple-100 to-purple-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="onEditProfileClick"
+        >
+          <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-200 mb-4"><span class="text-2xl text-purple-700 font-bold">我</span></span>
+          <span class="text-lg font-bold text-purple-800 mb-1">编辑个人资料</span>
+          <span class="text-sm text-purple-500">修改个人信息与密码</span>
+        </div>
+      </div>
+      <!-- 用户列表弹窗 -->
+      <div v-if="showUserDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-5xl overflow-y-auto max-h-[80vh] relative">
+          <button @click="showUserDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
           <div class="flex items-center justify-between mb-2">
-            <h2 class="text-xl font-bold text-blue-700">用户列表</h2>
+            <h2 class="text-2xl font-bold text-blue-700">用户列表</h2>
             <Button @click="showAddTeacherDialog = true">添加用户账号</Button>
           </div>
+          <!-- 复用原有用户表格和分页 -->
           <div v-if="teacherLoading" class="text-center text-gray-400 py-8">加载中...</div>
           <div v-else-if="teacherError" class="text-center text-red-500 py-8">{{ teacherError }}</div>
           <div v-else>
@@ -107,111 +120,114 @@
               <button @click="(teacherPage + 1) * teacherSize < teacherTotal && (teacherPage++, fetchTeachers())" :disabled="(teacherPage + 1) * teacherSize >= teacherTotal" class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2">下一页</button>
             </div>
           </div>
-        </div>
-        <div v-if="showAddTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">添加用户账号</h2>
-            <form @submit.prevent="onAddTeacher">
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">邮箱</label>
-                <input v-model="newTeacher.email" required class="w-full px-3 py-2 border rounded" placeholder="请输入用户邮箱" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">昵称</label>
-                <input v-model="newTeacher.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入用户昵称（可选）" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">手机号</label>
-                <input v-model="newTeacher.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号（可选）" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">初始密码</label>
-                <input v-model="newTeacher.password" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入初始密码" />
-              </div>
-              <div class="flex justify-end space-x-2 mt-4">
-                <button type="button" @click="showAddTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-                <button type="submit" :disabled="addTeacherLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ addTeacherLoading ? '添加中...' : '添加' }}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <div v-if="showEditTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">编辑用户信息</h2>
-            <form @submit.prevent="onUpdateTeacher">
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">邮箱</label>
-                <input v-model="editTeacher.email" required class="w-full px-3 py-2 border rounded" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">昵称</label>
-                <input v-model="editTeacher.nickname" class="w-full px-3 py-2 border rounded" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">手机号</label>
-                <input v-model="editTeacher.phone" class="w-full px-3 py-2 border rounded" />
-              </div>
-              <div class="flex justify-end space-x-2 mt-4">
-                <button type="button" @click="showEditTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-                <button type="submit" :disabled="editTeacherLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ editTeacherLoading ? '保存中...' : '保存' }}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <div v-if="showDisableTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm text-center">
-            <h2 class="text-xl font-bold mb-4">确认{{ statusActionText }}该用户账号？</h2>
-            <div class="mb-6 text-gray-700">{{ statusActionDescription }}</div>
-            <div class="flex justify-center space-x-4">
-              <button @click="showDisableTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-              <button @click="onConfirmUpdateStatus" :disabled="statusUpdateLoading" class="px-4 py-1 rounded bg-red-600 text-white">{{ statusUpdateLoading ? '处理中...' : '确认' }}</button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 编辑个人资料对话框 -->
-        <div v-if="showEditProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">编辑个人资料</h2>
-            <form @submit.prevent="onUpdateProfile">
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">昵称</label>
-                <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">邮箱</label>
-                <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">手机号</label>
-                <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
-              </div>
-              <div class="flex justify-end space-x-2 mt-4">
-                <button type="button" @click="showEditProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-                <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
-              </div>
-            </form>
-            <div class="mt-6 pt-4 border-t">
-              <h3 class="text-lg font-semibold mb-3">修改密码</h3>
-              <form @submit.prevent="onChangePassword">
+          <!-- 添加/编辑/禁用用户弹窗（v-if 控制） -->
+          <div v-if="showAddTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+            <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+              <h2 class="text-xl font-bold mb-4">添加用户账号</h2>
+              <form @submit.prevent="onAddTeacher">
                 <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">原密码</label>
-                  <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
+                  <label class="block text-gray-700 mb-1">邮箱</label>
+                  <input v-model="newTeacher.email" required class="w-full px-3 py-2 border rounded" placeholder="请输入用户邮箱" />
                 </div>
                 <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">新密码</label>
-                  <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
+                  <label class="block text-gray-700 mb-1">昵称</label>
+                  <input v-model="newTeacher.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入用户昵称（可选）" />
                 </div>
                 <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">确认新密码</label>
-                  <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
+                  <label class="block text-gray-700 mb-1">手机号</label>
+                  <input v-model="newTeacher.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号（可选）" />
                 </div>
-                <div class="flex justify-end space-x-2">
-                  <button type="submit" :disabled="changePasswordLoading" class="px-4 py-1 rounded bg-green-600 text-white">{{ changePasswordLoading ? '修改中...' : '修改密码' }}</button>
+                <div class="mb-3">
+                  <label class="block text-gray-700 mb-1">初始密码</label>
+                  <input v-model="newTeacher.password" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入初始密码" />
+                </div>
+                <div class="flex justify-end space-x-2 mt-4">
+                  <button type="button" @click="showAddTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                  <button type="submit" :disabled="addTeacherLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ addTeacherLoading ? '添加中...' : '添加' }}</button>
                 </div>
               </form>
             </div>
           </div>
+          <div v-if="showEditTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+            <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+              <h2 class="text-xl font-bold mb-4">编辑用户信息</h2>
+              <form @submit.prevent="onUpdateTeacher">
+                <div class="mb-3">
+                  <label class="block text-gray-700 mb-1">邮箱</label>
+                  <input v-model="editTeacher.email" required class="w-full px-3 py-2 border rounded" />
+                </div>
+                <div class="mb-3">
+                  <label class="block text-gray-700 mb-1">昵称</label>
+                  <input v-model="editTeacher.nickname" class="w-full px-3 py-2 border rounded" />
+                </div>
+                <div class="mb-3">
+                  <label class="block text-gray-700 mb-1">手机号</label>
+                  <input v-model="editTeacher.phone" class="w-full px-3 py-2 border rounded" />
+                </div>
+                <div class="flex justify-end space-x-2 mt-4">
+                  <button type="button" @click="showEditTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                  <button type="submit" :disabled="editTeacherLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ editTeacherLoading ? '保存中...' : '保存' }}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div v-if="showDisableTeacherDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+            <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm text-center">
+              <h2 class="text-xl font-bold mb-4">确认{{ statusActionText }}该用户账号？</h2>
+              <div class="mb-6 text-gray-700">{{ statusActionDescription }}</div>
+              <div class="flex justify-center space-x-4">
+                <button @click="showDisableTeacherDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                <button @click="onConfirmUpdateStatus" :disabled="statusUpdateLoading" class="px-4 py-1 rounded bg-red-600 text-white">{{ statusUpdateLoading ? '处理中...' : '确认' }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 编辑个人资料弹窗（单独放，互不嵌套） -->
+    <div v-if="showProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md overflow-y-auto max-h-[80vh] relative">
+        <button @click="showProfileDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-purple-600 text-2xl font-bold focus:outline-none">×</button>
+        <h2 class="text-2xl font-bold mb-4 text-purple-700">编辑个人资料</h2>
+        <!-- 复用原有个人资料表单和修改密码表单 -->
+        <form @submit.prevent="onUpdateProfile">
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">昵称</label>
+            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">邮箱</label>
+            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">手机号</label>
+            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
+          </div>
+          <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
+          </div>
+        </form>
+        <div class="mt-6 pt-4 border-t">
+          <h3 class="text-lg font-semibold mb-3">修改密码</h3>
+          <form @submit.prevent="onChangePassword">
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">原密码</label>
+              <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">新密码</label>
+              <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">确认新密码</label>
+              <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
+            </div>
+            <div class="flex justify-end space-x-2 mt-4">
+              <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+              <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '修改中...' : '修改密码' }}</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -449,8 +465,18 @@ function onLogout() {
   router.push('/login')
 }
 
-const showEditProfileDialog = ref(false)
+const showUserDialog = ref(false)
+const showProfileDialog = ref(false)
 const editProfile = ref({ nickname: '', email: '', phone: '' })
+function onEditProfileClick() {
+  editProfile.value = {
+    nickname: userInfo.value.nickname || '',
+    email: userInfo.value.email || '',
+    phone: userInfo.value.phone || ''
+  }
+  showProfileDialog.value = true
+}
+
 const updateProfileLoading = ref(false)
 
 async function onUpdateProfile() {
@@ -462,7 +488,7 @@ async function onUpdateProfile() {
       email: editProfile.value.email,
       phone: editProfile.value.phone
     })
-    showEditProfileDialog.value = false
+    showProfileDialog.value = false
     await fetchSchoolInfo() // 重新获取学校信息
     // 更新store中的用户信息
     const res = await getMe()
@@ -500,20 +526,5 @@ async function onChangePassword() {
   } finally {
     changePasswordLoading.value = false
   }
-}
-
-// 当打开编辑对话框时，初始化表单数据
-function openEditDialog() {
-  editProfile.value = {
-    nickname: userInfo.value.nickname || userInfo.value.account || '',
-    email: userInfo.value.email || '',
-    phone: userInfo.value.phone || ''
-  }
-  showEditProfileDialog.value = true
-}
-
-// 修改按钮点击事件
-function onEditProfileClick() {
-  openEditDialog()
 }
 </script> 

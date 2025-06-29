@@ -121,3 +121,77 @@ export function updateUserStatus(id: number, status: 'active' | 'inactive') {
     body: JSON.stringify({ status })
   })
 }
+
+// 岗位分类管理相关API
+// 获取岗位分类列表
+export function getJobCategories(params?: {
+  page?: number
+  size?: number
+  name?: string
+}) {
+  const queryParams = new URLSearchParams()
+  if (params?.page !== undefined) queryParams.append('page', params.page.toString())
+  if (params?.size !== undefined) queryParams.append('size', params.size.toString())
+  if (params?.name) queryParams.append('name', params.name)
+  
+  const queryString = queryParams.toString()
+  const url = queryString ? `/admin/job-categories?${queryString}` : '/admin/job-categories'
+  
+  return apiRequest(url, {
+    method: 'GET'
+  })
+}
+
+// 获取根分类（顶级分类）
+export function getRootJobCategories() {
+  return apiRequest('/job-categories/root', {
+    method: 'GET'
+  })
+}
+
+// 获取指定分类的子分类
+export function getJobCategoryChildren(id: number) {
+  return apiRequest(`/job-categories/${id}/children`, {
+    method: 'GET'
+  })
+}
+
+// 创建岗位分类
+export function createJobCategory(data: {
+  name: string
+  description?: string
+  sortOrder?: number
+  parentId?: number
+}) {
+  return apiRequest('/admin/job-categories', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+}
+
+// 更新岗位分类
+export function updateJobCategory(id: number, data: {
+  name?: string
+  description?: string
+  sortOrder?: number
+  parentId?: number
+}) {
+  return apiRequest(`/admin/job-categories/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  })
+}
+
+// 删除岗位分类
+export function deleteJobCategory(id: number) {
+  return apiRequest(`/admin/job-categories/${id}`, {
+    method: 'DELETE'
+  })
+}
+
+// 获取岗位分类详情
+export function getJobCategoryDetail(id: number) {
+  return apiRequest(`/admin/job-categories/${id}`, {
+    method: 'GET'
+  })
+}
