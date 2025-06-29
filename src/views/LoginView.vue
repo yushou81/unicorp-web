@@ -101,10 +101,11 @@ async function onLogin() {
     // 兼容 getMe 返回的 role
     try {
       const userInfo = await getMe()
-      useAppStore().setUser(userInfo)
-      if (userInfo.role) role = userInfo.role
+      useAppStore().setUser(userInfo.data)
+      if (userInfo.data && userInfo.data.role) role = userInfo.data.role
     } catch (e) {
       // getMe 失败时依然用登录返回的 role
+      console.error('[登录] 获取用户信息失败:', e)
     }
     // 跳转到对应 dashboard
     let target = '/dashboard'
@@ -112,7 +113,7 @@ async function onLogin() {
     else if (role === 'SCH_ADMIN') target = '/dashboard/school'
     else if (role === 'EN_ADMIN') target = '/dashboard/company'
     else if (role === 'TEACHER') target = '/dashboard/teacher'
-    else if (role === 'MENTOR') target = '/dashboard/mentor'
+    else if (role === 'EN_TEACHER') target = '/dashboard/mentor'
     else if (role === 'STUDENT') target = '/dashboard/student'
     router.push(target)
   } catch (e: any) {

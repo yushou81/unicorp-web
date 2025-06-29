@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
+import { getMe } from '@/lib/api/auth'
+import { setToken } from '@/lib/api/apiClient'
+import { useAppStore } from '@/stores/app'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -105,6 +108,30 @@ const router = createRouter({
       component: () => import('@/views/NotFound.vue')
     }
   ]
+})
+
+// 全局前置守卫
+router.beforeEach(async (to, from, next) => {
+  const appStore = useAppStore()
+  const token = localStorage.getItem('token')
+  
+  // 如果有token但没有用户信息，尝试获取用户信息
+  if (token && !appStore.user) {
+    try {
+      setToken(token)
+      const userInfo = await getMe() as any
+      if (userInfo && userInfo.data) {
+        appStore.setUser(userInfo.data)
+      }
+    } catch (e) {
+      console.error('获取用户信息失败:', e)
+      // 如果获取用户信息失败，可能是token过期，清除token
+      localStorage.removeItem('token')
+      appStore.logout()
+    }
+  }
+  
+  next()
 })
 
 export default router 

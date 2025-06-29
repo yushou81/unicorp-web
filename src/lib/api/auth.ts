@@ -13,6 +13,30 @@ export function getMe() {
   return apiRequest('/auth/me')
 }
 
+// 修改用户密码
+export function updatePassword(data: {
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+}) {
+  return apiRequest('/auth/password', {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  })
+}
+
+// 修改用户基本信息
+export function updateUserInfo(data: {
+  nickname?: string
+  email?: string
+  phone?: string
+}) {
+  return apiRequest('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  })
+}
+
 // 学生注册
 export function registerStudent(data: {
   nickname?: string
