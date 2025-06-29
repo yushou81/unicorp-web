@@ -1,4 +1,6 @@
+
 const API_BASE_URL =  'http://192.168.58.154:8081/api'
+
 
 let token = ''
 export function setToken(t: string) {
@@ -23,7 +25,12 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
   let response, rawText, data
   try {
-    response = await fetch(url, { ...options, headers })
+    // 添加时间戳，避免缓存
+    const urlWithTimestamp = url.includes('?') 
+      ? `${url}&_t=${Date.now()}` 
+      : `${url}?_t=${Date.now()}`
+    
+    response = await fetch(urlWithTimestamp, { ...options, headers })
     rawText = await response.text()
     
     // 对于 204 No Content 状态码，不需要解析 JSON
@@ -50,21 +57,26 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     rawText
   })
 
+
+  // 检查响应状态和业务状态码
   if (!response.ok) {
-    // 特殊处理 403 错误
-    if (response.status === 403) {
-      throw new Error('权限不足，您没有访问此资源的权限')
-    }
-    // 特殊处理 401 错误 - 优先使用后端返回的错误信息
-    if (response.status === 401) {
-      // 如果有后端返回的具体错误信息，使用后端的消息
-      if (data && data.message) {
-        throw new Error(data.message)
-      }
-      // 否则使用默认的登录过期消息
-      throw new Error('登录已过期，请重新登录')
-    }
-    throw new Error(data.message || `请求失败 (${response.status})`)
+    const errorMsg = data?.message || '请求失败'
+    console.error(`[apiRequest] HTTP错误: ${response.status} - ${errorMsg}`)
+    throw new Error(errorMsg)
   }
+  
+  // 检查业务状态码
+  if (data?.code !== 200) {
+    const errorMsg = data?.message || '业务处理失败'
+    console.error(`[apiRequest] 业务错误: ${data?.code} - ${errorMsg}`)
+    throw new Error(errorMsg)
+  }
+
+  // 检查分页数据
+  if (data?.data?.pages !== undefined) {
+    console.log(`[apiRequest] 分页数据: 当前页=${data.data.current}, 总页数=${data.data.pages}, 总记录数=${data.data.total}`)
+  }
+
+
   return data as T
 } 
