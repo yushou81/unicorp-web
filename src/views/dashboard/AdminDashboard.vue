@@ -58,7 +58,7 @@
         </div>
         <div class="bg-white/80 rounded-2xl shadow flex flex-col items-center p-6">
           <TagIcon class="w-8 h-8 text-orange-500 mb-2" />
-          <span class="text-2xl font-bold text-orange-700">{{ jobCategories.length }}</span>
+          <span class="text-2xl font-bold text-orange-700">{{ totalJobCategories }}</span>
           <span class="text-gray-500 mt-1">岗位分类</span>
         </div>
       </div>
@@ -370,7 +370,7 @@
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
-                  <template v-for="category in jobCategories" :key="category.id">
+                  <template v-for="category in filteredJobCategories" :key="category.id">
                     <!-- 主分类行 -->
                     <tr class="hover:bg-gray-50">
                       <td class="px-4 py-3">
@@ -699,16 +699,40 @@ async function fetchUsers() {
 const token = localStorage.getItem('token')
 if (token) setToken(token)
 
+// 检查用户权限
+const checkAdminPermissions = () => {
+  const userRole = userInfo.value.role
+  const allowedRoles = ['SYSADMIN', 'admin']
+  
+  if (!allowedRoles.includes(userRole)) {
+    console.warn(`用户角色 ${userRole} 无权访问管理员面板`)
+    return false
+  }
+  
+  return true
+}
+
 onMounted(async () => {
+  // 检查权限
+  if (!checkAdminPermissions()) {
+    alert('您没有权限访问管理员面板，即将跳转到首页')
+    router.push('/')
+    return
+  }
+
   try {
     const res = await getPendingOrganizations()
     organizations.value = res.data || []
   } catch (e) {
+    console.error('获取待审核组织失败:', e)
     organizations.value = []
   }
   
   // 获取用户列表
   await fetchUsers()
+  
+  // 获取岗位分类列表（用于统计显示）
+  await fetchJobCategories()
   
   // 获取公开学校列表
   publicSchoolsLoading.value = true
@@ -735,6 +759,7 @@ onMounted(async () => {
       }
     }
   } catch (e: any) {
+    console.error('获取学校列表失败:', e)
     publicSchoolsError.value = e.message || '获取学校列表失败'
   } finally {
     publicSchoolsLoading.value = false
@@ -766,6 +791,7 @@ onMounted(async () => {
       }
     }
   } catch (e: any) {
+    console.error('获取企业列表失败:', e)
     publicEnterprisesError.value = e.message || '获取企业列表失败'
   } finally {
     publicEnterprisesLoading.value = false
@@ -871,6 +897,23 @@ const safeUsers = computed(() => {
   return Array.isArray(users.value) ? users.value : []
 })
 
+// 计算岗位分类总数（包括所有层级）
+const totalJobCategories = computed(() => {
+  let total = 0
+  
+  const countCategories = (categories: any[]) => {
+    categories.forEach(category => {
+      total++
+      if (category.children && Array.isArray(category.children)) {
+        countCategories(category.children)
+      }
+    })
+  }
+  
+  countCategories(jobCategories.value)
+  return total
+})
+
 // 处理角色筛选
 function onRoleChange() {
   currentPage.value = 1
@@ -928,6 +971,45 @@ const jobCategoryForm = ref({
 const jobCategorySubmitting = ref(false)
 const deleteTargetCategory = ref<any>(null)
 const deleteJobCategoryLoading = ref(false)
+
+// 过滤后的分类数据（用于搜索）
+const filteredJobCategories = computed(() => {
+  if (!jobCategorySearch.value.trim()) {
+    return jobCategories.value
+  }
+  
+  const searchTerm = jobCategorySearch.value.toLowerCase()
+  
+  // 递归搜索分类及其子分类
+  const searchInCategory = (category: any): any => {
+    const matchesSearch = category.name.toLowerCase().includes(searchTerm) ||
+                         (category.description && category.description.toLowerCase().includes(searchTerm))
+    
+    // 如果有子分类，递归搜索子分类
+    if (Array.isArray(category.children) && category.children.length > 0) {
+      const matchingChildren = category.children
+        .map(searchInCategory)
+        .filter(child => child !== null)
+      
+      // 如果当前分类匹配或者有匹配的子分类，返回该分类
+      if (matchesSearch || matchingChildren.length > 0) {
+        return {
+          ...category,
+          children: matchingChildren
+        }
+      }
+    } else {
+      // 没有子分类，只检查当前分类是否匹配
+      return matchesSearch ? category : null
+    }
+    
+    return null
+  }
+  
+  return jobCategories.value
+    .map(searchInCategory)
+    .filter(category => category !== null)
+})
 
 // 计算可用的父分类（排除自己和自己的子分类）
 const availableParentCategories = computed(() => {
@@ -1139,8 +1221,8 @@ async function loadChildCategoryChildren(parentId: number, childId: number) {
 }
 
 function onJobCategorySearch() {
-  // 可以添加防抖逻辑
-  fetchJobCategories()
+  // 搜索功能现在通过computed属性实现，无需额外处理
+  console.log('搜索关键词:', jobCategorySearch.value)
 }
 
 function onEditJobCategory(category: any) {

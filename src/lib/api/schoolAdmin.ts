@@ -7,7 +7,7 @@ export function createTeacher(data: {
   password: string
   phone?: string
 }) {
-  return apiRequest('/school-admin/teachers', {
+  return apiRequest('/v1/school-admin/teachers', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -26,7 +26,7 @@ export function getAllUsers(params: Record<string, any> = {}) {
     }
   })
   const q = query.toString() ? `?${query.toString()}` : ''
-  return apiRequest(`/school-admin/users${q}`)
+  return apiRequest(`/v1/school-admin/users${q}`)
 }
 
 // 更新用户基本信息
@@ -35,7 +35,7 @@ export function updateUserInfo(id: number, data: {
   nickname?: string
   phone?: string
 }) {
-  return apiRequest(`/school-admin/users/${id}/info`, {
+  return apiRequest(`/v1/school-admin/users/${id}/info`, {
     method: 'PUT',
     body: JSON.stringify(data),
     headers: { 'Content-Type': 'application/json' }
@@ -44,14 +44,14 @@ export function updateUserInfo(id: number, data: {
 
 // 更新用户状态
 export function updateUserStatus(id: number, status: 'active' | 'inactive' | 'pending_approval') {
-  return apiRequest(`/school-admin/users/${id}/status?status=${status}`, {
+  return apiRequest(`/v1/school-admin/users/${id}/status?status=${status}`, {
     method: 'PUT'
   })
 }
 
 // 启用用户账号（已弃用，建议使用 updateUserStatus）
 export function enableUser(id: number) {
-  return apiRequest(`/school-admin/users/${id}/enable`, {
+  return apiRequest(`/v1/school-admin/users/${id}/enable`, {
     method: 'PUT'
   })
 } 

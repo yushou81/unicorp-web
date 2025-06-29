@@ -1,4 +1,4 @@
-const API_BASE_URL =  'http://192.168.58.154:8081/api/v1'
+const API_BASE_URL =  'http://192.168.58.154:8081/api'
 
 let token = ''
 export function setToken(t: string) {
@@ -50,6 +50,21 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     rawText
   })
 
-  if (!response.ok) throw new Error(data.message || '请求失败')
+  if (!response.ok) {
+    // 特殊处理 403 错误
+    if (response.status === 403) {
+      throw new Error('权限不足，您没有访问此资源的权限')
+    }
+    // 特殊处理 401 错误 - 优先使用后端返回的错误信息
+    if (response.status === 401) {
+      // 如果有后端返回的具体错误信息，使用后端的消息
+      if (data && data.message) {
+        throw new Error(data.message)
+      }
+      // 否则使用默认的登录过期消息
+      throw new Error('登录已过期，请重新登录')
+    }
+    throw new Error(data.message || `请求失败 (${response.status})`)
+  }
   return data as T
 } 
