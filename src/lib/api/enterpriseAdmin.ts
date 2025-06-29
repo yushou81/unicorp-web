@@ -7,7 +7,7 @@ export function createMentor(data: {
   password: string
   phone?: string
 }) {
-  return apiRequest('/enterprise-admin/mentors', {
+  return apiRequest('/v1/enterprise-admin/mentors', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -19,14 +19,14 @@ export function getMentorList(params: { page?: number; size?: number } = {}) {
   if (params.page !== undefined) query.append('page', String(params.page))
   if (params.size !== undefined) query.append('size', String(params.size))
   const q = query.toString() ? `?${query.toString()}` : ''
-  return apiRequest(`/enterprise-admin/mentors${q}`)
+  return apiRequest(`/v1/enterprise-admin/mentors${q}`)
 }
 
 // 更新导师状态
 export function updateMentorStatus(id: number, status: 'active' | 'inactive' | 'pending_approval') {
   const query = new URLSearchParams()
   query.append('status', status)
-  return apiRequest(`/enterprise-admin/mentors/${id}/status?${query.toString()}`, {
+  return apiRequest(`/v1/enterprise-admin/mentors/${id}/status?${query.toString()}`, {
     method: 'PUT'
   })
 }
@@ -37,7 +37,7 @@ export function updateMentorInfo(id: number, data: {
   nickname?: string
   phone?: string
 }) {
-  return apiRequest(`/enterprise-admin/mentors/${id}/info`, {
+  return apiRequest(`/v1/enterprise-admin/mentors/${id}/info`, {
     method: 'PUT',
     body: JSON.stringify(data)
   })

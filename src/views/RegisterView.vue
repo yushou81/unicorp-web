@@ -25,10 +25,13 @@
           </div>
           <div class="mb-4">
             <label class="block text-gray-700 mb-1">学校</label>
-            <select v-model="organizationId" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select v-model="organizationId" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" :disabled="schoolListLoading">
               <option value="">请选择学校</option>
-              <option v-for="school in schoolList" :key="school.id" :value="school.id">{{ school.organizationName }}</option>
+              <option v-if="schoolListLoading" value="" disabled>加载中...</option>
+              <option v-else-if="schoolListError" value="" disabled>加载失败</option>
+              <option v-else v-for="school in schoolList" :key="school.id" :value="school.id">{{ school.organizationName }}</option>
             </select>
+            <div v-if="schoolListError" class="mt-1 text-sm text-red-600">{{ schoolListError }}</div>
           </div>
           <div class="mb-4">
             <label class="block text-gray-700 mb-1">邮箱</label>
@@ -109,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { registerStudent, registerEnterprise } from '@/lib/api/auth'
 import { getAllSchools } from '@/lib/api/organization'
@@ -124,7 +127,9 @@ const confirmPassword = ref('')
 const realName = ref('')
 const idCard = ref('')
 const organizationId = ref('')
-const schoolList = ref<{ id: number, name: string }[]>([])
+const schoolList = ref<{ id: number, organizationName: string }[]>([])
+const schoolListLoading = ref(false)
+const schoolListError = ref('')
 // 企业管理员专属
 const companyName = ref('')
 const description = ref('')
@@ -136,15 +141,33 @@ const contactName = ref('')
 const router = useRouter()
 const businessLicenseUrl = ref('')
 
-onMounted(async () => {
-  if (role.value === 'student') {
-    try {
-      const res = await getAllSchools()
-      schoolList.value = res.data
-    } catch (e) {
-      schoolList.value = []
-    }
+// 获取学校列表
+async function fetchSchoolList() {
+  schoolListLoading.value = true
+  schoolListError.value = ''
+  try {
+    const res = await getAllSchools('simple')
+    console.log('[注册] 获取学校列表成功:', res)
+    schoolList.value = res.data || []
+  } catch (e: any) {
+    console.error('[注册] 获取学校列表失败:', e)
+    schoolListError.value = e.message || '获取学校列表失败'
+    schoolList.value = []
+  } finally {
+    schoolListLoading.value = false
   }
+}
+
+// 监听角色变化，重新获取学校列表
+watch(role, (newRole) => {
+  if (newRole === 'student') {
+    fetchSchoolList()
+  }
+})
+
+onMounted(async () => {
+  // 初始获取学校列表
+  await fetchSchoolList()
 })
 
 function isValidPhone(phone: string) {
