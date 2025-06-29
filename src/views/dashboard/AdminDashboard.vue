@@ -345,7 +345,7 @@
                 class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 @input="onJobCategorySearch"
               />
-              <Button @click="fetchJobCategories" variant="outline" size="sm" :loading="jobCategoriesLoading">刷新</Button>
+              <Button @click="fetchJobCategoriesWithChildren" variant="outline" size="sm" :loading="jobCategoriesLoading">刷新</Button>
             </div>
             <Button @click="showAddJobCategoryDialog = true" class="bg-orange-600 hover:bg-orange-700">
               新增分类
@@ -731,8 +731,8 @@ onMounted(async () => {
   // 获取用户列表
   await fetchUsers()
   
-  // 获取岗位分类列表（用于统计显示）
-  await fetchJobCategories()
+  // 获取岗位分类列表（包括子分类，用于统计显示）
+  await fetchJobCategoriesWithChildren()
   
   // 获取公开学校列表
   publicSchoolsLoading.value = true
@@ -1283,7 +1283,7 @@ async function onSubmitJobCategory() {
     }
     
     closeJobCategoryForm()
-    fetchJobCategories()
+    fetchJobCategoriesWithChildren()
   } catch (e: any) {
     alert(showEditJobCategoryDialog.value ? '更新失败：' + e.message : '创建失败：' + e.message)
   } finally {
@@ -1300,7 +1300,7 @@ async function onConfirmDeleteJobCategory() {
     alert('岗位分类删除成功')
     showDeleteJobCategoryDialog.value = false
     deleteTargetCategory.value = null
-    fetchJobCategories()
+    fetchJobCategoriesWithChildren()
   } catch (e: any) {
     alert('删除失败：' + e.message)
   } finally {
@@ -1310,7 +1310,7 @@ async function onConfirmDeleteJobCategory() {
 
 function onJobCategoryCardClick() {
   showJobCategoryDialog.value = true
-  // 获取岗位分类数据并预加载子分类信息
-  fetchJobCategoriesWithChildren()
+  // 页面加载时已经获取了完整的分类数据，这里不需要重复获取
+  // fetchJobCategoriesWithChildren()
 }
 </script> 
