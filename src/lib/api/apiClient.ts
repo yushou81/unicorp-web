@@ -1,4 +1,4 @@
-const API_BASE_URL =  'http://192.168.1.6:8081/api'
+const API_BASE_URL =  'http://localhost:8081/api'
 
 let token = ''
 export function setToken(t: string) {

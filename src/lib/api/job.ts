@@ -14,7 +14,33 @@ export interface Job {
   id: number
   organizationId: number
   organizationName: string
+  organization?: {
+    id: number
+    organizationName: string
+    type: string
+    description: string
+    website: string
+    address: string
+  }
+  enterpriseDetail?: {
+    organizationId: number
+    industry: string
+    companySize: string
+    businessLicenseUrl: string
+  }
   postedByUserId: number
+  postedByUser?: {
+    id: number
+    account: string
+    nickname: string
+    email: string
+    phone: string
+    status: string
+    organizationId: number
+    organizationName: string | null
+    role: string
+    createdAt: string
+  }
   title: string
   description: string
   location: string
@@ -28,13 +54,27 @@ export interface Job {
   headcount: number
   educationRequirement: string
   experienceRequirement: string
-  jobCategory: string | null
-  skillTags: string | null
   applicationDeadline: string | null
   viewCount: number
+  tags: string | null
   logo?: string
   companySize?: string
   industry?: string
+  responsibilities?: string // 岗位职责
+  requirements?: string // 岗位要求
+  benefits?: string // 福利待遇
+  jobRequirements?: string // API返回的另一种岗位要求字段
+  jobBenefits?: string // API返回的另一种福利待遇字段
+  contactPerson?: string // 联系人
+  contactEmail?: string // 联系邮箱
+  contactPhone?: string // 联系电话
+  category?: {
+    id: number
+    name: string
+    parentId: number
+    level: number
+    children: any | null
+  }
 }
 
 // API 响应接口
@@ -108,6 +148,38 @@ export async function getJobs(params: GetJobsParams = {}) {
   
   const response = await apiRequest<ApiResponse<PaginatedResponse<Job>>>(url)
   console.log(`[getJobs] 响应数据:`, response.data)
+  
+  return response
+}
+
+/**
+ * 获取岗位详情
+ * @param id 岗位ID
+ * @returns 岗位详情
+ */
+export async function getJobDetail(id: number | string) {
+  const url = `/v1/jobs/${id}`
+  console.log(`[getJobDetail] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<Job>>(url)
+  console.log(`[getJobDetail] 响应数据:`, response.data)
+  
+  return response
+}
+
+/**
+ * 收藏岗位
+ * @param id 岗位ID
+ * @returns 收藏结果
+ */
+export async function favoriteJob(id: number | string) {
+  const url = `/v1/jobs/${id}/favorite`
+  console.log(`[favoriteJob] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<any>>(`${url}`, {
+    method: 'POST'
+  })
+  console.log(`[favoriteJob] 响应数据:`, response)
   
   return response
 } 
