@@ -65,6 +65,38 @@
       <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <h2 class="text-xl font-bold mb-4">编辑个人资料</h2>
         <form @submit.prevent="onUpdateProfile">
+          <!-- 头像上传 -->
+          <div class="mb-5 flex flex-col items-center">
+            <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
+            <div class="flex items-center mt-2">
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleAvatarChange"
+              />
+              <button 
+                type="button" 
+                @click="fileInput?.click()"
+                class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
+              >
+                选择头像
+              </button>
+              <button 
+                v-if="avatarFile" 
+                type="button" 
+                @click="cancelAvatarUpload" 
+                class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
+              >
+                取消
+              </button>
+            </div>
+            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
+              {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
+            </p>
+          </div>
+
           <div class="mb-3">
             <label class="block text-gray-700 mb-1">昵称</label>
             <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
@@ -115,7 +147,7 @@ import { useAppStore } from '@/stores/app'
 import { ref, computed, onMounted } from 'vue'
 import { BriefcaseIcon, BookmarkIcon, AcademicCapIcon, CalendarDaysIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
-import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
+import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
 import { getMyResumes, createMyResume, updateMyResume, deleteMyResume } from '@/lib/api/resume'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
@@ -320,24 +352,57 @@ const passwordChange = ref({
 const updateProfileLoading = ref(false)
 const changePasswordLoading = ref(false)
 
+// 头像上传相关
+const fileInput = ref<HTMLInputElement | null>(null)
+const avatarFile = ref<File | null>(null)
+const previewAvatar = ref<string | null>(null)
+const avatarUploading = ref(false)
+
 // 简历管理相关
 const showResumeDialog = ref(false)
 
 async function onUpdateProfile() {
   updateProfileLoading.value = true
   try {
+    // 先更新用户基本信息
     await updateUserInfo({
       nickname: editProfile.value.nickname,
       email: editProfile.value.email,
       phone: editProfile.value.phone
     })
+    
+    // 如果选择了新头像，则上传头像
+    if (avatarFile.value) {
+      avatarUploading.value = true
+      try {
+        await uploadAvatar(avatarFile.value)
+        console.log('头像上传成功')
+      } catch (avatarError: any) {
+        console.error('头像上传失败:', avatarError)
+        alert('头像上传失败: ' + (avatarError.message || '未知错误'))
+        // 继续执行，不影响其他信息的保存
+      } finally {
+        avatarUploading.value = false
+      }
+    }
+    
     showEditProfileDialog.value = false
+    
+    // 重置头像上传状态
+    avatarFile.value = null
+    previewAvatar.value = null
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+    
     await fetchUserInfo() // 重新获取用户信息
+    
     // 更新store中的用户信息
     const res = await getMe() as ApiResponse<any>
     if (res?.data) {
       appStore.setUser(res.data)
     }
+    
     alert('个人资料更新成功')
   } catch (e: any) {
     alert('更新失败：' + (e.message || '未知错误'))
@@ -381,6 +446,32 @@ function openEditDialog() {
 // 修改按钮点击事件
 function onEditProfileClick() {
   openEditDialog()
+}
+
+// 处理头像上传相关函数
+function handleAvatarChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    avatarFile.value = target.files[0]
+    previewAvatar.value = URL.createObjectURL(avatarFile.value)
+  }
+}
+
+function cancelAvatarUpload() {
+  avatarFile.value = null
+  previewAvatar.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+// 格式化文件大小
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i]
 }
 
 // 简历更新回调

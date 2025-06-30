@@ -379,18 +379,6 @@ async function onSaveResume() {
       saving.value = false;
       return;
     }
-    
-    // 调试输出详细的FormData内容
-    console.log('----------------------');
-    console.log('表单数据详细内容:');
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File [name=${value.name}, type=${value.type}, size=${value.size}]`);
-      } else {
-        console.log(`${key}: ${value}`);
-      }
-    }
-    console.log('----------------------');
 
     // 调试输出表单数据
     console.log('表单数据:');
