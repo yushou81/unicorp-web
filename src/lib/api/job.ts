@@ -105,6 +105,25 @@ export interface GetJobsParams {
   salaryMin?: number
   salaryMax?: number
   sortBy?: string
+  organizeId?: number
+  posterId?: number
+}
+
+// 岗位创建DTO
+export interface JobCreationDTO {
+  title: string
+  description: string
+  location: string
+  jobType: string
+  educationRequirement: string
+  salaryMin?: number
+  salaryMax?: number
+  salaryUnit?: string
+  headcount?: number
+  experienceRequirement?: string
+  applicationDeadline?: string
+  skillTags?: string
+  categoryId: number // 三级分类ID
 }
 
 /**
@@ -150,6 +169,14 @@ export async function getJobs(params: GetJobsParams = {}) {
   
   if (params.sortBy) {
     queryParams.append('sortBy', params.sortBy)
+  }
+  
+  if (params.organizeId !== undefined) {
+    queryParams.append('organizeId', params.organizeId.toString())
+  }
+  
+  if (params.posterId !== undefined) {
+    queryParams.append('posterId', params.posterId.toString())
   }
   
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ''
@@ -331,6 +358,20 @@ export async function applyJob(jobId: number | string) {
   })
   console.log(`[applyJob] 响应数据:`, response)
   
+/**
+ * 创建新岗位
+ * @param data 岗位创建数据
+ * @returns 创建结果
+ */
+export async function createJob(data: JobCreationDTO) {
+  const url = '/v1/jobs'
+  const response = await apiRequest<ApiResponse<any>>(url, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
   return response
 }
 
@@ -351,4 +392,71 @@ export async function updateApplicationStatus(applicationId: number, statusData:
   console.log(`[updateApplicationStatus] 响应数据:`, response)
   
   return response
+/**
+ * 更新岗位信息
+ * @param id 岗位ID
+ * @param data 岗位数据
+ * @returns 更新结果
+ */
+export async function updateJob(id: number | string, data: JobCreationDTO) {
+  const url = `/v1/jobs/${id}`
+  const response = await apiRequest<ApiResponse<any>>(url, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  return response
+}
+
+/**
+ * 删除岗位
+ * @param id 岗位ID
+ * @returns 删除结果
+ */
+export async function deleteJob(id: number | string) {
+  const url = `/v1/jobs/${id}`
+  const response = await apiRequest<ApiResponse<any>>(url, {
+    method: 'DELETE'
+  })
+  return response
+}
+
+/**
+ * 获取所有岗位分类（公开接口）
+ * @param params 分页参数
+ * @returns 分类列表
+ */
+export async function getPublicJobCategories(params?: { page?: number; size?: number }) {
+  const query = new URLSearchParams()
+  if (params?.page) query.append('page', params.page.toString())
+  if (params?.size) query.append('size', params.size.toString())
+  const url = query.toString() ? `/v1/job-categories?${query}` : '/v1/job-categories'
+  return apiRequest(url)
+}
+
+/**
+ * 获取岗位申请列表（企业）
+ * @param jobId 岗位ID
+ * @param page 页码
+ * @param size 每页数量
+ * @returns 申请人分页数据
+ */
+export async function getJobApplications(jobId: number | string, page = 1, size = 10) {
+  const url = `/v1/jobs/${jobId}/applications?page=${page}&size=${size}`
+  return apiRequest(url)
+}
+
+/**
+ * 更新岗位申请状态
+ * @param applicationId 申请ID
+ * @param data { status, feedback }
+ */
+export async function updateApplicationStatus(applicationId: number, data: { status: string, feedback?: string }) {
+  return apiRequest(`/v1/applications/${applicationId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' }
+  })
 } 

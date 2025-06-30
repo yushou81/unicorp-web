@@ -42,6 +42,14 @@
           <span class="text-sm text-blue-500">管理企业导师账号与权限</span>
         </div>
         <div
+          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="showJobDialog = true"
+        >
+          <BriefcaseIcon class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-green-800 mb-1">岗位管理</span>
+          <span class="text-sm text-green-500">查看和管理企业岗位</span>
+        </div>
+        <div
           class="group cursor-pointer bg-gradient-to-br from-purple-100 to-purple-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
           @click="onEditProfileClick"
         >
@@ -252,6 +260,22 @@
           </div>
         </div>
       </div>
+      <!-- 岗位管理弹窗 -->
+      <div v-if="showJobDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-5xl overflow-y-auto max-h-[90vh] relative">
+          <button @click="showJobDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-green-600 text-2xl font-bold focus:outline-none">×</button>
+          <h2 class="text-2xl font-bold mb-6 text-green-700">企业岗位管理</h2>
+          <GridJobList
+            :jobs="jobs"
+            :loading="jobsLoading"
+            :totalJobs="totalJobs"
+            :currentPage="currentPage"
+            :totalPages="totalPages"
+            @update:currentPage="fetchJobs"
+            @update:sortBy="onSortByChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -265,6 +289,8 @@ import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/a
 import { updateUser } from '@/lib/api/admin'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
+import { getJobs, Job } from '@/lib/api/job'
+import GridJobList from '@/components/job/GridJobList.vue'
 
 const company = ref({
   logo: 'https://randomuser.me/api/portraits/lego/1.jpg',
@@ -598,4 +624,40 @@ function onEditProfileClick() {
 
 const showMentorDialog = ref(false)
 const showProfileDialog = ref(false)
+const showJobDialog = ref(false)
+
+const jobs = ref<Job[]>([])
+const totalJobs = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = ref(1)
+const jobsLoading = ref(false)
+const sortBy = ref('latest')
+
+function onSortByChange(newSort) {
+  sortBy.value = newSort
+  fetchJobs(1) // 切换排序时回到第一页
+}
+
+async function fetchJobs(page = 1) {
+  jobsLoading.value = true
+  try {
+    const res = await getJobs({
+      organizeId: userInfo.value.organizationId,
+      page: page,
+      size: pageSize.value,
+      sortBy: sortBy.value // 传递排序参数
+    })
+    jobs.value = res.data.records
+    totalJobs.value = res.data.total
+    totalPages.value = res.data.pages
+    currentPage.value = page
+  } finally {
+    jobsLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchJobs()
+})
 </script> 

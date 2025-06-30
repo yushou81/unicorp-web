@@ -360,132 +360,14 @@
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
-                  <template v-for="category in filteredJobCategories" :key="category.id">
-                    <!-- 主分类行 -->
-                    <tr class="hover:bg-gray-50">
-                      <td class="px-4 py-3">
-                        <div class="flex items-center space-x-2">
-                          <button 
-                            v-if="category.hasChildren || (Array.isArray(category.children) && category.children.length > 0)"
-                            @click="toggleCategory(category.id)"
-                            class="text-gray-400 hover:text-gray-600"
-                          >
-                            <svg v-if="!expandedCategories.includes(category.id)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                          </button>
-                          <div v-else class="w-4 h-4 flex items-center justify-center">
-                            <div class="w-1 h-1 bg-gray-300 rounded-full"></div>
-                          </div>
-                          <span class="text-sm font-medium text-gray-900">{{ category.name }}</span>
-                        </div>
-                      </td>
-                      <td class="px-4 py-3 text-sm text-gray-500">{{ category.description || '-' }}</td>
-                      <td class="px-4 py-3 text-sm text-gray-500">{{ category.sortOrder || 0 }}</td>
-                      <td class="px-4 py-3 text-sm text-gray-500">
-                        <span v-if="Array.isArray(category.children) && category.children.length > 0" class="text-blue-600">
-                          {{ category.children.length }} 个子分类
-                        </span>
-                        <span v-else-if="category.hasChildren" class="text-blue-600">
-                          有子分类
-                        </span>
-                        <span v-else class="text-gray-400">无</span>
-                      </td>
-                      <td class="px-4 py-3 text-sm text-gray-500">{{ category.createdAt ? new Date(category.createdAt).toLocaleString() : '-' }}</td>
-                      <td class="px-4 py-3 text-sm space-x-2">
-                        <Button size="sm" variant="outline" @click="onEditJobCategory(category)">编辑</Button>
-                        <Button size="sm" variant="outline" @click="onDeleteJobCategory(category)" class="text-red-600 hover:text-red-700">删除</Button>
-                      </td>
-                    </tr>
-                    <!-- 子分类行 -->
-                    <template v-if="expandedCategories.includes(category.id)">
-                      <tr v-if="category.childrenLoading" class="hover:bg-gray-50 bg-gray-50">
-                        <td colspan="6" class="px-4 py-3 text-center text-gray-500">
-                          <div class="flex items-center justify-center space-x-2">
-                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-                            <span>加载子分类中...</span>
-                          </div>
-                        </td>
-                      </tr>
-                      <template v-else-if="Array.isArray(category.children) && category.children.length > 0">
-                        <tr v-for="child in (Array.isArray(category.children) ? category.children.filter(item => item && item.id) : [])" :key="`child-${child?.id || 'unknown'}`" class="hover:bg-gray-50 bg-gray-50">
-                          <td class="px-4 py-3">
-                            <div class="flex items-center space-x-2 pl-8">
-                              <button 
-                                v-if="child?.hasChildren || (Array.isArray(child?.children) && child.children.length > 0)"
-                                @click="toggleChildCategory(category.id, child.id)"
-                                class="text-gray-400 hover:text-gray-600"
-                                :disabled="!child"
-                              >
-                                <svg v-if="!expandedChildCategories.includes(`${category.id}-${child.id}`)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                              </button>
-                              <div v-else class="w-4 h-4 flex items-center justify-center">
-                                <div class="w-1 h-1 bg-gray-300 rounded-full"></div>
-                              </div>
-                              <span class="text-sm text-gray-900">└ {{ child?.name || '未知分类' }}</span>
-                            </div>
-                          </td>
-                          <td class="px-4 py-3 text-sm text-gray-500">{{ child?.description || '-' }}</td>
-                          <td class="px-4 py-3 text-sm text-gray-500">{{ child?.sortOrder || 0 }}</td>
-                          <td class="px-4 py-3 text-sm text-gray-500">
-                            <span v-if="Array.isArray(child?.children) && child.children.length > 0" class="text-blue-600">
-                              {{ child.children.length }} 个子分类
-                            </span>
-                            <span v-else-if="child?.hasChildren" class="text-blue-600">
-                              有子分类
-                            </span>
-                            <span v-else class="text-gray-400">无</span>
-                          </td>
-                          <td class="px-4 py-3 text-sm text-gray-500">{{ child?.createdAt ? new Date(child.createdAt).toLocaleString() : '-' }}</td>
-                          <td class="px-4 py-3 text-sm space-x-2">
-                            <Button size="sm" variant="outline" @click="onEditJobCategory(child)" :disabled="!child">编辑</Button>
-                            <Button size="sm" variant="outline" @click="onDeleteJobCategory(child)" class="text-red-600 hover:text-red-700" :disabled="!child">删除</Button>
-                          </td>
-                        </tr>
-                        <!-- 孙分类行 -->
-                        <template v-if="child && expandedChildCategories.includes(`${category.id}-${child.id}`) && Array.isArray(child.children) && child.children.length > 0">
-                          <tr v-for="grandChild in (Array.isArray(child.children) ? child.children.filter(item => item && item.id) : [])" :key="`grandchild-${grandChild?.id || 'unknown'}`" class="hover:bg-gray-50 bg-gray-100">
-                            <td class="px-4 py-3">
-                              <div class="flex items-center space-x-2 pl-12">
-                                <span class="text-sm text-gray-900">└ └ {{ grandChild?.name || '未知分类' }}</span>
-                              </div>
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-500">{{ grandChild?.description || '-' }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-500">{{ grandChild?.sortOrder || 0 }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-500">
-                              <span v-if="Array.isArray(grandChild?.children) && grandChild.children.length > 0" class="text-blue-600">
-                                {{ grandChild.children.length }} 个子分类
-                              </span>
-                              <span v-else class="text-gray-400">无</span>
-                            </td>
-                            <td class="px-4 py-3 text-sm text-gray-500">{{ grandChild?.createdAt ? new Date(grandChild.createdAt).toLocaleString() : '-' }}</td>
-                            <td class="px-4 py-3 text-sm space-x-2">
-                              <Button size="sm" variant="outline" @click="onEditJobCategory(grandChild)" :disabled="!grandChild">编辑</Button>
-                              <Button size="sm" variant="outline" @click="onDeleteJobCategory(grandChild)" class="text-red-600 hover:text-red-700" :disabled="!grandChild">删除</Button>
-                            </td>
-                          </tr>
-                        </template>
-                      </template>
-                      <tr v-else-if="category.childrenError" class="hover:bg-gray-50 bg-gray-50">
-                        <td colspan="6" class="px-4 py-3 text-center text-red-500">
-                          加载子分类失败: {{ category.childrenError }}
-                        </td>
-                      </tr>
-                      <tr v-else class="hover:bg-gray-50 bg-gray-50">
-                        <td colspan="6" class="px-4 py-3 text-center text-gray-500">
-                          暂无子分类
-                        </td>
-                      </tr>
-                    </template>
-                  </template>
+                  <CategoryRow
+                    v-for="category in filteredJobCategories"
+                    :key="category.id"
+                    :category="category"
+                    :level="0"
+                    :onEdit="onEditJobCategory"
+                    :onDelete="onDeleteJobCategory"
+                  />
                 </tbody>
               </table>
             </div>
@@ -575,12 +457,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, defineComponent, getCurrentInstance, h } from 'vue'
 import { Building2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import { ClipboardDocumentListIcon, UserGroupIcon, Cog6ToothIcon, TagIcon } from '@heroicons/vue/24/outline'
 import { apiRequest } from '@/lib/api/apiClient'
-import { createSchool, getPendingOrganizations, approveEnterprise, getPendingEnterprises, getUsers, updateUserStatus, getJobCategories, createJobCategory, updateJobCategory, deleteJobCategory, getRootJobCategories, getJobCategoryChildren } from '@/lib/api/admin'
+import { createSchool, getPendingOrganizations, approveEnterprise, getPendingEnterprises, getUsers, updateUserStatus, getJobCategories, createJobCategory, updateJobCategory, deleteJobCategory, getRootJobCategories, getJobCategoryChildren, getHierarchicalJobCategories } from '@/lib/api/admin'
 import { setToken } from '@/lib/api/apiClient'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -637,6 +519,47 @@ const showDeleteJobCategoryDialog = ref(false)
 
 const router = useRouter()
 const appStore = useAppStore()
+
+// 在这里定义 CategoryRow 递归组件
+const CategoryRow = defineComponent({
+  name: 'CategoryRow',
+  props: {
+    category: { type: Object, required: true },
+    level: { type: Number, default: 0 },
+    onEdit: { type: Function, required: false },
+    onDelete: { type: Function, required: false }
+  },
+  setup(props) {
+    return () => [
+      h('tr', { class: props.level === 0 ? '' : 'bg-gray-50' }, [
+        h('td', { style: { paddingLeft: `${props.level * 32}px` } }, [
+          `${'└ '.repeat(props.level)}${props.category.name}`
+        ]),
+        h('td', props.category.description || '-'),
+        h('td', props.category.sortOrder || 0),
+        h('td', Array.isArray(props.category.children) && props.category.children.length > 0
+          ? h('span', { class: 'text-blue-600' }, `${props.category.children.length} 个子分类`)
+          : h('span', { class: 'text-gray-400' }, '无')
+        ),
+        h('td', props.category.createdAt ? new Date(props.category.createdAt).toLocaleString() : '-'),
+        h('td', [
+          h(Button, { size: 'sm', variant: 'outline', onClick: () => props.onEdit && props.onEdit(props.category) }, '编辑'),
+          h(Button, { size: 'sm', variant: 'outline', class: 'text-red-600 hover:text-red-700', onClick: () => props.onDelete && props.onDelete(props.category) }, '删除')
+        ])
+      ]),
+      ...(Array.isArray(props.category.children)
+        ? props.category.children.map(child =>
+            h(CategoryRow, {
+              category: child,
+              level: props.level + 1,
+              onEdit: props.onEdit,
+              onDelete: props.onDelete
+            })
+          )
+        : [])
+    ]
+  }
+})
 
 // 获取用户列表
 async function fetchUsers() {
@@ -1026,90 +949,46 @@ const availableParentCategories = computed(() => {
   return jobCategories.value.filter(category => !excludeIds.has(category.id))
 })
 
-// 岗位分类管理函数
-async function fetchJobCategories() {
-  jobCategoriesLoading.value = true
-  jobCategoriesError.value = ''
-  try {
-    // 使用新的根分类API
-    const res = await getRootJobCategories()
-    console.log('获取根分类API响应:', res)
-    if (res.data && Array.isArray(res.data)) {
-      // 处理返回的数据，确保每个分类都有正确的状态
-      jobCategories.value = res.data.map(category => ({
-        ...category,
-        children: category.children || null,
-        hasChildren: category.hasChildren || false, // 确保hasChildren字段存在
-        childrenLoading: false,
-        childrenError: null
-      }))
-      console.log('处理后的分类数据:', jobCategories.value)
-    } else {
-      jobCategories.value = []
-    }
-  } catch (e: any) {
-    console.error('获取岗位分类列表失败:', e)
-    jobCategoriesError.value = e.message || '获取岗位分类列表失败'
-    jobCategories.value = []
-  } finally {
-    jobCategoriesLoading.value = false
-  }
-}
-
-// 获取所有分类及其子分类信息
+// 获取所有分类及其子分类信息（推荐用 root 接口，children 字段递归）
 async function fetchJobCategoriesWithChildren() {
   jobCategoriesLoading.value = true
   jobCategoriesError.value = ''
   try {
-    // 首先获取根分类
-    const res = await getRootJobCategories()
-    console.log('获取根分类API响应:', res)
+    // 优先用树形结构接口
+    const res = await getHierarchicalJobCategories()
     if (res.data && Array.isArray(res.data)) {
-      // 处理返回的数据，确保每个分类都有正确的状态
-      jobCategories.value = res.data.map(category => ({
-        ...category,
-        children: category.children || null,
-        hasChildren: category.hasChildren || false, // 确保hasChildren字段存在
-        childrenLoading: false,
-        childrenError: null
-      }))
-      console.log('处理后的分类数据:', jobCategories.value)
-      
-      // 预加载所有分类的子分类信息（不判断hasChildren）
-      const loadPromises = jobCategories.value
-        .map(async (category) => {
-          try {
-            const childrenRes = await getJobCategoryChildren(category.id)
-            console.log(`获取分类 ${category.id} 的子分类API响应:`, childrenRes)
-            if (childrenRes.data && Array.isArray(childrenRes.data)) {
-              category.children = childrenRes.data
-                .filter(item => item && typeof item === 'object' && item.id)
-                .map(child => ({
-                  ...child,
-                  children: child.children || null,
-                  hasChildren: child.hasChildren || false, // 确保hasChildren字段存在
-                  childrenLoading: false,
-                  childrenError: null
-                }))
-              console.log(`处理后的分类 ${category.id} 子分类数据:`, category.children)
+      // 递归修正 children 为 null 的情况
+      function fixNullChildren(node) {
+        if (node.children === null) {
+          node.children = []
+        } else if (Array.isArray(node.children)) {
+          node.children.forEach(fixNullChildren)
+        }
+      }
+      res.data.forEach(fixNullChildren)
+      jobCategories.value = res.data
+      // 自动展开所有层级
+      expandedCategories.value = []
+      expandedChildCategories.value = []
+      function collectExpandIds(categories, parentId = null) {
+        for (const cat of categories) {
+          if (cat.children && cat.children.length > 0) {
+            if (parentId === null) {
+              expandedCategories.value.push(cat.id)
             } else {
-              category.children = []
+              expandedChildCategories.value.push(`${parentId}-${cat.id}`)
             }
-          } catch (e: any) {
-            console.error(`获取分类 ${category.id} 的子分类失败:`, e)
-            category.childrenError = e.message || '加载子分类失败'
-            category.children = []
+            collectExpandIds(cat.children, cat.id)
           }
-        })
-      
-      // 等待所有子分类加载完成
-      await Promise.all(loadPromises)
-      console.log('所有子分类加载完成')
+        }
+      }
+      collectExpandIds(jobCategories.value)
+      // 调试输出
+      console.log('[fetchJobCategoriesWithChildren] jobCategories.value:', JSON.parse(JSON.stringify(jobCategories.value)))
     } else {
       jobCategories.value = []
     }
-  } catch (e: any) {
-    console.error('获取岗位分类列表失败:', e)
+  } catch (e) {
     jobCategoriesError.value = e.message || '获取岗位分类列表失败'
     jobCategories.value = []
   } finally {
