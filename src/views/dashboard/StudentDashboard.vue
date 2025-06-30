@@ -1,59 +1,336 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div class="min-h-screen bg-gray-50">
     <!-- 使用通用导航栏组件 -->
     <Navbar />
     
-    <div class="py-8">
-      <div class="container mx-auto px-4">
-        <!-- 个人资料卡片 -->
-        <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
-          <img :src="userAvatar" class="w-20 h-20 rounded-full border-2 border-blue-200 mr-6" alt="avatar" />
-          <div class="flex-1">
-            <div class="flex items-center mb-2">
-              <span class="text-2xl font-bold text-gray-900 mr-2">{{ user.nickname }}</span>
-              <span class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700 ml-2">{{ roleText }}</span>
-              <span v-if="user.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
+    <!-- 加载状态 -->
+    <div v-if="isLoading" class="container mx-auto px-4 py-8">
+      <div class="bg-white rounded-xl shadow-sm mb-8 animate-pulse">
+        <div class="h-40 w-full bg-gray-200 rounded-t-xl"></div>
+        <div class="px-6 py-4">
+          <div class="flex flex-col md:flex-row">
+            <div class="flex flex-col items-center md:items-start -mt-16 md:-mt-12">
+              <div class="w-28 h-28 rounded-full bg-gray-300"></div>
+              <div class="mt-4 w-40 h-6 bg-gray-300 rounded-md"></div>
+              <div class="mt-2 w-24 h-4 bg-gray-200 rounded-md"></div>
             </div>
-            <div class="text-gray-500 text-sm mb-1">{{ user.email }}</div>
-            <div class="text-gray-500 text-sm">{{ user.phone }}</div>
-            <div class="text-gray-500 text-sm mt-1">所属学校：{{ user.school || '未绑定' }}</div>
           </div>
-          <div class="flex flex-col space-y-2">
-            <button @click="onEditProfileClick" class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑资料</button>
-            <button @click="showResumeDialog = true" class="px-4 py-1 rounded bg-green-600 text-white font-semibold hover:bg-green-700 transition shadow">管理简历</button>
+        </div>
+        <div class="px-6 pt-2 pb-2 border-b">
+          <div class="h-8 w-full bg-gray-100"></div>
+        </div>
+      </div>
+      
+      <div class="h-8 w-40 bg-gray-200 rounded-md mb-4"></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div v-for="i in 3" :key="i" class="h-64 bg-white rounded-xl shadow-sm animate-pulse"></div>
+      </div>
+    </div>
+    
+    <!-- 主内容 -->
+    <div v-else class="container mx-auto px-4 py-8">
+      <!-- 个人资料区域 -->
+      <div class="bg-white rounded-xl shadow-sm mb-8 hover-card">
+        <!-- 顶部信息区 -->
+        <div class="relative">
+          <!-- 封面背景 -->
+          <div class="h-40 w-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-xl"></div>
+          
+          <!-- 头像和基本信息 -->
+          <div class="flex flex-col md:flex-row px-6 py-4">
+            <div class="flex flex-col items-center md:items-start -mt-16 md:-mt-12">
+              <div class="relative group avatar-hover">
+                <img 
+                  :src="userAvatar" 
+                  class="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover" 
+                  alt="用户头像" 
+                />
+                <div 
+                  @click="onEditProfileClick"
+                  class="absolute inset-0 rounded-full bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-200"
+                >
+                  <span class="text-white text-sm">更换头像</span>
+                </div>
+              </div>
+              
+              <div class="mt-4 md:mt-6 flex flex-col items-center md:items-start">
+                <div class="flex items-center flex-wrap justify-center md:justify-start">
+                  <h1 class="text-2xl font-bold text-gray-900">{{ user.nickname }}</h1>
+                  <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">{{ roleText }}</span>
+                  <span v-if="user.verified" class="ml-2 mt-1 md:mt-0 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">已认证</span>
+                </div>
+                <p class="text-gray-500 mt-1">{{ user.school || '未绑定学校' }}</p>
+              </div>
+            </div>
+            
+            <div class="ml-0 md:ml-auto mt-6 md:mt-0 flex flex-col md:flex-row items-center gap-3">
+              <div class="flex flex-col items-center md:items-end">
+                <div class="text-gray-600 text-sm">{{ user.email }}</div>
+                <div class="text-gray-600 text-sm">{{ user.phone }}</div>
+              </div>
+              <div class="flex gap-2 mt-3 md:mt-0">
+                <button 
+                  @click="onEditProfileClick" 
+                  class="px-4 py-2 rounded-full bg-blue-50 text-blue-600 font-medium hover:bg-blue-100 transition flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                  编辑资料
+                </button>
+                <button 
+                  @click="showResumeDialog = true" 
+                  class="px-4 py-2 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+                  </svg>
+                  我的简历
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 导航标签栏 -->
+          <div class="px-6 pt-2 pb-0 border-b relative">
+            <!-- 移动端菜单按钮 -->
+            <button 
+              @click="toggleMobileMenu" 
+              class="md:hidden absolute right-4 top-2 text-gray-500 hover:text-gray-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+            </button>
+            
+            <!-- 桌面菜单 -->
+            <div class="hidden md:flex space-x-6 overflow-x-auto scrollbar-hide">
+              <a class="pb-3 border-b-2 border-indigo-600 font-medium text-indigo-600">个人主页</a>
+              <a class="pb-3 border-b-2 border-transparent hover:border-gray-300 font-medium text-gray-500 hover:text-gray-700">求职记录</a>
+              <a class="pb-3 border-b-2 border-transparent hover:border-gray-300 font-medium text-gray-500 hover:text-gray-700">学习记录</a>
+              <a class="pb-3 border-b-2 border-transparent hover:border-gray-300 font-medium text-gray-500 hover:text-gray-700">课程管理</a>
+            </div>
+            
+            <!-- 移动菜单 -->
+            <div 
+              v-if="mobileMenuOpen"
+              class="md:hidden absolute left-0 right-0 top-full bg-white shadow-md z-10 border-b border-gray-100"
+            >
+              <a class="block px-4 py-2 text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50">个人主页</a>
+              <a class="block px-4 py-2 text-gray-500 hover:bg-gray-50 border-l-4 border-transparent">求职记录</a>
+              <a class="block px-4 py-2 text-gray-500 hover:bg-gray-50 border-l-4 border-transparent">学习记录</a>
+              <a class="block px-4 py-2 text-gray-500 hover:bg-gray-50 border-l-4 border-transparent">课程管理</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 数据卡片区域 -->
+      <div class="mb-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-2 md:mb-0">我的数据</h2>
+          <div class="flex space-x-2">
+            <button class="px-3 py-1.5 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+              </svg>
+              筛选
+            </button>
+            <button class="px-3 py-1.5 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+              </svg>
+              排序
+            </button>
+          </div>
+        </div>
+
+        <!-- 上半部分数据卡片 - 使用大卡片布局 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 equal-height-cards">
+          <!-- 收藏/投递职位 卡片 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
+            <!-- 卡片头部 -->
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+              <div class="flex items-center">
+                <span class="bg-blue-100 p-2 rounded-lg mr-3">
+                  <component :is="blocks[0].icon" class="w-5 h-5 text-blue-600" />
+                </span>
+                <h3 class="font-medium text-gray-800">{{ blocks[0].title }}</h3>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- 卡片内容 -->
+            <div class="p-5">
+              <ul class="space-y-3">
+                <li v-for="item in blocks[0].data" :key="item.id" class="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-all">
+                  <div class="flex items-center">
+                    <div class="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                    <span class="text-gray-700">{{ item.label }}</span>
+                  </div>
+                  <span class="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full">{{ item.extra }}</span>
+                </li>
+                <li v-if="blocks[0].data.length === 0" class="text-gray-400 text-sm p-2">{{ blocks[0].empty }}</li>
+              </ul>
+            </div>
+            
+            <!-- 卡片底部 -->
+            <div class="border-t border-gray-100 p-4 mt-auto">
+              <router-link v-if="blocks[0].footer" :to="blocks[0].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center justify-center">
+                {{ blocks[0].footer.text }}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </router-link>
+            </div>
+          </div>
+          
+          <!-- 学习记录 卡片 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
+            <!-- 卡片头部 -->
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+              <div class="flex items-center">
+                <span class="bg-green-100 p-2 rounded-lg mr-3">
+                  <component :is="blocks[1].icon" class="w-5 h-5 text-green-600" />
+                </span>
+                <h3 class="font-medium text-gray-800">{{ blocks[1].title }}</h3>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- 卡片内容 -->
+            <div class="p-5">
+              <ul class="space-y-3">
+                <li v-for="item in blocks[1].data" :key="item.id" class="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-all">
+                  <div class="flex items-center">
+                    <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                    <span class="text-gray-700">{{ item.label }}</span>
+                  </div>
+                  <span class="text-xs px-2 py-1 bg-green-50 text-green-600 rounded-full">{{ item.extra }}</span>
+                </li>
+                <li v-if="blocks[1].data.length === 0" class="text-gray-400 text-sm p-2">{{ blocks[1].empty }}</li>
+              </ul>
+            </div>
+            
+            <!-- 卡片底部 -->
+            <div class="border-t border-gray-100 p-4 mt-auto">
+              <router-link v-if="blocks[1].footer" :to="blocks[1].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center justify-center">
+                {{ blocks[1].footer.text }}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </router-link>
+            </div>
+          </div>
+          
+          <!-- 报名课程 卡片 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
+            <!-- 卡片头部 -->
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+              <div class="flex items-center">
+                <span class="bg-indigo-100 p-2 rounded-lg mr-3">
+                  <component :is="blocks[2].icon" class="w-5 h-5 text-indigo-600" />
+                </span>
+                <h3 class="font-medium text-gray-800">{{ blocks[2].title }}</h3>
+              </div>
+              <button class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- 卡片内容 -->
+            <div class="p-5">
+              <ul class="space-y-3">
+                <li v-for="item in blocks[2].data" :key="item.id" class="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-all">
+                  <div class="flex items-center">
+                    <div class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></div>
+                    <span class="text-gray-700">{{ item.label }}</span>
+                  </div>
+                  <span class="text-xs px-2 py-1 bg-indigo-50 text-indigo-600 rounded-full">{{ item.extra }}</span>
+                </li>
+                <li v-if="blocks[2].data.length === 0" class="text-gray-400 text-sm p-2">{{ blocks[2].empty }}</li>
+              </ul>
+            </div>
+            
+            <!-- 卡片底部 -->
+            <div class="border-t border-gray-100 p-4 mt-auto">
+              <router-link v-if="blocks[2].footer" :to="blocks[2].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center justify-center">
+                {{ blocks[2].footer.text }}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </router-link>
+            </div>
           </div>
         </div>
         
-        <!-- 数据卡片 -->
-        <h2 class="text-xl font-bold text-gray-800 mb-4">我的数据</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-          <div v-for="(block, idx) in blocks" :key="idx" class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-200 flex flex-col mb-2">
-            <div class="flex items-center mb-4">
-              <component :is="block.icon" class="w-7 h-7 mr-2" :class="block.color" />
-              <span class="font-semibold text-lg">{{ block.title }}</span>
+        <!-- 下半部分数据卡片 - 使用紧凑的水平卡片布局 -->
+        <h3 class="text-lg font-medium text-gray-800 mb-4">快速入口</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- 企业申请入口 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
+            <div class="p-4 flex">
+              <div class="rounded-lg p-3 bg-yellow-50 mr-4">
+                <component :is="blocks[3].icon" class="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <h3 class="font-medium text-gray-800 mb-1">{{ blocks[3].title }}</h3>
+                <p class="text-sm text-gray-500 mb-2">{{ blocks[3].empty }}</p>
+                <router-link v-if="blocks[3].footer" :to="blocks[3].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center">
+                  {{ blocks[3].footer.text }}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </router-link>
+              </div>
             </div>
-            <div v-if="block.type === 'list'">
-              <ul>
-                <li v-for="item in block.data" :key="item.id" class="flex justify-between items-center mb-2 text-gray-700">
-                  <span>{{ item.label }}</span>
-                  <span v-if="item.status" class="text-xs px-2 py-0.5 rounded" :class="item.statusColor">{{ item.status }}</span>
-                  <span v-if="item.extra" class="text-xs text-gray-400 ml-2">{{ item.extra }}</span>
-                </li>
-                <li v-if="block.data.length === 0" class="text-gray-400 text-sm">{{ block.empty }}</li>
-              </ul>
+          </div>
+          
+          <!-- 学校信息浏览 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
+            <div class="p-4 flex">
+              <div class="rounded-lg p-3 bg-green-50 mr-4">
+                <component :is="blocks[4].icon" class="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h3 class="font-medium text-gray-800 mb-1">{{ blocks[4].title }}</h3>
+                <p class="text-sm text-gray-500 mb-2">{{ blocks[4].empty }}</p>
+                <router-link v-if="blocks[4].footer" :to="blocks[4].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center">
+                  {{ blocks[4].footer.text }}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </router-link>
+              </div>
             </div>
-            <div v-else-if="block.type === 'count'">
-              <div class="mb-2 text-sm text-gray-700">共 {{ block.count || 0 }} 项</div>
-              <ul>
-                <li v-for="item in block.data" :key="item.id" class="flex justify-between items-center mb-1">
-                  <span>{{ item.label }}</span>
-                  <span class="text-xs text-gray-400">{{ item.extra }}</span>
-                </li>
-                <li v-if="block.data.length === 0" class="text-gray-400 text-sm">{{ block.empty }}</li>
-              </ul>
-            </div>
-            <div class="mt-auto pt-4">
-              <router-link v-if="block.footer" :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium">{{ block.footer.text }}</router-link>
+          </div>
+          
+          <!-- 企业信息浏览 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
+            <div class="p-4 flex">
+              <div class="rounded-lg p-3 bg-yellow-50 mr-4">
+                <component :is="blocks[5].icon" class="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <h3 class="font-medium text-gray-800 mb-1">{{ blocks[5].title }}</h3>
+                <p class="text-sm text-gray-500 mb-2">{{ blocks[5].empty }}</p>
+                <router-link v-if="blocks[5].footer" :to="blocks[5].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center">
+                  {{ blocks[5].footer.text }}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </router-link>
+              </div>
             </div>
           </div>
         </div>
@@ -67,70 +344,86 @@
         <form @submit.prevent="onUpdateProfile">
           <!-- 头像上传 -->
           <div class="mb-5 flex flex-col items-center">
-            <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
-            <div class="flex items-center mt-2">
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                class="hidden"
-                @change="handleAvatarChange"
+            <div class="relative group">
+              <img 
+                :src="previewAvatar || userAvatar" 
+                class="w-28 h-28 rounded-full border-2 border-blue-200 mb-2 object-cover" 
+                alt="avatar" 
               />
-              <button 
-                type="button" 
-                @click="fileInput?.click()"
-                class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
+              <div 
+                @click="fileInput?.click()" 
+                class="absolute inset-0 rounded-full bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-200"
               >
-                选择头像
-              </button>
+                <span class="text-white text-sm">更换头像</span>
+              </div>
+            </div>
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleAvatarChange"
+            />
+            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1 flex items-center">
+              <span>{{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})</span>
               <button 
-                v-if="avatarFile" 
                 type="button" 
                 @click="cancelAvatarUpload" 
-                class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
+                class="ml-2 text-red-500 hover:text-red-700"
               >
-                取消
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
               </button>
-            </div>
-            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
-              {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
             </p>
           </div>
 
           <div class="mb-3">
-            <label class="block text-gray-700 mb-1">昵称</label>
-            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
+            <label class="block text-gray-700 mb-1 text-sm font-medium">昵称</label>
+            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入昵称" />
           </div>
           <div class="mb-3">
-            <label class="block text-gray-700 mb-1">邮箱</label>
-            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
+            <label class="block text-gray-700 mb-1 text-sm font-medium">邮箱</label>
+            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入邮箱" />
           </div>
           <div class="mb-3">
-            <label class="block text-gray-700 mb-1">手机号</label>
-            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
+            <label class="block text-gray-700 mb-1 text-sm font-medium">手机号</label>
+            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入手机号" />
           </div>
           <div class="flex justify-end space-x-2 mt-4">
-            <button type="button" @click="showEditProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
+            <button type="button" @click="showEditProfileDialog = false" class="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">取消</button>
+            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition flex items-center">
+              <svg v-if="updateProfileLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ updateProfileLoading ? '保存中...' : '保存' }}
+            </button>
           </div>
         </form>
         <div class="mt-6 pt-4 border-t">
           <h3 class="text-lg font-semibold mb-3">修改密码</h3>
           <form @submit.prevent="onChangePassword">
             <div class="mb-3">
-              <label class="block text-gray-700 mb-1">原密码</label>
-              <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
+              <label class="block text-gray-700 mb-1 text-sm font-medium">原密码</label>
+              <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入原密码" />
             </div>
             <div class="mb-3">
-              <label class="block text-gray-700 mb-1">新密码</label>
-              <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
+              <label class="block text-gray-700 mb-1 text-sm font-medium">新密码</label>
+              <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入新密码" />
             </div>
             <div class="mb-3">
-              <label class="block text-gray-700 mb-1">确认新密码</label>
-              <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
+              <label class="block text-gray-700 mb-1 text-sm font-medium">确认新密码</label>
+              <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请再次输入新密码" />
             </div>
             <div class="flex justify-end space-x-2">
-              <button type="submit" :disabled="changePasswordLoading" class="px-4 py-1 rounded bg-green-600 text-white">{{ changePasswordLoading ? '修改中...' : '修改密码' }}</button>
+              <button type="submit" :disabled="changePasswordLoading" class="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 transition flex items-center">
+                <svg v-if="changePasswordLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ changePasswordLoading ? '修改中...' : '修改密码' }}
+              </button>
             </div>
           </form>
         </div>
@@ -479,10 +772,110 @@ function onResumeUpdated() {
   // 可以在这里执行一些操作，如更新数据卡片中的简历信息
   console.log('简历已更新')
 }
+
+// 添加页面加载状态
+const isLoading = ref(true)
+const mobileMenuOpen = ref(false)
+
+// 在onMounted中模拟加载
+onMounted(async () => {
+  try {
+    await fetchUserInfo()
+    
+    // 获取完成后设置加载状态为false
+    setTimeout(() => {
+      isLoading.value = false
+    }, 300) // 短暂延迟以确保平滑过渡
+  } catch (e) {
+    console.error('获取数据失败:', e)
+    isLoading.value = false
+  }
+})
+
+// 移动菜单切换
+function toggleMobileMenu() {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
 </script>
 
 <style scoped>
 .gradient-card {
   background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 页面过渡效果 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 卡片悬停效果 */
+.hover-card {
+  transition: all 0.2s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* 隐藏滚动条但保留功能 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+/* 响应式卡片高度匹配 */
+@media (min-width: 768px) {
+  .equal-height-cards {
+    display: grid;
+    grid-auto-rows: 1fr;
+  }
+}
+
+/* 加载动画 */
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 头像悬停效果增强 */
+.avatar-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar-hover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  border-radius: 9999px;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-hover:hover::after {
+  opacity: 1;
 }
 </style>
