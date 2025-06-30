@@ -65,6 +65,38 @@
       <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <h2 class="text-xl font-bold mb-4">编辑个人资料</h2>
         <form @submit.prevent="onUpdateProfile">
+          <!-- 头像上传 -->
+          <div class="mb-5 flex flex-col items-center">
+            <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
+            <div class="flex items-center mt-2">
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleAvatarChange"
+              />
+              <button 
+                type="button" 
+                @click="fileInput?.click()"
+                class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
+              >
+                选择头像
+              </button>
+              <button 
+                v-if="avatarFile" 
+                type="button" 
+                @click="cancelAvatarUpload" 
+                class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
+              >
+                取消
+              </button>
+            </div>
+            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
+              {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
+            </p>
+          </div>
+
           <div class="mb-3">
             <label class="block text-gray-700 mb-1">昵称</label>
             <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
@@ -106,137 +138,7 @@
     </div>
 
     <!-- 简历管理对话框 -->
-    <div v-if="showResumeDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-blue-700">简历管理</h2>
-          <button @click="showResumeDialog = false" class="text-gray-400 hover:text-gray-600">
-            <XIcon class="w-6 h-6" />
-          </button>
-        </div>
-
-        <form @submit.prevent="onSaveResume">
-          <!-- 基本信息 -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-3 pb-2 border-b">基本信息</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-gray-700 mb-1">专业</label>
-                <input v-model="resumeData.major" class="w-full px-3 py-2 border rounded" placeholder="请输入专业" />
-              </div>
-              <div>
-                <label class="block text-gray-700 mb-1">学历</label>
-                <select v-model="resumeData.educationLevel" class="w-full px-3 py-2 border rounded">
-                  <option value="专科">专科</option>
-                  <option value="本科">本科</option>
-                  <option value="硕士">硕士</option>
-                  <option value="博士">博士</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- 成就与荣誉 -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-3 pb-2 border-b">成就与荣誉</h3>
-            <div v-for="(achievement, index) in resumeData.achievements" :key="index" class="mb-2 flex items-center">
-              <input 
-                v-model="resumeData.achievements[index]" 
-                class="flex-1 px-3 py-2 border rounded" 
-                placeholder="请输入成就或荣誉" 
-              />
-              <button 
-                type="button" 
-                @click="removeAchievement(index)" 
-                class="ml-2 text-red-500 hover:text-red-700"
-              >
-                <TrashIcon class="w-5 h-5" />
-              </button>
-            </div>
-            <button 
-              type="button" 
-              @click="addAchievement" 
-              class="mt-2 flex items-center text-blue-600 hover:text-blue-800"
-            >
-              <PlusIcon class="w-4 h-4 mr-1" />
-              <span>添加成就</span>
-            </button>
-          </div>
-
-          <!-- 简历文件上传 -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-3 pb-2 border-b">简历文件</h3>
-            
-            <div v-if="resumeData.resumeUrl" class="mb-4 p-4 border rounded bg-blue-50 flex items-center justify-between">
-              <div class="flex items-center">
-                <DocumentIcon class="w-6 h-6 text-blue-500 mr-2" />
-                <div>
-                  <div class="font-medium">当前简历</div>
-                  <div class="text-sm text-gray-500">{{ getFileNameFromUrl(resumeData.resumeUrl) }}</div>
-                </div>
-              </div>
-              <button 
-                type="button" 
-                @click="deleteResume" 
-                class="text-red-500 hover:text-red-700"
-              >
-                <TrashIcon class="w-5 h-5" />
-              </button>
-            </div>
-
-            <div 
-              class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer"
-              @click="triggerFileInput"
-            >
-              <input 
-                ref="fileInput" 
-                type="file" 
-                class="hidden" 
-                @change="handleFileChange" 
-                accept=".pdf,.doc,.docx"
-              />
-              <div v-if="!resumeFile">
-                <UploadIcon class="w-12 h-12 mx-auto text-gray-400" />
-                <p class="mt-2 text-sm text-gray-600">点击或拖拽文件至此处上传</p>
-                <p class="text-xs text-gray-500 mt-1">支持格式：PDF、Word（.doc/.docx）</p>
-              </div>
-              <div v-else class="text-left">
-                <div class="flex items-center">
-                  <DocumentIcon class="w-10 h-10 text-blue-500 mr-3" />
-                  <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-800">{{ resumeFile.name }}</p>
-                    <p class="text-xs text-gray-500">{{ formatFileSize(resumeFile.size) }}</p>
-                  </div>
-                  <button 
-                    @click.stop="removeFile" 
-                    class="text-gray-400 hover:text-red-500"
-                  >
-                    <TrashIcon class="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end space-x-3 mt-6">
-            <button 
-              type="button" 
-              @click="showResumeDialog = false" 
-              class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-            >
-              取消
-            </button>
-            <button 
-              type="submit" 
-              :disabled="resumeSaving"
-              class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {{ resumeSaving ? '保存中...' : '保存简历' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ResumeManager v-model:visible="showResumeDialog" @resume-updated="onResumeUpdated" />
   </div>
 </template>
 
@@ -245,17 +147,11 @@ import { useAppStore } from '@/stores/app'
 import { ref, computed, onMounted } from 'vue'
 import { BriefcaseIcon, BookmarkIcon, AcademicCapIcon, CalendarDaysIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
-import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
-import { getUserResume, updateUserResume, uploadResumeFile, deleteResumeFile } from '@/lib/api/resume'
+import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
+import { getMyResumes, createMyResume, updateMyResume, deleteMyResume } from '@/lib/api/resume'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
-import { 
-  FileText as DocumentIcon, 
-  Upload as UploadIcon, 
-  Trash as TrashIcon, 
-  X as XIcon, 
-  Plus as PlusIcon 
-} from 'lucide-vue-next'
+import ResumeManager from '@/components/resume/ResumeManager.vue'
 
 // 定义API响应类型
 interface ApiResponse<T> {
@@ -311,11 +207,12 @@ interface Block {
   };
 }
 
-// 简历数据类型
+// 简历数据类型 - 与API保持一致
 interface ResumeData {
+  id?: number;
   major: string;
   educationLevel: string;
-  achievements: string[];
+  achievements: string;
   resumeUrl?: string;
 }
 
@@ -350,10 +247,9 @@ async function fetchUserInfo() {
 
 onMounted(() => {
   fetchUserInfo()
-  fetchUserResume()
 })
 
-// 更新blocks数据，添加类型
+// 更新blocks数据
 const blocks = ref<Block[]>([
   {
     title: '收藏/投递职位',
@@ -456,21 +352,57 @@ const passwordChange = ref({
 const updateProfileLoading = ref(false)
 const changePasswordLoading = ref(false)
 
+// 头像上传相关
+const fileInput = ref<HTMLInputElement | null>(null)
+const avatarFile = ref<File | null>(null)
+const previewAvatar = ref<string | null>(null)
+const avatarUploading = ref(false)
+
+// 简历管理相关
+const showResumeDialog = ref(false)
+
 async function onUpdateProfile() {
   updateProfileLoading.value = true
   try {
+    // 先更新用户基本信息
     await updateUserInfo({
       nickname: editProfile.value.nickname,
       email: editProfile.value.email,
       phone: editProfile.value.phone
     })
+    
+    // 如果选择了新头像，则上传头像
+    if (avatarFile.value) {
+      avatarUploading.value = true
+      try {
+        await uploadAvatar(avatarFile.value)
+        console.log('头像上传成功')
+      } catch (avatarError: any) {
+        console.error('头像上传失败:', avatarError)
+        alert('头像上传失败: ' + (avatarError.message || '未知错误'))
+        // 继续执行，不影响其他信息的保存
+      } finally {
+        avatarUploading.value = false
+      }
+    }
+    
     showEditProfileDialog.value = false
+    
+    // 重置头像上传状态
+    avatarFile.value = null
+    previewAvatar.value = null
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+    
     await fetchUserInfo() // 重新获取用户信息
+    
     // 更新store中的用户信息
     const res = await getMe() as ApiResponse<any>
     if (res?.data) {
       appStore.setUser(res.data)
     }
+    
     alert('个人资料更新成功')
   } catch (e: any) {
     alert('更新失败：' + (e.message || '未知错误'))
@@ -516,82 +448,21 @@ function onEditProfileClick() {
   openEditDialog()
 }
 
-// 简历管理相关
-const showResumeDialog = ref(false)
-const resumeData = ref<ResumeData>({
-  major: '',
-  educationLevel: '本科',
-  achievements: ['']
-})
-const resumeFile = ref<File | null>(null)
-const fileInput = ref<HTMLInputElement | null>(null)
-const resumeSaving = ref(false)
-
-// 获取用户简历信息
-async function fetchUserResume() {
-  try {
-    const res = await getUserResume() as ApiResponse<ResumeData>
-    if (res?.data) {
-      resumeData.value = res.data
-      
-      // 确保至少有一个成就输入框
-      if (!resumeData.value.achievements || resumeData.value.achievements.length === 0) {
-        resumeData.value.achievements = ['']
-      }
-    }
-  } catch (e: any) {
-    console.error('获取简历信息失败:', e)
-    // 初始化空数据
-    resumeData.value = {
-      major: '',
-      educationLevel: '本科',
-      achievements: ['']
-    }
-  }
-}
-
-// 添加成就
-function addAchievement() {
-  resumeData.value.achievements.push('')
-}
-
-// 删除成就
-function removeAchievement(index: number) {
-  if (resumeData.value.achievements.length > 1) {
-    resumeData.value.achievements.splice(index, 1)
-  } else {
-    resumeData.value.achievements = ['']
-  }
-}
-
-// 触发文件选择框
-function triggerFileInput() {
-  if (fileInput.value) {
-    fileInput.value.click()
-  }
-}
-
-// 处理文件选择
-function handleFileChange(event: Event) {
+// 处理头像上传相关函数
+function handleAvatarChange(event: Event) {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
-    resumeFile.value = target.files[0]
+    avatarFile.value = target.files[0]
+    previewAvatar.value = URL.createObjectURL(avatarFile.value)
   }
 }
 
-// 移除已选择的文件
-function removeFile() {
-  resumeFile.value = null
+function cancelAvatarUpload() {
+  avatarFile.value = null
+  previewAvatar.value = null
   if (fileInput.value) {
     fileInput.value.value = ''
   }
-}
-
-// 从URL中获取文件名
-function getFileNameFromUrl(url: string): string {
-  if (!url) return '未知文件'
-  const parts = url.split('/')
-  return parts[parts.length - 1]
 }
 
 // 格式化文件大小
@@ -603,58 +474,10 @@ function formatFileSize(bytes: number): string {
   return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i]
 }
 
-// 删除简历文件
-async function deleteResume() {
-  if (confirm('确定要删除当前简历文件吗？')) {
-    try {
-      await deleteResumeFile()
-      resumeData.value.resumeUrl = undefined
-      alert('简历文件已删除')
-    } catch (e: any) {
-      alert('删除失败：' + (e.message || '未知错误'))
-    }
-  }
-}
-
-// 保存简历信息
-async function onSaveResume() {
-  resumeSaving.value = true
-  
-  try {
-    // 过滤掉空的成就
-    const filteredAchievements = resumeData.value.achievements.filter(item => item.trim() !== '')
-    
-    // 更新基本信息
-    await updateUserResume({
-      major: resumeData.value.major,
-      educationLevel: resumeData.value.educationLevel,
-      achievements: filteredAchievements.length > 0 ? filteredAchievements : []
-    })
-    
-    // 如果有新文件上传
-    if (resumeFile.value) {
-      const formData = new FormData()
-      formData.append('file', resumeFile.value)
-      
-      const uploadRes = await uploadResumeFile(formData) as ApiResponse<{resumeUrl: string}>
-      if (uploadRes?.data?.resumeUrl) {
-        resumeData.value.resumeUrl = uploadRes.data.resumeUrl
-      }
-      
-      // 清空文件选择
-      resumeFile.value = null
-      if (fileInput.value) {
-        fileInput.value.value = ''
-      }
-    }
-    
-    alert('简历信息保存成功')
-    showResumeDialog.value = false
-  } catch (e: any) {
-    alert('保存失败：' + (e.message || '未知错误'))
-  } finally {
-    resumeSaving.value = false
-  }
+// 简历更新回调
+function onResumeUpdated() {
+  // 可以在这里执行一些操作，如更新数据卡片中的简历信息
+  console.log('简历已更新')
 }
 </script>
 

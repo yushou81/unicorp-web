@@ -8,6 +8,17 @@ export function login(data: { loginType: 'account'|'email'|'phone'; principal: s
   })
 }
 
+// 上传用户头像
+export function uploadAvatar(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  return apiRequest('/v1/auth/avatar', {
+    method: 'POST',
+    body: formData
+  })
+}
+
 // 获取当前用户
 export function getMe() {
   return apiRequest('/v1/auth/me')

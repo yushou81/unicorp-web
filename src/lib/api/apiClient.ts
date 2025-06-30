@@ -9,10 +9,21 @@ export function setToken(t: string) {
 
 export async function apiRequest<T>(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`
-  const headers = Object.assign(
-    { 'Content-Type': 'application/json' },
-    options.headers || {}
-  ) as Record<string, string>
+  
+  // 初始化headers
+  let headers: Record<string, string> = {}
+  
+  // 如果提供了自定义headers，使用它
+  if (options.headers !== undefined) {
+    headers = Object.assign({}, options.headers) as Record<string, string>
+  } else {
+    // 否则设置默认的Content-Type，但如果是FormData则不设置
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json'
+    }
+  }
+  
+  // 添加认证token
   if (token) headers['Authorization'] = `Bearer ${token}`
 
   // 调试输出
