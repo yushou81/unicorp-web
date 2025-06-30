@@ -1,18 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white/90 shadow-sm border-b border-gray-200 sticky top-0 z-40">
-      <div class="container mx-auto px-4 flex items-center justify-between h-14">
-        <div class="flex items-center space-x-4">
-          <span class="text-lg font-bold text-blue-700 tracking-wide">管理平台</span>
-          <!-- 预留导航信息位 -->
-          <span class="text-gray-400 text-sm ml-4">（可在此展示全局信息）</span>
-        </div>
-        <div class="flex items-center space-x-4">
-          <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
-        </div>
-      </div>
-    </nav>
+    <!-- 使用通用导航栏组件 -->
+    <Navbar />
+    
     <!-- 顶部渐变大标题 -->
     <div class="w-full py-12 bg-gradient-to-r from-blue-400 to-indigo-400 mb-8 shadow-lg">
       <div class="container mx-auto px-4 flex flex-col items-center">
@@ -595,6 +585,7 @@ import { setToken } from '@/lib/api/apiClient'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getAllSchools, getAllEnterprises } from '@/lib/api/organization'
+import Navbar from '@/components/layout/Navbar.vue'
 
 const showAddSchoolDialog = ref(false)
 const newSchool = ref({

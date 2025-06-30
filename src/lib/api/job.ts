@@ -182,4 +182,58 @@ export async function favoriteJob(id: number | string) {
   console.log(`[favoriteJob] 响应数据:`, response)
   
   return response
+}
+
+/**
+ * 申请岗位 - 上传简历文件
+ * @param jobId 岗位ID
+ * @param formData 包含简历文件和其他信息的FormData对象
+ * @returns 申请结果
+ */
+export async function applyJobWithFile(jobId: number | string, formData: FormData) {
+  const url = `/v1/jobs/${jobId}/apply/file`
+  console.log(`[applyJobWithFile] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<any>>(`${url}`, {
+    method: 'POST',
+    body: formData,
+    // 使用FormData时不要设置Content-Type，浏览器会自动设置
+    headers: {}
+  })
+  console.log(`[applyJobWithFile] 响应数据:`, response)
+  
+  return response
+}
+
+/**
+ * 申请岗位 - 在线填写简历
+ * @param jobId 岗位ID
+ * @param resumeData 简历数据
+ * @returns 申请结果
+ */
+export async function applyJobWithOnlineResume(jobId: number | string, resumeData: any) {
+  const url = `/v1/jobs/${jobId}/apply/online`
+  console.log(`[applyJobWithOnlineResume] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<any>>(`${url}`, {
+    method: 'POST',
+    body: JSON.stringify(resumeData)
+  })
+  console.log(`[applyJobWithOnlineResume] 响应数据:`, response)
+  
+  return response
+}
+
+/**
+ * 检查用户是否已有简历
+ * @returns 检查结果
+ */
+export async function checkUserResume() {
+  const url = `/v1/resume/check`
+  console.log(`[checkUserResume] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<{hasResume: boolean}>>(`${url}`)
+  console.log(`[checkUserResume] 响应数据:`, response)
+  
+  return response
 } 

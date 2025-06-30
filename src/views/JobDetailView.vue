@@ -3,7 +3,7 @@
     <!-- 导航栏 -->
     <Navbar />
     
-    <div class="container mx-auto px-4 py-6">
+    <div class="container mx-auto px-4 py-6 max-w-6xl">
       <div v-if="loading" class="flex justify-center py-12">
         <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
@@ -28,7 +28,7 @@
         </div>
         
         <!-- 职位标题区域 -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
           <div class="flex flex-col md:flex-row md:items-center justify-between">
             <div class="flex-1">
               <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ job.title }}
@@ -67,7 +67,10 @@
           
           <!-- 操作按钮 -->
           <div class="flex flex-wrap gap-4 mt-6">
-            <button class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center">
+            <button 
+              @click="showApplicationModal" 
+              class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center"
+            >
               <SendIcon class="w-4 h-4 mr-2" />
               立即申请
             </button>
@@ -91,10 +94,10 @@
         </div>
         
         <!-- 职位详情和公司信息 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
           <!-- 左侧：职位详情 -->
-          <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div class="lg:col-span-3">
+            <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
               <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                 <FileTextIcon class="w-5 h-5 mr-2 text-blue-600" />
                 职位描述
@@ -104,7 +107,7 @@
               </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
               <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                 <ClipboardCheckIcon class="w-5 h-5 mr-2 text-blue-600" />
                 岗位要求
@@ -116,7 +119,7 @@
             </div>
             
             <!-- 福利待遇 -->
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
               <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                 <GiftIcon class="w-5 h-5 mr-2 text-blue-600" />
                 福利待遇
@@ -130,7 +133,7 @@
           
           <!-- 右侧：公司信息和联系方式 -->
           <div class="lg:col-span-1">
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
               <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                 <BuildingIcon class="w-5 h-5 mr-2 text-blue-600" />
                 公司信息
@@ -172,7 +175,7 @@
               </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
               <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                 <PhoneIcon class="w-5 h-5 mr-2 text-blue-600" />
                 联系方式
@@ -205,7 +208,7 @@
               </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="bg-white rounded-lg shadow-sm p-5">
               <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                 <CalendarIcon class="w-5 h-5 mr-2 text-blue-600" />
                 投递时间
@@ -224,7 +227,7 @@
         </div>
         
         <!-- 相似职位推荐 -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
           <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
             <ListIcon class="w-5 h-5 mr-2 text-blue-600" />
             相似职位推荐
@@ -245,6 +248,14 @@
       copyright="© 2023-2024 校企联盟平台 版权所有"
       contactInfo="联系方式：contact@example.com"
     />
+    
+    <!-- 申请岗位模态框 -->
+    <JobApplicationModal 
+      :visible="applicationModalVisible" 
+      :job="job || {}" 
+      @close="applicationModalVisible = false"
+      @submit="handleApplicationSubmit"
+    />
   </div>
 </template>
 
@@ -254,6 +265,7 @@ import { useRoute } from 'vue-router'
 import { getJobDetail, Job, favoriteJob } from '@/lib/api/job'
 import Navbar from '@/components/layout/Navbar.vue'
 import Footer from '@/components/layout/Footer.vue'
+import JobApplicationModal from '@/components/job/JobApplicationModal.vue'
 import { 
   MapPin as MapPinIcon,
   GraduationCap as GraduationCapIcon,
@@ -289,6 +301,8 @@ const toast = ref({
   message: '',
   hiding: false
 })
+
+const applicationModalVisible = ref(false)
 
 // 获取岗位详情
 const fetchJobDetail = async () => {
@@ -502,6 +516,31 @@ const handleFavorite = async () => {
   } finally {
     favoriteLoading.value = false
   }
+}
+
+// 显示申请模态框
+const showApplicationModal = () => {
+  // 检查用户是否已登录
+  const isLoggedIn = localStorage.getItem('token')
+  if (!isLoggedIn) {
+    // 如果未登录，重定向到登录页面
+    alert('请先登录后再申请职位')
+    // 保存当前URL，以便登录后返回
+    localStorage.setItem('redirect_after_login', window.location.href)
+    window.location.href = '/login'
+    return
+  }
+  
+  applicationModalVisible.value = true
+}
+
+// 处理岗位申请提交
+const handleApplicationSubmit = (result: any) => {
+  // 提交成功后关闭模态框
+  applicationModalVisible.value = false
+  
+  // 显示成功提示
+  showToast('申请成功提交，请等待企业查看')
 }
 
 onMounted(() => {
