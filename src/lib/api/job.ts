@@ -77,6 +77,16 @@ export interface Job {
   }
 }
 
+// 岗位申请接口
+export interface JobApplication {
+  id: number
+  jobId: number
+  jobTitle: string
+  companyName: string
+  status: string
+  appliedAt: string
+}
+
 // API 响应接口
 export interface ApiResponse<T> {
   code: number
@@ -212,6 +222,75 @@ export async function favoriteJob(id: number | string) {
 }
 
 /**
+ * 取消收藏岗位
+ * @param id 岗位ID
+ * @returns 取消收藏结果
+ */
+export async function unfavoriteJob(id: number | string) {
+  const url = `/v1/jobs/${id}/favorite`
+  console.log(`[unfavoriteJob] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<any>>(`${url}`, {
+    method: 'DELETE'
+  })
+  console.log(`[unfavoriteJob] 响应数据:`, response)
+  
+  return response
+}
+
+/**
+ * 获取我收藏的岗位列表
+ * @param params 分页参数
+ * @returns 收藏岗位列表
+ */
+export async function getFavoriteJobs(params: { page?: number, size?: number } = {}) {
+  const queryParams = new URLSearchParams()
+  
+  if (params.page !== undefined) {
+    queryParams.append('page', params.page.toString())
+  }
+  
+  if (params.size !== undefined) {
+    queryParams.append('size', params.size.toString())
+  }
+  
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ''
+  const url = `/v1/me/favorites/jobs${queryString}`
+  console.log(`[getFavoriteJobs] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<PaginatedResponse<Job>>>(url)
+  console.log(`[getFavoriteJobs] 响应数据:`, response.data)
+  
+  return response
+}
+
+/**
+ * 获取我的岗位申请列表
+ * @param params 分页参数
+ * @returns 申请列表
+ */
+export async function getMyApplications(params: { page?: number, size?: number } = {}) {
+  const queryParams = new URLSearchParams()
+  
+  if (params.page !== undefined) {
+    queryParams.append('page', params.page.toString())
+  }
+  
+  if (params.size !== undefined) {
+    queryParams.append('size', params.size.toString())
+  }
+  
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ''
+  const url = `/v1/me/applications${queryString}`
+  console.log(`[getMyApplications] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<PaginatedResponse<JobApplication>>>(url)
+  console.log(`[getMyApplications] 响应数据:`, response.data)
+  
+  return response
+}
+
+/**
  * 申请岗位 - 上传简历文件
  * @param jobId 岗位ID
  * @param formData 包含简历文件和其他信息的FormData对象
@@ -266,6 +345,20 @@ export async function checkUserResume() {
 }
 
 /**
+ * 申请岗位
+ * @param jobId 岗位ID
+ * @returns 申请结果
+ */
+export async function applyJob(jobId: number | string) {
+  const url = `/v1/jobs/${jobId}/apply`
+  console.log(`[applyJob] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<number>>(`${url}`, {
+    method: 'POST'
+  })
+  console.log(`[applyJob] 响应数据:`, response)
+  
+/**
  * 创建新岗位
  * @param data 岗位创建数据
  * @returns 创建结果
@@ -282,6 +375,23 @@ export async function createJob(data: JobCreationDTO) {
   return response
 }
 
+/**
+ * 更新申请状态
+ * @param applicationId 申请ID
+ * @param statusData 状态更新数据
+ * @returns 更新结果
+ */
+export async function updateApplicationStatus(applicationId: number, statusData: { status: string, feedback?: string }) {
+  const url = `/v1/applications/${applicationId}`
+  console.log(`[updateApplicationStatus] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<any>>(`${url}`, {
+    method: 'PATCH',
+    body: JSON.stringify(statusData)
+  })
+  console.log(`[updateApplicationStatus] 响应数据:`, response)
+  
+  return response
 /**
  * 更新岗位信息
  * @param id 岗位ID
