@@ -22,7 +22,7 @@
         <div class="flex items-center text-sm text-gray-500 mb-4">
           <router-link to="/" class="hover:text-blue-600">首页</router-link>
           <span class="mx-2">/</span>
-          <router-link to="/job" class="hover:text-blue-600">校招</router-link>
+          <router-link to="/job" class="hover:text-blue-600">招聘</router-link>
           <span class="mx-2">/</span>
           <span class="text-gray-700">职位详情页</span>
         </div>
@@ -80,7 +80,7 @@
               :disabled="favoriteLoading"
             >
               <BookmarkIcon class="w-4 h-4 mr-2" />
-              {{ favoriteLoading ? '收藏中...' : '收藏' }}
+              {{ favoriteLoading ? '处理中...' : (isFavorited ? '取消收藏' : '收藏') }}
             </button>
             <button class="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center">
               <ShareIcon class="w-4 h-4 mr-2" />
@@ -225,21 +225,6 @@
             </div>
           </div>
         </div>
-        
-        <!-- 相似职位推荐 -->
-        <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
-          <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-            <ListIcon class="w-5 h-5 mr-2 text-blue-600" />
-            相似职位推荐
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="i in 3" :key="i" class="border border-gray-100 rounded-lg p-4 hover:shadow-sm transition-shadow">
-              <div class="font-medium text-gray-900 mb-1">相似职位 {{ i }}</div>
-              <div class="text-sm text-gray-500 mb-2">某某公司</div>
-              <div class="text-blue-600 text-sm font-medium">15k-25k/月</div>
-            </div>
-          </div>
-        </div>
       </template>
     </div>
     
@@ -253,6 +238,9 @@
     <JobApplicationModal 
       :visible="applicationModalVisible" 
       :job="job || {}" 
+      :user-resumes="userResumes"
+      v-model:selected-resume-id="selectedResumeId"
+      :loading="applyLoading"
       @close="applicationModalVisible = false"
       @submit="handleApplicationSubmit"
     />
@@ -262,8 +250,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getJobDetail, Job, favoriteJob, ApiResponse } from '@/lib/api/job'
+import { getJobDetail, Job, favoriteJob, unfavoriteJob, ApiResponse, applyJob } from '@/lib/api/job'
 import { getEnterpriseById } from '@/lib/api/organization'
+import { getMyResumes } from '@/lib/api/resume'
 import Navbar from '@/components/layout/Navbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import JobApplicationModal from '@/components/job/JobApplicationModal.vue'
@@ -284,7 +273,6 @@ import {
   Mail as MailIcon,
   Phone as PhoneIcon,
   Calendar as CalendarIcon,
-  List as ListIcon,
   ExternalLink as ExternalLinkIcon,
   Gift as GiftIcon
 } from 'lucide-vue-next'
@@ -300,6 +288,17 @@ interface Organization {
   address?: string;
 }
 
+// 简历接口
+interface Resume {
+  id?: number;
+  major: string;
+  educationLevel: string;
+  achievements: string;
+  resumeUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 const route = useRoute()
 const jobId = route.params.id as string
 
@@ -307,6 +306,7 @@ const job = ref<Job | null>(null)
 const loading = ref(true)
 const error = ref('')
 const favoriteLoading = ref(false)
+const isFavorited = ref(false) // 是否已收藏
 // Toast状态
 const toast = ref({
   show: false,
@@ -316,6 +316,9 @@ const toast = ref({
 
 const applicationModalVisible = ref(false)
 const organizationLogo = ref<string | null>(null)
+const userResumes = ref<Resume[]>([])
+const selectedResumeId = ref<number | null>(null)
+const applyLoading = ref(false)
 
 // 获取岗位详情
 const fetchJobDetail = async () => {
@@ -533,28 +536,77 @@ const handleFavorite = async () => {
   favoriteLoading.value = true
   
   try {
-    const response = await favoriteJob(jobId)
-    if (response.code === 200) {
-      showToast('收藏成功')
-    } else if (response.code === 400) {
-      showToast('已经收藏过该岗位')
+    if (isFavorited.value) {
+      // 取消收藏
+      const response = await unfavoriteJob(jobId)
+      if (response.code === 200) {
+        isFavorited.value = false
+        showToast('已取消收藏')
+      } else {
+        showToast(response.message || '取消收藏失败')
+      }
     } else {
-      showToast(response.message || '收藏失败')
+      // 添加收藏
+      const response = await favoriteJob(jobId)
+      if (response.code === 200) {
+        isFavorited.value = true
+        showToast('收藏成功')
+      } else if (response.code === 400) {
+        isFavorited.value = true
+        showToast('已经收藏过该岗位')
+      } else {
+        showToast(response.message || '收藏失败')
+      }
     }
   } catch (err) {
-    console.error('收藏岗位出错:', err)
+    console.error('收藏/取消收藏岗位出错:', err)
     if (err instanceof Error && err.message.includes('已收藏')) {
+      isFavorited.value = true
       showToast('已经收藏过该岗位')
     } else {
-      showToast(err instanceof Error ? err.message : '收藏失败，请稍后再试')
+      showToast(err instanceof Error ? err.message : '操作失败，请稍后再试')
     }
   } finally {
     favoriteLoading.value = false
   }
 }
 
+// 检查是否已收藏该岗位
+const checkIfFavorited = async () => {
+  try {
+    // 这里应该调用API检查是否已收藏
+    // 由于接口文档中没有提供检查是否已收藏的API，这里暂时使用try-catch方式
+    // 实际项目中应该添加专门的API来检查
+    const response = await favoriteJob(jobId)
+    // 如果能成功收藏，说明之前没有收藏过
+    isFavorited.value = false
+  } catch (err) {
+    // 如果收藏失败且错误信息包含"已收藏"，说明已经收藏过
+    if (err instanceof Error && err.message.includes('已收藏')) {
+      isFavorited.value = true
+    }
+  }
+}
+
+// 获取用户简历列表
+const fetchUserResumes = async () => {
+  try {
+    const response = await getMyResumes()
+    if (response.code === 200 && response.data) {
+      userResumes.value = response.data
+      // 如果有简历，默认选择第一个
+      if (userResumes.value.length > 0 && userResumes.value[0].id) {
+        selectedResumeId.value = userResumes.value[0].id
+      }
+      console.log('用户简历列表:', userResumes.value)
+    }
+  } catch (err) {
+    console.error('获取用户简历出错:', err)
+  }
+}
+
 // 显示申请模态框
-const showApplicationModal = () => {
+const showApplicationModal = async () => {
   // 检查用户是否已登录
   const isLoggedIn = localStorage.getItem('token')
   if (!isLoggedIn) {
@@ -566,20 +618,40 @@ const showApplicationModal = () => {
     return
   }
   
+  // 获取用户简历列表
+  await fetchUserResumes()
+  
+  // 显示申请模态框
   applicationModalVisible.value = true
 }
 
 // 处理岗位申请提交
-const handleApplicationSubmit = (result: any) => {
-  // 提交成功后关闭模态框
-  applicationModalVisible.value = false
+const handleApplicationSubmit = async (applicationData: any) => {
+  if (!job.value) return
   
-  // 显示成功提示
-  showToast('申请成功提交，请等待企业查看')
+  applyLoading.value = true
+  
+  try {
+    // 调用申请岗位API
+    const response = await applyJob(jobId)
+    
+    // 提交成功后关闭模态框
+    applicationModalVisible.value = false
+    
+    // 显示成功提示
+    showToast('申请成功提交，请等待企业查看')
+  } catch (err) {
+    console.error('申请岗位出错:', err)
+    showToast(err instanceof Error ? err.message : '申请失败，请稍后再试')
+  } finally {
+    applyLoading.value = false
+  }
 }
 
 onMounted(() => {
   fetchJobDetail()
+  // 检查是否已收藏
+  checkIfFavorited()
 })
 </script>
 

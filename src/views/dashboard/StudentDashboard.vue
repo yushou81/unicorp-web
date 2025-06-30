@@ -166,13 +166,41 @@
             
             <!-- 卡片内容 -->
             <div class="p-5">
-              <ul class="space-y-3">
-                <li v-for="item in blocks[0].data" :key="item.id" class="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-all">
-                  <div class="flex items-center">
+              <!-- 加载状态 -->
+              <div v-if="blocks[0].loading" class="flex justify-center items-center py-4">
+                <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              
+              <!-- 岗位列表 -->
+              <ul v-else class="space-y-3">
+                <li 
+                  v-for="item in blocks[0].data" 
+                  :key="item.id" 
+                  class="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-all"
+                >
+                  <div 
+                    class="flex items-center flex-grow cursor-pointer" 
+                    @click="goToJobDetail(item.jobId as number)"
+                  >
                     <div class="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                    <span class="text-gray-700">{{ item.label }}</span>
+                    <span class="text-gray-700 mr-2">{{ item.label }}</span>
+                    <span v-if="item.status" class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">{{ item.status }}</span>
                   </div>
-                  <span class="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full">{{ item.extra }}</span>
+                  <div class="flex items-center">
+                    <span class="text-xs text-gray-500 mr-2">{{ item.extra }}</span>
+                    <button 
+                      @click="handleUnfavorite(item.jobId as number)" 
+                      class="text-gray-400 hover:text-red-500 transition-colors"
+                      title="取消收藏"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
                 </li>
                 <li v-if="blocks[0].data.length === 0" class="text-gray-400 text-sm p-2">{{ blocks[0].empty }}</li>
               </ul>
@@ -277,6 +305,55 @@
         <!-- 下半部分数据卡片 - 使用紧凑的水平卡片布局 -->
         <h3 class="text-lg font-medium text-gray-800 mb-4">快速入口</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- 我的岗位申请卡片 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
+            <div class="p-4">
+              <div class="flex items-center mb-3">
+                <span class="rounded-lg p-2 bg-purple-50 mr-3">
+                  <component :is="myApplicationsBlock.icon" class="w-5 h-5 text-purple-600" />
+                </span>
+                <h3 class="font-medium text-gray-800">{{ myApplicationsBlock.title }}</h3>
+              </div>
+              
+              <!-- 加载状态 -->
+              <div v-if="myApplicationsBlock.loading" class="flex justify-center items-center py-4">
+                <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              
+              <!-- 申请列表 -->
+              <ul v-else class="space-y-2">
+                <li 
+                  v-for="item in myApplicationsBlock.data" 
+                  :key="item.id" 
+                  class="flex justify-between items-center p-1.5 hover:bg-gray-50 rounded-md transition-all"
+                  @click="goToJobDetail(item.jobId as number)"
+                >
+                  <div class="flex items-center cursor-pointer">
+                    <div class="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
+                    <span class="text-gray-700 text-sm">{{ item.label }}</span>
+                  </div>
+                  <span 
+                    class="text-xs px-2 py-0.5 rounded-full" 
+                    :class="item.statusColor || 'bg-gray-100 text-gray-600'"
+                  >
+                    {{ item.status }}
+                  </span>
+                </li>
+                <li v-if="myApplicationsBlock.data.length === 0" class="text-gray-400 text-sm p-1.5">{{ myApplicationsBlock.empty }}</li>
+              </ul>
+              
+              <router-link v-if="myApplicationsBlock.footer" :to="myApplicationsBlock.footer.link" class="mt-3 text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center">
+                {{ myApplicationsBlock.footer.text }}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </router-link>
+            </div>
+          </div>
+          
           <!-- 企业申请入口 -->
           <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
             <div class="p-4 flex">
@@ -432,6 +509,15 @@
 
     <!-- 简历管理对话框 -->
     <ResumeManager v-model:visible="showResumeDialog" @resume-updated="onResumeUpdated" />
+    
+    <!-- Toast提示组件 -->
+    <div 
+      v-if="toast.show" 
+      class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300"
+      :class="{'opacity-0 translate-y-2': toast.hiding, 'opacity-100 translate-y-0': !toast.hiding}"
+    >
+      {{ toast.message }}
+    </div>
   </div>
 </template>
 
@@ -442,6 +528,7 @@ import { BriefcaseIcon, BookmarkIcon, AcademicCapIcon, CalendarDaysIcon, Buildin
 import { useRouter } from 'vue-router'
 import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
 import { getMyResumes, createMyResume, updateMyResume, deleteMyResume } from '@/lib/api/resume'
+import { getFavoriteJobs, unfavoriteJob, getMyApplications, Job, JobApplication } from '@/lib/api/job'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import ResumeManager from '@/components/resume/ResumeManager.vue'
@@ -483,6 +570,7 @@ interface DataItem {
   extra?: string;
   status?: string;
   statusColor?: string;
+  jobId?: number; // 岗位ID，用于收藏/申请操作
 }
 
 // 定义区块类型
@@ -494,6 +582,7 @@ interface Block {
   data: DataItem[];
   empty: string;
   count?: number;
+  loading?: boolean;
   footer?: {
     text: string;
     link: string;
@@ -538,10 +627,6 @@ async function fetchUserInfo() {
   }
 }
 
-onMounted(() => {
-  fetchUserInfo()
-})
-
 // 更新blocks数据
 const blocks = ref<Block[]>([
   {
@@ -549,10 +634,8 @@ const blocks = ref<Block[]>([
     icon: BriefcaseIcon,
     color: 'text-blue-500',
     type: 'list',
-    data: [
-      { id: 1, label: '前端开发实习生', extra: '已投递' },
-      { id: 2, label: '产品助理', extra: '已收藏' }
-    ],
+    data: [],
+    loading: false,
     empty: '暂无职位记录',
     footer: { text: '查看全部职位', link: '/job' }
   },
@@ -607,6 +690,18 @@ const blocks = ref<Block[]>([
   }
 ])
 
+// 添加我的申请区块
+const myApplicationsBlock = ref<Block>({
+  title: '我的岗位申请',
+  icon: BookmarkIcon,
+  color: 'text-purple-500',
+  type: 'list',
+  data: [],
+  loading: false,
+  empty: '暂无申请记录',
+  footer: { text: '查看所有申请', link: '/me/applications' }
+})
+
 const router = useRouter()
 const appStore = useAppStore()
 
@@ -654,6 +749,131 @@ const avatarUploading = ref(false)
 // 简历管理相关
 const showResumeDialog = ref(false)
 
+// Toast提示
+const toast = ref({
+  show: false,
+  message: '',
+  hiding: false
+})
+
+// 获取收藏的岗位
+async function fetchFavoriteJobs() {
+  blocks.value[0].loading = true
+  try {
+    const response = await getFavoriteJobs({ page: 0, size: 5 })
+    if (response.code === 200 && response.data) {
+      blocks.value[0].data = response.data.records.map(job => ({
+        id: job.id,
+        jobId: job.id,
+        label: job.title,
+        extra: job.organizationName,
+        status: formatJobStatus(job.status)
+      }))
+    }
+  } catch (error) {
+    console.error('获取收藏岗位失败:', error)
+  } finally {
+    blocks.value[0].loading = false
+  }
+}
+
+// 获取我的申请
+async function fetchMyApplications() {
+  myApplicationsBlock.value.loading = true
+  try {
+    const response = await getMyApplications({ page: 0, size: 5 })
+    if (response.code === 200 && response.data) {
+      myApplicationsBlock.value.data = response.data.records.map(app => ({
+        id: app.id,
+        jobId: app.jobId,
+        label: app.jobTitle,
+        extra: app.companyName,
+        status: formatApplicationStatus(app.status),
+        statusColor: getStatusColor(app.status)
+      }))
+    }
+  } catch (error) {
+    console.error('获取岗位申请失败:', error)
+  } finally {
+    myApplicationsBlock.value.loading = false
+  }
+}
+
+// 格式化岗位状态
+function formatJobStatus(status: string): string {
+  switch (status) {
+    case 'open': return '招聘中'
+    case 'closed': return '已关闭'
+    default: return status
+  }
+}
+
+// 格式化申请状态
+function formatApplicationStatus(status: string): string {
+  switch (status) {
+    case 'submitted': return '已提交'
+    case 'viewed': return '已查看'
+    case 'interviewing': return '面试中'
+    case 'offered': return '已录用'
+    case 'rejected': return '已拒绝'
+    default: return status
+  }
+}
+
+// 获取状态颜色
+function getStatusColor(status: string): string {
+  switch (status) {
+    case 'submitted': return 'bg-blue-100 text-blue-700'
+    case 'viewed': return 'bg-yellow-100 text-yellow-700'
+    case 'interviewing': return 'bg-purple-100 text-purple-700'
+    case 'offered': return 'bg-green-100 text-green-700'
+    case 'rejected': return 'bg-red-100 text-red-700'
+    default: return 'bg-gray-100 text-gray-700'
+  }
+}
+
+// 取消收藏岗位
+async function handleUnfavorite(jobId: number) {
+  try {
+    const response = await unfavoriteJob(jobId)
+    if (response.code === 200) {
+      showToast('取消收藏成功')
+      // 从列表中移除该岗位
+      blocks.value[0].data = blocks.value[0].data.filter(item => item.jobId !== jobId)
+    } else {
+      showToast(response.message || '取消收藏失败')
+    }
+  } catch (error: any) {
+    showToast(error.message || '操作失败')
+  }
+}
+
+// 显示Toast消息
+function showToast(message: string, duration = 2000) {
+  // 如果已经有Toast在显示，先关闭它
+  if (toast.value.show) {
+    hideToast()
+  }
+  
+  // 显示新Toast
+  setTimeout(() => {
+    toast.value.message = message
+    toast.value.show = true
+    toast.value.hiding = false
+    
+    // 设置自动隐藏
+    setTimeout(hideToast, duration)
+  }, toast.value.show ? 300 : 0)
+}
+
+// 隐藏Toast
+function hideToast() {
+  toast.value.hiding = true
+  setTimeout(() => {
+    toast.value.show = false
+  }, 300)
+}
+
 async function onUpdateProfile() {
   updateProfileLoading.value = true
   try {
@@ -696,9 +916,9 @@ async function onUpdateProfile() {
       appStore.setUser(res.data)
     }
     
-    alert('个人资料更新成功')
+    showToast('个人资料更新成功')
   } catch (e: any) {
-    alert('更新失败：' + (e.message || '未知错误'))
+    showToast('更新失败：' + (e.message || '未知错误'))
   } finally {
     updateProfileLoading.value = false
   }
@@ -706,7 +926,7 @@ async function onUpdateProfile() {
 
 async function onChangePassword() {
   if (passwordChange.value.newPassword !== passwordChange.value.confirmPassword) {
-    alert('新密码与确认密码不一致')
+    showToast('新密码与确认密码不一致')
     return
   }
   
@@ -718,9 +938,9 @@ async function onChangePassword() {
       confirmPassword: passwordChange.value.confirmPassword
     })
     passwordChange.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
-    alert('密码修改成功')
+    showToast('密码修改成功')
   } catch (e: any) {
-    alert('密码修改失败：' + (e.message || '未知错误'))
+    showToast('密码修改失败：' + (e.message || '未知错误'))
   } finally {
     changePasswordLoading.value = false
   }
@@ -782,6 +1002,12 @@ onMounted(async () => {
   try {
     await fetchUserInfo()
     
+    // 获取收藏岗位和申请记录
+    await Promise.all([
+      fetchFavoriteJobs(),
+      fetchMyApplications()
+    ])
+    
     // 获取完成后设置加载状态为false
     setTimeout(() => {
       isLoading.value = false
@@ -795,6 +1021,11 @@ onMounted(async () => {
 // 移动菜单切换
 function toggleMobileMenu() {
   mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+// 跳转到职位详情页
+function goToJobDetail(jobId: number) {
+  router.push(`/job/${jobId}`)
 }
 </script>
 

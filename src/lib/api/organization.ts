@@ -33,8 +33,6 @@ export function uploadOrganizationLogo(id: number, file: File) {
   return apiRequest(`/v1/organizations/${id}/logo`, {
     method: 'POST',
     body: formData,
-    headers: {
-      // 不设置Content-Type，让浏览器自动设置multipart/form-data和boundary
-    }
+    headers: {}
   })
 } 
