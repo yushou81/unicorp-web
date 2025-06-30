@@ -57,7 +57,7 @@
             
             <div class="flex flex-col items-center mt-4 md:mt-0">
               <img 
-                :src="job.logo || '/company-placeholder.png'" 
+                :src="displayLogoUrl" 
                 alt="公司Logo" 
                 class="w-16 h-16 rounded-lg object-contain bg-gray-50 p-2 border border-gray-100"
               />
@@ -140,7 +140,7 @@
               </h2>
               <div class="flex items-center mb-4">
                 <img 
-                  :src="job.logo || '/company-placeholder.png'" 
+                  :src="displayLogoUrl" 
                   alt="公司Logo" 
                   class="w-16 h-16 rounded-lg object-contain bg-gray-50 p-2 border border-gray-100 mr-4"
                 />
@@ -262,7 +262,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getJobDetail, Job, favoriteJob } from '@/lib/api/job'
+import { getJobDetail, Job, favoriteJob, ApiResponse } from '@/lib/api/job'
+import { getEnterpriseById } from '@/lib/api/organization'
 import Navbar from '@/components/layout/Navbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import JobApplicationModal from '@/components/job/JobApplicationModal.vue'
@@ -288,6 +289,17 @@ import {
   Gift as GiftIcon
 } from 'lucide-vue-next'
 
+// 组织接口
+interface Organization {
+  id: number;
+  organizationName: string;
+  type: string;
+  description?: string;
+  website?: string;
+  logoUrl?: string;
+  address?: string;
+}
+
 const route = useRoute()
 const jobId = route.params.id as string
 
@@ -303,6 +315,7 @@ const toast = ref({
 })
 
 const applicationModalVisible = ref(false)
+const organizationLogo = ref<string | null>(null)
 
 // 获取岗位详情
 const fetchJobDetail = async () => {
@@ -344,6 +357,11 @@ const fetchJobDetail = async () => {
         }
       }
       
+      // 获取组织Logo
+      if (job.value.organizationId) {
+        fetchOrganizationLogo(job.value.organizationId)
+      }
+      
       console.log('岗位详情数据:', job.value)
     } else {
       error.value = response.message || '获取岗位详情失败'
@@ -355,6 +373,23 @@ const fetchJobDetail = async () => {
     loading.value = false
   }
 }
+
+// 获取组织Logo
+const fetchOrganizationLogo = async (organizationId: number) => {
+  try {
+    const response = await getEnterpriseById(organizationId) as ApiResponse<Organization>
+    if (response.code === 200 && response.data && response.data.logoUrl) {
+      organizationLogo.value = response.data.logoUrl
+    }
+  } catch (err) {
+    console.error('获取组织Logo出错:', err)
+  }
+}
+
+// 计算属性：获取要显示的Logo URL
+const displayLogoUrl = computed(() => {
+  return organizationLogo.value || job.value?.logo || '/company-placeholder.png'
+})
 
 // 格式化职位类型
 const formatJobType = (jobType: string) => {

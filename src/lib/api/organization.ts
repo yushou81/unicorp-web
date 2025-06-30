@@ -10,6 +10,11 @@ export function getAllSchools(view: 'simple' | 'detailed' = 'simple') {
   return apiRequest(`/v1/organizations/schools?view=${view}`)
 }
 
+// 获取学校详情（公开接口）
+export function getSchoolById(id: number) {
+  return apiRequest(`/v1/organizations/schools/${id}`)
+}
+
 // 获取企业列表（公开接口）
 export function getAllEnterprises(view: 'simple' | 'detailed' = 'simple') {
   return apiRequest(`/v1/organizations/enterprises?view=${view}`)
@@ -18,4 +23,18 @@ export function getAllEnterprises(view: 'simple' | 'detailed' = 'simple') {
 // 获取企业详情（公开接口）
 export function getEnterpriseById(id: number) {
   return apiRequest(`/v1/organizations/enterprises/${id}`)
+}
+
+// 上传组织Logo
+export function uploadOrganizationLogo(id: number, file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  return apiRequest(`/v1/organizations/${id}/logo`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      // 不设置Content-Type，让浏览器自动设置multipart/form-data和boundary
+    }
+  })
 } 
