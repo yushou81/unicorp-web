@@ -324,4 +324,29 @@ export async function getPublicJobCategories(params?: { page?: number; size?: nu
   if (params?.size) query.append('size', params.size.toString())
   const url = query.toString() ? `/v1/job-categories?${query}` : '/v1/job-categories'
   return apiRequest(url)
+}
+
+/**
+ * 获取岗位申请列表（企业）
+ * @param jobId 岗位ID
+ * @param page 页码
+ * @param size 每页数量
+ * @returns 申请人分页数据
+ */
+export async function getJobApplications(jobId: number | string, page = 1, size = 10) {
+  const url = `/v1/jobs/${jobId}/applications?page=${page}&size=${size}`
+  return apiRequest(url)
+}
+
+/**
+ * 更新岗位申请状态
+ * @param applicationId 申请ID
+ * @param data { status, feedback }
+ */
+export async function updateApplicationStatus(applicationId: number, data: { status: string, feedback?: string }) {
+  return apiRequest(`/v1/applications/${applicationId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' }
+  })
 } 
