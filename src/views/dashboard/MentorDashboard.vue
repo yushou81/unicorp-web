@@ -49,6 +49,19 @@
           </div>
         </div>
         
+        <!-- 岗位列表展示区块 -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
+          <h2 class="text-xl font-bold mb-6 text-blue-700">我发布的岗位</h2>
+          <GridJobList
+            :jobs="jobs"
+            :loading="jobsLoading"
+            :totalJobs="totalJobs"
+            :currentPage="currentPage"
+            :totalPages="totalPages"
+            @update:currentPage="fetchJobs"
+          />
+        </div>
+        
         <!-- 编辑个人资料对话框 -->
         <div v-if="showEditProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
@@ -103,6 +116,8 @@ import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon, Buildin
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
+import { getJobs, Job } from '@/lib/api/job'
+import GridJobList from '@/components/job/GridJobList.vue'
 
 const mentor = ref({
   avatar: 'https://randomuser.me/api/portraits/men/34.jpg',
@@ -309,4 +324,32 @@ function openEditDialog() {
 function onEditProfileClick() {
   openEditDialog()
 }
+
+const jobs = ref<Job[]>([])
+const totalJobs = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = ref(1)
+const jobsLoading = ref(false)
+
+async function fetchJobs(page = 1) {
+  jobsLoading.value = true
+  try {
+    const res = await getJobs({
+      posterId: userInfo.value.id,
+      page: page - 1,
+      size: pageSize.value
+    })
+    jobs.value = res.data.records
+    totalJobs.value = res.data.total
+    totalPages.value = res.data.pages
+    currentPage.value = res.data.current + 1
+  } finally {
+    jobsLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchJobs()
+})
 </script> 

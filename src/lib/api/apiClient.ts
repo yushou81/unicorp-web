@@ -1,5 +1,5 @@
 
-const API_BASE_URL =  'http://192.168.58.154:8081/api'
+const API_BASE_URL =  'http://192.168.1.6:8081/api'
 
 
 let token = ''

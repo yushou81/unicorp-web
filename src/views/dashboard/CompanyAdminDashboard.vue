@@ -59,6 +59,18 @@
           <span class="text-sm text-purple-500">修改个人信息与密码</span>
         </div>
       </div>
+      <!-- 岗位列表展示区块 -->
+      <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
+        <h2 class="text-xl font-bold mb-6 text-blue-700">企业岗位列表</h2>
+        <GridJobList
+          :jobs="jobs"
+          :loading="jobsLoading"
+          :totalJobs="totalJobs"
+          :currentPage="currentPage"
+          :totalPages="totalPages"
+          @update:currentPage="fetchJobs"
+        />
+      </div>
       <!-- 企业导师管理弹窗 -->
       <div v-if="showMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl overflow-y-auto max-h-[80vh] relative">
@@ -241,6 +253,8 @@ import { createMentor, getMentorList, updateMentorStatus, updateMentorInfo } fro
 import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
 import { updateUser } from '@/lib/api/admin'
 import Button from '@/components/ui/Button.vue'
+import { getJobs, Job } from '@/lib/api/job'
+import GridJobList from '@/components/job/GridJobList.vue'
 
 const company = ref({
   logo: 'https://randomuser.me/api/portraits/lego/1.jpg',
@@ -515,4 +529,32 @@ function onEditProfileClick() {
 
 const showMentorDialog = ref(false)
 const showProfileDialog = ref(false)
+
+const jobs = ref<Job[]>([])
+const totalJobs = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = ref(1)
+const jobsLoading = ref(false)
+
+async function fetchJobs(page = 1) {
+  jobsLoading.value = true
+  try {
+    const res = await getJobs({
+      organizeId: userInfo.value.organizationId,
+      page: page - 1,
+      size: pageSize.value
+    })
+    jobs.value = res.data.records
+    totalJobs.value = res.data.total
+    totalPages.value = res.data.pages
+    currentPage.value = res.data.current + 1
+  } finally {
+    jobsLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchJobs()
+})
 </script> 

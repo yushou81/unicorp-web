@@ -55,6 +55,8 @@ export interface GetJobsParams {
   salaryMin?: number
   salaryMax?: number
   sortBy?: string
+  organizeId?: number
+  posterId?: number
 }
 
 /**
@@ -100,6 +102,14 @@ export async function getJobs(params: GetJobsParams = {}) {
   
   if (params.sortBy) {
     queryParams.append('sortBy', params.sortBy)
+  }
+  
+  if (params.organizeId !== undefined) {
+    queryParams.append('organizeId', params.organizeId.toString())
+  }
+  
+  if (params.posterId !== undefined) {
+    queryParams.append('posterId', params.posterId.toString())
   }
   
   const queryString = queryParams.toString() ? `?${queryParams.toString()}` : ''
