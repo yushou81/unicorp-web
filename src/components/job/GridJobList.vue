@@ -17,15 +17,15 @@
           </button>
           <button 
             class="text-sm px-3 py-1 rounded-full" 
-            :class="sortBy === 'salary' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-            @click="changeSortBy('salary')"
+            :class="sortBy === 'salary_asc' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+            @click="changeSortBy('salary_asc')"
           >
             薪资从低到高
           </button>
           <button 
             class="text-sm px-3 py-1 rounded-full" 
-            :class="sortBy === 'salary-desc' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-            @click="changeSortBy('salary-desc')"
+            :class="sortBy === 'salary_desc' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+            @click="changeSortBy('salary_desc')"
           >
             薪资从高到低
           </button>
@@ -42,9 +42,9 @@
     
     <!-- 职位列表 - 网格布局 -->
     <transition name="job-list">
-      <div v-if="hasJobs" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div v-if="hasJobs" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <div v-for="job in jobs" :key="job.id" class="h-full">
-          <GridJobCard :job="job" />
+          <GridJobCard :job="job" :showEdit="showEdit" @edit="$emit('edit', $event)" />
         </div>
       </div>
     </transition>
@@ -124,11 +124,13 @@ const props = defineProps<{
   totalJobs: number
   currentPage: number
   totalPages: number
+  showEdit?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:currentPage', page: number): void
   (e: 'update:sortBy', sort: string): void
+  (e: 'edit', job: Job): void
 }>()
 
 // 排序方式

@@ -1,44 +1,50 @@
 <template>
   <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden h-full flex flex-col">
     <!-- 卡片头部 -->
-    <div class="p-4 border-b">
-      <div class="flex items-center justify-between mb-2">
-        <router-link :to="`/job/${job.id}`" class="text-lg font-medium text-gray-900 hover:text-blue-600 truncate max-w-[80%]">
+    <div class="p-3 border-b">
+      <div class="flex items-center justify-between mb-1">
+        <router-link :to="`/job/${job.id}`" class="text-base font-medium text-gray-900 hover:text-blue-600 truncate max-w-[80%]">
           {{ job.title }}
         </router-link>
-        <div class="flex space-x-1">
-          <span v-if="isNew" class="px-1.5 py-0.5 bg-green-100 text-green-600 text-xs rounded-full whitespace-nowrap">新</span>
-          <span v-if="isHot" class="px-1.5 py-0.5 bg-red-100 text-red-600 text-xs rounded-full whitespace-nowrap">热</span>
+        <div class="flex space-x-1 items-center">
+          <span v-if="isNew" class="px-1 py-0.5 bg-green-100 text-green-600 text-xs rounded-full whitespace-nowrap">新</span>
+          <span v-if="isHot" class="px-1 py-0.5 bg-red-100 text-red-600 text-xs rounded-full whitespace-nowrap">热</span>
+          <button
+            v-if="showEdit"
+            @click.stop="$emit('edit', job)"
+            class="ml-2 px-2 py-0.5 text-xs rounded bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100"
+            title="编辑岗位"
+          >编辑</button>
         </div>
       </div>
       
-      <div class="text-blue-600 font-medium text-sm truncate">{{ job.organizationName }}</div>
+      <div class="text-blue-600 font-medium text-xs truncate">{{ job.organizationName }}</div>
     </div>
     
     <!-- 卡片内容 -->
-    <div class="p-4 flex-1 flex flex-col">
+    <div class="p-3 flex-1 flex flex-col">
       <!-- 薪资和地点 -->
-      <div class="flex items-center justify-between mb-3">
-        <div class="text-blue-600 font-medium">{{ formattedSalary }}</div>
-        <div class="text-gray-500 text-sm flex items-center">
-          <MapPinIcon class="w-3.5 h-3.5 mr-1 text-gray-400" />
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-blue-600 font-medium text-sm">{{ formattedSalary }}</div>
+        <div class="text-gray-500 text-xs flex items-center">
+          <MapPinIcon class="w-3 h-3 mr-0.5 text-gray-400" />
           <span>{{ job.location }}</span>
         </div>
       </div>
       
       <!-- 标签 -->
-      <div class="flex flex-wrap gap-1.5 mb-3">
+      <div class="flex flex-wrap gap-1 mb-2">
         <span 
           v-for="(tag, index) in skillTagsArray" 
           :key="index"
-          class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
+          class="px-1 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
         >
           {{ tag }}
         </span>
       </div>
       
       <!-- 底部信息 -->
-      <div class="flex items-center justify-between mt-auto pt-2 text-sm text-gray-500">
+      <div class="flex items-center justify-between mt-auto pt-1 text-xs text-gray-500">
         <div>{{ formattedEducation }}</div>
         <div>{{ formatDate(job.createdAt) }}</div>
       </div>
@@ -52,7 +58,8 @@ import { MapPinIcon } from 'lucide-vue-next'
 import { Job } from '@/lib/api/job'
 
 const props = defineProps<{
-  job: Job
+  job: Job,
+  showEdit?: boolean
 }>()
 
 // 计算属性：是否为新发布的职位（7天内）

@@ -1,17 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white/90 shadow-sm border-b border-gray-200 sticky top-0 z-40">
-      <div class="container mx-auto px-4 flex items-center justify-between h-14">
-        <div class="flex items-center space-x-4">
-          <span class="text-lg font-bold text-blue-700 tracking-wide">企业管理平台</span>
-          <span class="text-gray-400 text-sm ml-4">（可在此展示全局信息）</span>
-        </div>
-        <div class="flex items-center space-x-4">
-          <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
-        </div>
-      </div>
-    </nav>
+    <!-- 使用通用导航栏组件 -->
+    <Navbar />
+    
     <!-- 大标题区 -->
     <div class="w-full py-10 bg-gradient-to-r from-blue-400 to-indigo-400 mb-8 shadow-lg">
       <div class="container mx-auto px-4 flex flex-col items-center">
@@ -51,6 +42,14 @@
           <span class="text-sm text-blue-500">管理企业导师账号与权限</span>
         </div>
         <div
+          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="showJobDialog = true"
+        >
+          <BriefcaseIcon class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-green-800 mb-1">岗位管理</span>
+          <span class="text-sm text-green-500">查看和管理企业岗位</span>
+        </div>
+        <div
           class="group cursor-pointer bg-gradient-to-br from-purple-100 to-purple-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
           @click="onEditProfileClick"
         >
@@ -58,18 +57,6 @@
           <span class="text-lg font-bold text-purple-800 mb-1">编辑个人资料</span>
           <span class="text-sm text-purple-500">修改个人信息与密码</span>
         </div>
-      </div>
-      <!-- 岗位列表展示区块 -->
-      <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
-        <h2 class="text-xl font-bold mb-6 text-blue-700">企业岗位列表</h2>
-        <GridJobList
-          :jobs="jobs"
-          :loading="jobsLoading"
-          :totalJobs="totalJobs"
-          :currentPage="currentPage"
-          :totalPages="totalPages"
-          @update:currentPage="fetchJobs"
-        />
       </div>
       <!-- 企业导师管理弹窗 -->
       <div v-if="showMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
@@ -241,6 +228,22 @@
           </div>
         </div>
       </div>
+      <!-- 岗位管理弹窗 -->
+      <div v-if="showJobDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-5xl overflow-y-auto max-h-[90vh] relative">
+          <button @click="showJobDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-green-600 text-2xl font-bold focus:outline-none">×</button>
+          <h2 class="text-2xl font-bold mb-6 text-green-700">企业岗位管理</h2>
+          <GridJobList
+            :jobs="jobs"
+            :loading="jobsLoading"
+            :totalJobs="totalJobs"
+            :currentPage="currentPage"
+            :totalPages="totalPages"
+            @update:currentPage="fetchJobs"
+            @update:sortBy="onSortByChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -253,6 +256,7 @@ import { createMentor, getMentorList, updateMentorStatus, updateMentorInfo } fro
 import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
 import { updateUser } from '@/lib/api/admin'
 import Button from '@/components/ui/Button.vue'
+import Navbar from '@/components/layout/Navbar.vue'
 import { getJobs, Job } from '@/lib/api/job'
 import GridJobList from '@/components/job/GridJobList.vue'
 
@@ -529,6 +533,7 @@ function onEditProfileClick() {
 
 const showMentorDialog = ref(false)
 const showProfileDialog = ref(false)
+const showJobDialog = ref(false)
 
 const jobs = ref<Job[]>([])
 const totalJobs = ref(0)
@@ -536,19 +541,26 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const totalPages = ref(1)
 const jobsLoading = ref(false)
+const sortBy = ref('latest')
+
+function onSortByChange(newSort) {
+  sortBy.value = newSort
+  fetchJobs(1) // 切换排序时回到第一页
+}
 
 async function fetchJobs(page = 1) {
   jobsLoading.value = true
   try {
     const res = await getJobs({
       organizeId: userInfo.value.organizationId,
-      page: page - 1,
-      size: pageSize.value
+      page: page,
+      size: pageSize.value,
+      sortBy: sortBy.value // 传递排序参数
     })
     jobs.value = res.data.records
     totalJobs.value = res.data.total
     totalPages.value = res.data.pages
-    currentPage.value = res.data.current + 1
+    currentPage.value = page
   } finally {
     jobsLoading.value = false
   }

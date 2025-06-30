@@ -14,7 +14,33 @@ export interface Job {
   id: number
   organizationId: number
   organizationName: string
+  organization?: {
+    id: number
+    organizationName: string
+    type: string
+    description: string
+    website: string
+    address: string
+  }
+  enterpriseDetail?: {
+    organizationId: number
+    industry: string
+    companySize: string
+    businessLicenseUrl: string
+  }
   postedByUserId: number
+  postedByUser?: {
+    id: number
+    account: string
+    nickname: string
+    email: string
+    phone: string
+    status: string
+    organizationId: number
+    organizationName: string | null
+    role: string
+    createdAt: string
+  }
   title: string
   description: string
   location: string
@@ -28,13 +54,27 @@ export interface Job {
   headcount: number
   educationRequirement: string
   experienceRequirement: string
-  jobCategory: string | null
-  skillTags: string | null
   applicationDeadline: string | null
   viewCount: number
+  tags: string | null
   logo?: string
   companySize?: string
   industry?: string
+  responsibilities?: string // 岗位职责
+  requirements?: string // 岗位要求
+  benefits?: string // 福利待遇
+  jobRequirements?: string // API返回的另一种岗位要求字段
+  jobBenefits?: string // API返回的另一种福利待遇字段
+  contactPerson?: string // 联系人
+  contactEmail?: string // 联系邮箱
+  contactPhone?: string // 联系电话
+  category?: {
+    id: number
+    name: string
+    parentId: number
+    level: number
+    children: any | null
+  }
 }
 
 // API 响应接口
@@ -57,6 +97,23 @@ export interface GetJobsParams {
   sortBy?: string
   organizeId?: number
   posterId?: number
+}
+
+// 岗位创建DTO
+export interface JobCreationDTO {
+  title: string
+  description: string
+  location: string
+  jobType: string
+  educationRequirement: string
+  salaryMin?: number
+  salaryMax?: number
+  salaryUnit?: string
+  headcount?: number
+  experienceRequirement?: string
+  applicationDeadline?: string
+  skillTags?: string
+  categoryId: number // 三级分类ID
 }
 
 /**
@@ -120,4 +177,151 @@ export async function getJobs(params: GetJobsParams = {}) {
   console.log(`[getJobs] 响应数据:`, response.data)
   
   return response
+}
+
+/**
+ * 获取岗位详情
+ * @param id 岗位ID
+ * @returns 岗位详情
+ */
+export async function getJobDetail(id: number | string) {
+  const url = `/v1/jobs/${id}`
+  console.log(`[getJobDetail] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<Job>>(url)
+  console.log(`[getJobDetail] 响应数据:`, response.data)
+  
+  return response
+}
+
+/**
+ * 收藏岗位
+ * @param id 岗位ID
+ * @returns 收藏结果
+ */
+export async function favoriteJob(id: number | string) {
+  const url = `/v1/jobs/${id}/favorite`
+  console.log(`[favoriteJob] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<any>>(`${url}`, {
+    method: 'POST'
+  })
+  console.log(`[favoriteJob] 响应数据:`, response)
+  
+  return response
+}
+
+/**
+ * 申请岗位 - 上传简历文件
+ * @param jobId 岗位ID
+ * @param formData 包含简历文件和其他信息的FormData对象
+ * @returns 申请结果
+ */
+export async function applyJobWithFile(jobId: number | string, formData: FormData) {
+  const url = `/v1/jobs/${jobId}/apply/file`
+  console.log(`[applyJobWithFile] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<any>>(`${url}`, {
+    method: 'POST',
+    body: formData,
+    // 使用FormData时不要设置Content-Type，浏览器会自动设置
+    headers: {}
+  })
+  console.log(`[applyJobWithFile] 响应数据:`, response)
+  
+  return response
+}
+
+/**
+ * 申请岗位 - 在线填写简历
+ * @param jobId 岗位ID
+ * @param resumeData 简历数据
+ * @returns 申请结果
+ */
+export async function applyJobWithOnlineResume(jobId: number | string, resumeData: any) {
+  const url = `/v1/jobs/${jobId}/apply/online`
+  console.log(`[applyJobWithOnlineResume] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<any>>(`${url}`, {
+    method: 'POST',
+    body: JSON.stringify(resumeData)
+  })
+  console.log(`[applyJobWithOnlineResume] 响应数据:`, response)
+  
+  return response
+}
+
+/**
+ * 检查用户是否已有简历
+ * @returns 检查结果
+ */
+export async function checkUserResume() {
+  const url = `/v1/resume/check`
+  console.log(`[checkUserResume] 请求URL: ${url}`)
+  
+  const response = await apiRequest<ApiResponse<{hasResume: boolean}>>(`${url}`)
+  console.log(`[checkUserResume] 响应数据:`, response)
+  
+  return response
+}
+
+/**
+ * 创建新岗位
+ * @param data 岗位创建数据
+ * @returns 创建结果
+ */
+export async function createJob(data: JobCreationDTO) {
+  const url = '/v1/jobs'
+  const response = await apiRequest<ApiResponse<any>>(url, {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  return response
+}
+
+/**
+ * 更新岗位信息
+ * @param id 岗位ID
+ * @param data 岗位数据
+ * @returns 更新结果
+ */
+export async function updateJob(id: number | string, data: JobCreationDTO) {
+  const url = `/v1/jobs/${id}`
+  const response = await apiRequest<ApiResponse<any>>(url, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  return response
+}
+
+/**
+ * 删除岗位
+ * @param id 岗位ID
+ * @returns 删除结果
+ */
+export async function deleteJob(id: number | string) {
+  const url = `/v1/jobs/${id}`
+  const response = await apiRequest<ApiResponse<any>>(url, {
+    method: 'DELETE'
+  })
+  return response
+}
+
+/**
+ * 获取所有岗位分类（公开接口）
+ * @param params 分页参数
+ * @returns 分类列表
+ */
+export async function getPublicJobCategories(params?: { page?: number; size?: number }) {
+  const query = new URLSearchParams()
+  if (params?.page) query.append('page', params.page.toString())
+  if (params?.size) query.append('size', params.size.toString())
+  const url = query.toString() ? `/v1/job-categories?${query}` : '/v1/job-categories'
+  return apiRequest(url)
 } 

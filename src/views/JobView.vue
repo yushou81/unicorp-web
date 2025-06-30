@@ -3,54 +3,54 @@
     <!-- 导航栏 -->
     <Navbar />
     
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-2 py-6 max-w-screen-2xl">
       <!-- 页面标题 -->
-      <div class="bg-blue-600 text-white rounded-lg p-8 mb-6">
-        <h1 class="text-3xl font-bold mb-2">校企人才招聘平台</h1>
-        <p class="text-lg opacity-90">发现适合你的实习与就业机会，连接优质企业，开启职业发展新篇章</p>
+      <div class="bg-blue-600 text-white rounded-lg p-6 mb-4">
+        <h1 class="text-2xl font-bold mb-1">校企人才招聘平台</h1>
+        <p class="text-base opacity-90">发现适合你的实习与就业机会，连接优质企业，开启职业发展新篇章</p>
         
         <!-- 搜索框 -->
-        <div class="mt-6 flex">
+        <div class="mt-4 flex">
           <input 
             v-model="searchQuery" 
             type="text" 
             placeholder="搜索职位名称、公司或关键词" 
-            class="flex-1 px-4 py-3 rounded-l-lg text-gray-800 focus:outline-none"
+            class="flex-1 px-3 py-2 rounded-l-lg text-gray-800 focus:outline-none"
             @keyup.enter="handleSearch"
           />
           <button 
             @click="handleSearch" 
-            class="bg-blue-700 hover:bg-blue-800 px-6 py-3 rounded-r-lg flex items-center justify-center"
+            class="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-r-lg flex items-center justify-center"
           >
-            <SearchIcon class="w-5 h-5" />
+            <SearchIcon class="w-4 h-4" />
           </button>
         </div>
       </div>
       
       <!-- 筛选选项区域 -->
-      <div class="mb-6 flex flex-wrap justify-start gap-4">
-        <div class="w-40">
+      <div class="mb-4 flex flex-wrap justify-start gap-2">
+        <div class="w-32">
           <JobTypeSelector 
             v-model="filters.jobType"
             placeholder="职位类型"
             @change="applyFilters"
           />
         </div>
-        <div class="w-40">
+        <div class="w-32">
           <CitySelector 
             v-model="filters.location"
             placeholder="城市"
             @change="applyFilters"
           />
         </div>
-        <div class="w-40">
+        <div class="w-32">
           <EducationSelector 
             v-model="filters.educationRequirement"
             placeholder="学历要求"
             @change="applyFilters"
           />
         </div>
-        <div class="w-40">
+        <div class="w-32">
           <SalarySelector 
             v-model="filters.salaryMin"
             v-model:max="filters.salaryMax"

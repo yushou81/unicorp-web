@@ -1,19 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-      <div class="container mx-auto px-4">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-xl font-semibold text-gray-900">企业导师平台</h1>
-          </div>
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-600">{{ userInfo.nickname || userInfo.account || '用户' }}</span>
-            <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <!-- 使用通用导航栏组件 -->
+    <Navbar />
     
     <div class="py-10">
       <div class="container mx-auto px-4">
@@ -47,19 +35,6 @@
               <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium mt-2">{{ block.footer.text }}</router-link>
             </div>
           </div>
-        </div>
-        
-        <!-- 岗位列表展示区块 -->
-        <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
-          <h2 class="text-xl font-bold mb-6 text-blue-700">我发布的岗位</h2>
-          <GridJobList
-            :jobs="jobs"
-            :loading="jobsLoading"
-            :totalJobs="totalJobs"
-            :currentPage="currentPage"
-            :totalPages="totalPages"
-            @update:currentPage="fetchJobs"
-          />
         </div>
         
         <!-- 编辑个人资料对话框 -->
@@ -106,6 +81,209 @@
             </div>
           </div>
         </div>
+        <!-- 我发布的岗位区块 -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-10">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-blue-700">我发布的岗位</h2>
+            <button @click="openCreateJobDialog" class="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">创建新岗位</button>
+          </div>
+          <GridJobList
+            :jobs="jobs"
+            :loading="jobsLoading"
+            :totalJobs="totalJobs"
+            :currentPage="currentPage"
+            :totalPages="totalPages"
+            :showEdit="true"
+            @update:currentPage="fetchJobs"
+            @update:sortBy="onSortByChange"
+            @edit="onEditJob"
+          />
+        </div>
+
+        <!-- 创建岗位弹窗 -->
+        <div v-if="showCreateJobDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
+            <button @click="showCreateJobDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
+            <h2 class="text-2xl font-bold mb-6 text-blue-700">创建新岗位</h2>
+            <form @submit.prevent="onCreateJob">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 mb-1">岗位名称</label>
+                  <input v-model="newJob.title" required class="w-full px-3 py-2 border rounded" placeholder="请输入岗位名称" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">工作地点</label>
+                  <input v-model="newJob.location" required class="w-full px-3 py-2 border rounded" placeholder="请输入工作地点" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">岗位类型</label>
+                  <select v-model="newJob.jobType" required class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option value="full_time">全职</option>
+                    <option value="part_time">兼职</option>
+                    <option value="internship">实习</option>
+                    <option value="remote">远程</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">学历要求</label>
+                  <select v-model="newJob.educationRequirement" required class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option value="bachelor">本科及以上</option>
+                    <option value="master">硕士及以上</option>
+                    <option value="doctor">博士及以上</option>
+                    <option value="any">不限</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">最低薪资 (k)</label>
+                  <input v-model.number="newJob.salaryMin" type="number" min="0" class="w-full px-3 py-2 border rounded" placeholder="最低薪资" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">最高薪资 (k)</label>
+                  <input v-model.number="newJob.salaryMax" type="number" min="0" class="w-full px-3 py-2 border rounded" placeholder="最高薪资" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">薪资单位</label>
+                  <select v-model="newJob.salaryUnit" class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option value="per_month">元/月</option>
+                    <option value="per_year">元/年</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">招聘人数</label>
+                  <input v-model.number="newJob.headcount" type="number" min="1" class="w-full px-3 py-2 border rounded" placeholder="招聘人数" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">经验要求</label>
+                  <select v-model="newJob.experienceRequirement" required class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option value="fresh_graduate">应届毕业生</option>
+                    <option value="less_than_1_year">1年以下</option>
+                    <option value="1_to_3_years">1-3年</option>
+                    <option value="any">不限</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">截止日期</label>
+                  <input v-model="newJob.applicationDeadline" type="date" class="w-full px-3 py-2 border rounded" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">技能标签（逗号分隔）</label>
+                  <input v-model="newJob.skillTags" class="w-full px-3 py-2 border rounded" placeholder="如：Java,Vue,SQL" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">岗位分类</label>
+                  <select v-model="newJob.categoryId" required class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option v-for="cat in jobCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mt-4">
+                <label class="block text-gray-700 mb-1">岗位描述</label>
+                <textarea v-model="newJob.description" required class="w-full px-3 py-2 border rounded min-h-[80px]" placeholder="请输入岗位描述"></textarea>
+              </div>
+              <div class="flex justify-end space-x-2 mt-6">
+                <button type="button" @click="showCreateJobDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                <button type="submit" :disabled="createJobLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ createJobLoading ? '创建中...' : '创建' }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <!-- 编辑岗位弹窗 -->
+        <div v-if="showEditJobDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
+            <button @click="showEditJobDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
+            <h2 class="text-2xl font-bold mb-6 text-blue-700">编辑岗位</h2>
+            <form @submit.prevent="onUpdateJob">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 mb-1">岗位名称</label>
+                  <input v-model="editJobData.title" required class="w-full px-3 py-2 border rounded" placeholder="请输入岗位名称" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">工作地点</label>
+                  <input v-model="editJobData.location" required class="w-full px-3 py-2 border rounded" placeholder="请输入工作地点" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">岗位类型</label>
+                  <select v-model="editJobData.jobType" required class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option value="full_time">全职</option>
+                    <option value="part_time">兼职</option>
+                    <option value="internship">实习</option>
+                    <option value="remote">远程</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">学历要求</label>
+                  <select v-model="editJobData.educationRequirement" required class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option value="bachelor">本科及以上</option>
+                    <option value="master">硕士及以上</option>
+                    <option value="doctor">博士及以上</option>
+                    <option value="any">不限</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">最低薪资 (k)</label>
+                  <input v-model.number="editJobData.salaryMin" type="number" min="0" class="w-full px-3 py-2 border rounded" placeholder="最低薪资" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">最高薪资 (k)</label>
+                  <input v-model.number="editJobData.salaryMax" type="number" min="0" class="w-full px-3 py-2 border rounded" placeholder="最高薪资" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">薪资单位</label>
+                  <select v-model="editJobData.salaryUnit" class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option value="per_month">元/月</option>
+                    <option value="per_year">元/年</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">招聘人数</label>
+                  <input v-model.number="editJobData.headcount" type="number" min="1" class="w-full px-3 py-2 border rounded" placeholder="招聘人数" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">经验要求</label>
+                  <select v-model="editJobData.experienceRequirement" required class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option value="fresh_graduate">应届毕业生</option>
+                    <option value="less_than_1_year">1年以下</option>
+                    <option value="1_to_3_years">1-3年</option>
+                    <option value="any">不限</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">截止日期</label>
+                  <input v-model="editJobData.applicationDeadline" type="date" class="w-full px-3 py-2 border rounded" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">技能标签（逗号分隔）</label>
+                  <input v-model="editJobData.skillTags" class="w-full px-3 py-2 border rounded" placeholder="如：Java,Vue,SQL" />
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1">岗位分类</label>
+                  <select v-model="editJobData.categoryId" required class="w-full px-3 py-2 border rounded">
+                    <option value="">请选择</option>
+                    <option v-for="cat in jobCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mt-4">
+                <label class="block text-gray-700 mb-1">岗位描述</label>
+                <textarea v-model="editJobData.description" required class="w-full px-3 py-2 border rounded min-h-[80px]" placeholder="请输入岗位描述"></textarea>
+              </div>
+              <div class="flex justify-end space-x-2 mt-6">
+                <button type="button" @click="showEditJobDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                <button type="submit" :disabled="editJobLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ editJobLoading ? '保存中...' : '保存' }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -116,7 +294,8 @@ import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon, Buildin
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
-import { getJobs, Job } from '@/lib/api/job'
+import Navbar from '@/components/layout/Navbar.vue'
+import { getJobs, Job, createJob, JobCreationDTO, updateJob, getPublicJobCategories } from '@/lib/api/job'
 import GridJobList from '@/components/job/GridJobList.vue'
 
 const mentor = ref({
@@ -331,19 +510,26 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const totalPages = ref(1)
 const jobsLoading = ref(false)
+const sortBy = ref('latest')
+
+function onSortByChange(newSort) {
+  sortBy.value = newSort
+  fetchJobs(1)
+}
 
 async function fetchJobs(page = 1) {
   jobsLoading.value = true
   try {
     const res = await getJobs({
       posterId: userInfo.value.id,
-      page: page - 1,
-      size: pageSize.value
+      page: page,
+      size: pageSize.value,
+      sortBy: sortBy.value
     })
     jobs.value = res.data.records
     totalJobs.value = res.data.total
     totalPages.value = res.data.pages
-    currentPage.value = res.data.current + 1
+    currentPage.value = page
   } finally {
     jobsLoading.value = false
   }
@@ -352,4 +538,123 @@ async function fetchJobs(page = 1) {
 onMounted(() => {
   fetchJobs()
 })
+
+const showCreateJobDialog = ref(false)
+const createJobLoading = ref(false)
+const newJob = ref<JobCreationDTO>({
+  title: '',
+  description: '',
+  location: '',
+  jobType: '',
+  educationRequirement: '',
+  salaryMin: undefined,
+  salaryMax: undefined,
+  salaryUnit: '',
+  headcount: undefined,
+  experienceRequirement: '',
+  applicationDeadline: '',
+  skillTags: '',
+  categoryId: 0
+})
+
+const jobCategories = ref<{ id: number; name: string }[]>([])
+
+async function fetchJobCategories() {
+  // 只查三级分类，假设后端返回全部分类，前端筛选 level===3
+  const res = await getPublicJobCategories({ page: 1, size: 100 })
+  if (res && res.data && Array.isArray(res.data)) {
+    jobCategories.value = res.data.filter((cat: any) => cat.level === 3).map((cat: any) => ({ id: cat.id, name: cat.name }))
+  }
+}
+
+// 打开创建岗位弹窗时拉取分类
+function openCreateJobDialog() {
+  fetchJobCategories()
+  showCreateJobDialog.value = true
+}
+
+async function onCreateJob() {
+  createJobLoading.value = true
+  try {
+    await createJob(newJob.value)
+    showCreateJobDialog.value = false
+    // 重置表单
+    newJob.value = {
+      title: '',
+      description: '',
+      location: '',
+      jobType: '',
+      educationRequirement: '',
+      salaryMin: undefined,
+      salaryMax: undefined,
+      salaryUnit: '',
+      headcount: undefined,
+      experienceRequirement: '',
+      applicationDeadline: '',
+      skillTags: '',
+      categoryId: 0
+    }
+    await fetchJobs()
+    alert('岗位创建成功！')
+  } catch (e: any) {
+    alert('创建失败：' + (e.message || '未知错误'))
+  } finally {
+    createJobLoading.value = false
+  }
+}
+
+const showEditJobDialog = ref(false)
+const editJobLoading = ref(false)
+const editJobId = ref<number | null>(null)
+const editJobData = ref<JobCreationDTO>({
+  title: '',
+  description: '',
+  location: '',
+  jobType: '',
+  educationRequirement: '',
+  salaryMin: undefined,
+  salaryMax: undefined,
+  salaryUnit: '',
+  headcount: undefined,
+  experienceRequirement: '',
+  applicationDeadline: '',
+  skillTags: '',
+  categoryId: 0
+})
+
+function onEditJob(job: Job) {
+  fetchJobCategories()
+  editJobId.value = job.id
+  editJobData.value = {
+    title: job.title,
+    description: job.description,
+    location: job.location,
+    jobType: job.jobType,
+    educationRequirement: job.educationRequirement,
+    salaryMin: job.salaryMin ?? undefined,
+    salaryMax: job.salaryMax ?? undefined,
+    salaryUnit: job.salaryUnit ?? '',
+    headcount: job.headcount ?? undefined,
+    experienceRequirement: job.experienceRequirement ?? '',
+    applicationDeadline: job.applicationDeadline ?? '',
+    skillTags: job.skillTags ?? '',
+    categoryId: job.category?.id || 0
+  }
+  showEditJobDialog.value = true
+}
+
+async function onUpdateJob() {
+  if (!editJobId.value) return
+  editJobLoading.value = true
+  try {
+    await updateJob(editJobId.value, editJobData.value)
+    showEditJobDialog.value = false
+    await fetchJobs(currentPage.value)
+    alert('岗位信息已更新！')
+  } catch (e: any) {
+    alert('更新失败：' + (e.message || '未知错误'))
+  } finally {
+    editJobLoading.value = false
+  }
+}
 </script> 

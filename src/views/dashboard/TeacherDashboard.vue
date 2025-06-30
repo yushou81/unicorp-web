@@ -1,19 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-      <div class="container mx-auto px-4">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-xl font-semibold text-gray-900">教师平台</h1>
-          </div>
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-600">{{ userInfo.nickname || userInfo.account || '用户' }}</span>
-            <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
-          </div>
-        </div>
-      </div>
-    </nav>
+    <!-- 使用通用导航栏组件 -->
+    <Navbar />
     
     <div class="py-10">
       <div class="container mx-auto px-4">
@@ -103,6 +91,7 @@ import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon, Buildin
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
+import Navbar from '@/components/layout/Navbar.vue'
 
 const teacher = ref({
   avatar: 'https://randomuser.me/api/portraits/men/33.jpg',

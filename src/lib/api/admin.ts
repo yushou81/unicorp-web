@@ -195,3 +195,12 @@ export function getJobCategoryDetail(id: number) {
     method: 'GET'
   })
 }
+
+/**
+ * 获取所有岗位分类（树形结构）
+ */
+export function getHierarchicalJobCategories() {
+  return apiRequest('/v1/job-categories/hierarchical', {
+    method: 'GET'
+  })
+}
