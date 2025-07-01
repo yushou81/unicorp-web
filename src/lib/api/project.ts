@@ -58,7 +58,7 @@ export interface ProjectDetail {
 // 获取项目列表（分页、搜索、筛选）
 export function getProjects(params: any = {}): Promise<{ data: ProjectListResponse }> {
   const query = qs.stringify(params, { arrayFormat: 'repeat' })
-  return apiRequest(`/projects?${query}`)
+  return apiRequest(`/v1/projects?${query}`)
 }
 
 export interface MyApplication {
@@ -76,7 +76,7 @@ export interface MyApplicationsResponse {
 
 // 创建新项目
 export function createProject(data: any) {
-  return apiRequest('/projects', {
+  return apiRequest('/v1/projects', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -84,12 +84,12 @@ export function createProject(data: any) {
 
 // 获取项目详情
 export function getProject(id: number): Promise<{ data: ProjectDetail }> {
-  return apiRequest(`/projects/${id}`)
+  return apiRequest(`/v1/projects/${id}`)
 }
 
 // 更新项目
 export function updateProject(id: number, data: any) {
-  return apiRequest(`/projects/${id}`, {
+  return apiRequest(`/v1/projects/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data)
   })
@@ -97,12 +97,12 @@ export function updateProject(id: number, data: any) {
 
 // 删除项目
 export function deleteProject(id: number) {
-  return apiRequest(`/projects/${id}`, { method: 'DELETE' })
+  return apiRequest(`/v1/projects/${id}`, { method: 'DELETE' })
 }
 
 // 学生申请加入项目
 export function applyForProject(id: number, data: any = {}) {
-  return apiRequest(`/projects/${id}/apply`, {
+  return apiRequest(`/v1/projects/${id}/apply`, {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -110,18 +110,18 @@ export function applyForProject(id: number, data: any = {}) {
 
 // 获取已加入成员
 export function getProjectMembers(projectId: number): Promise<{ data: ProjectMember[] }> {
-  return apiRequest(`/projects/${projectId}/members`, { method: 'GET' })
+  return apiRequest(`/v1/projects/${projectId}/members`, { method: 'GET' })
 }
 
 
 // 获取项目申请列表（所有者）
 export function getProjectApplications(id: number): Promise<{ data: ProjectApplication[] }> {
-  return apiRequest(`/projects/${id}/applications`)
+  return apiRequest(`/v1/projects/${id}/applications`)
 }
 
 // 审批项目申请
 export function updateApplicationStatus(applicationId: number, data: any) {
-  return apiRequest(`/project-applications/${applicationId}`, {
+  return apiRequest(`/v1/project-applications/${applicationId}`, {
     method: 'PATCH',
     body: JSON.stringify(data)
   })
@@ -132,7 +132,7 @@ export function getMyApplications(params: { page?: number; size?: number } = {})
   const query = new URLSearchParams()
   if (params.page !== undefined) query.append('page', params.page + '')
   if (params.size !== undefined) query.append('size', params.size + '')
-  return apiRequest(`/me/project-applications?${query.toString()}`)
+  return apiRequest(`/v1/me/project-applications?${query.toString()}`)
 }
 
 /**
@@ -140,5 +140,5 @@ export function getMyApplications(params: { page?: number; size?: number } = {})
  * @param memberId 成员ID
  */
 export function removeProjectMember(userId: number, projectId: number) {
-    return apiRequest(`/projects/${projectId}/member/${userId}`, { method: 'DELETE' })
+    return apiRequest(`/v1/projects/${projectId}/member/${userId}`, { method: 'DELETE' })
   }

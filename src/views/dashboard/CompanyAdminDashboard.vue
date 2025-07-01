@@ -288,13 +288,9 @@ import { createMentor, getMentorList, updateMentorStatus, updateMentorInfo } fro
 import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
 import { updateUser } from '@/lib/api/admin'
 import Button from '@/components/ui/Button.vue'
-<<<<<<< HEAD
-import { ClipboardDocumentListIcon } from '@heroicons/vue/24/outline'
-=======
 import Navbar from '@/components/layout/Navbar.vue'
 import { getJobs, Job } from '@/lib/api/job'
 import GridJobList from '@/components/job/GridJobList.vue'
->>>>>>> 1b1f31a21ec39c76f1e439a7f61e106fe985a7ca
 
 const company = ref({
   logo: 'https://randomuser.me/api/portraits/lego/1.jpg',

@@ -14,13 +14,13 @@ export default defineConfig({
   },
   server: {
     //我自己留着测的
-    // host: '127.0.0.1',
-    // port: 3000,
+     host: '127.0.0.1',
+     port: 3000,
 
-    port: 8081,
+    //port: 8081,
 
     open: true,
-    host: '0.0.0.0',
+    //host: '0.0.0.0',
     proxy: {
       '/api': {
         target: 'http://192.168.58.162:8081',

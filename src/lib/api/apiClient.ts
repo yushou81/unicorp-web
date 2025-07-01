@@ -1,10 +1,10 @@
-<<<<<<< HEAD
-const API_BASE_URL =  'http://localhost:8081/api/v1'
-=======
+// 我自己留着测的
+ const API_BASE_URL =  'http://localhost:8081/api'
 
-const API_BASE_URL =  'http://192.168.58.162:8081/api'
 
->>>>>>> 1b1f31a21ec39c76f1e439a7f61e106fe985a7ca
+//const API_BASE_URL =  'http://192.168.58.162:8081/api'
+
+
 
 let token = ''
 export function setToken(t: string) {
@@ -13,12 +13,16 @@ export function setToken(t: string) {
 
 export async function apiRequest<T>(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`
-<<<<<<< HEAD
-  let headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) }
-  if (!(options.body instanceof FormData)) {
-    headers['Content-Type'] = 'application/json'
-  }
-=======
+
+
+
+  //我写的，先留着
+  // let headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) }
+  // if (!(options.body instanceof FormData)) {
+  //   headers['Content-Type'] = 'application/json'
+  // }
+
+
   
   // 初始化headers
   let headers: Record<string, string> = {}
@@ -34,7 +38,6 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   }
   
   // 添加认证token
->>>>>>> 1b1f31a21ec39c76f1e439a7f61e106fe985a7ca
   if (token) headers['Authorization'] = `Bearer ${token}`
 
   // 调试输出
@@ -47,16 +50,17 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
   let response, rawText, data
   try {
-<<<<<<< HEAD
-    response = await fetch(url, { ...options, headers, body: options.body })
-=======
+
+    //未带时间戳的，可能没用，先留着
+    //response = await fetch(url, { ...options, headers, body: options.body })
+
     // 添加时间戳，避免缓存
     const urlWithTimestamp = url.includes('?') 
       ? `${url}&_t=${Date.now()}` 
       : `${url}?_t=${Date.now()}`
     
     response = await fetch(urlWithTimestamp, { ...options, headers })
->>>>>>> 1b1f31a21ec39c76f1e439a7f61e106fe985a7ca
+
     rawText = await response.text()
     
     // 对于 204 No Content 状态码，不需要解析 JSON

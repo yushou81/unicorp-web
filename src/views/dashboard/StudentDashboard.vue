@@ -708,16 +708,10 @@ const blocks = ref<Block[]>([
     footer: { text: '查看全部课程', link: '/courses' }
   },
   {
-<<<<<<< HEAD
-    title: '查找项目',
-    icon: BriefcaseIcon,
-    color: 'text-blue-500',
-=======
     title: '企业申请入口',
     icon: BuildingOffice2Icon,
     color: 'text-yellow-500',
     type: 'list',
->>>>>>> 1b1f31a21ec39c76f1e439a7f61e106fe985a7ca
     data: [],
     empty: '点击下方查找并申请项目',
     footer: { text: '查找项目', link: '/student/projects' }
