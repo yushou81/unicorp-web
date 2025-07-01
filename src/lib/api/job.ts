@@ -358,6 +358,9 @@ export async function applyJob(jobId: number | string) {
   })
   console.log(`[applyJob] 响应数据:`, response)
   
+  return response
+}
+
 /**
  * 创建新岗位
  * @param data 岗位创建数据
@@ -392,6 +395,8 @@ export async function updateApplicationStatus(applicationId: number, statusData:
   console.log(`[updateApplicationStatus] 响应数据:`, response)
   
   return response
+}
+
 /**
  * 更新岗位信息
  * @param id 岗位ID
@@ -446,17 +451,4 @@ export async function getPublicJobCategories(params?: { page?: number; size?: nu
 export async function getJobApplications(jobId: number | string, page = 1, size = 10) {
   const url = `/v1/jobs/${jobId}/applications?page=${page}&size=${size}`
   return apiRequest(url)
-}
-
-/**
- * 更新岗位申请状态
- * @param applicationId 申请ID
- * @param data { status, feedback }
- */
-export async function updateApplicationStatus(applicationId: number, data: { status: string, feedback?: string }) {
-  return apiRequest(`/v1/applications/${applicationId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-    headers: { 'Content-Type': 'application/json' }
-  })
 } 

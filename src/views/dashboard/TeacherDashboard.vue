@@ -18,6 +18,21 @@
           </div>
           <button @click="onEditProfileClick" class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑资料</button>
         </div>
+        
+        <!-- 添加创建课程按钮 -->
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">我的双师课堂</h2>
+          <button 
+            @click="openCreateCourseDialog" 
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            创建新课程
+          </button>
+        </div>
+        
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
           <div v-for="(block, idx) in blocks" :key="idx" class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-200 flex flex-col mb-2">
             <div class="flex items-center mb-4">
@@ -25,15 +40,50 @@
               <span class="font-semibold text-lg">{{ block.title }}</span>
             </div>
             <ul>
-              <li v-for="item in block.data" :key="item.id || item" class="flex justify-between items-center mb-2 text-gray-700">
-                <span>{{ item.label || item }}</span>
-                <span v-if="item.extra" class="text-xs text-gray-400 ml-2">{{ item.extra }}</span>
+              <li v-for="item in block.data" :key="typeof item === 'string' ? item : item.id" class="flex justify-between items-center mb-2 text-gray-700">
+                <span>{{ typeof item === 'string' ? item : item.label }}</span>
+                <span v-if="typeof item !== 'string' && item.extra" class="text-xs text-gray-400 ml-2">{{ item.extra }}</span>
               </li>
               <li v-if="block.data.length === 0" class="text-gray-400 text-sm">{{ block.empty }}</li>
             </ul>
             <div v-if="block.footer">
               <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium mt-2">{{ block.footer.text }}</router-link>
             </div>
+          </div>
+        </div>
+        
+        <!-- 课程列表 -->
+        <div v-if="courseList.length > 0" class="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 class="text-xl font-semibold mb-4">我的全部课程</h2>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课程名称</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课程时间</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">课程类型</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">报名人数</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="course in courseList" :key="course.id">
+                  <td class="px-6 py-4 whitespace-nowrap">{{ course.title }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">{{ new Date(course.scheduledTime).toLocaleString() }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">{{ course.courseType }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">{{ course.enrolledCount }}/{{ course.maxStudents }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="getStatusClass(course.status)">{{ getStatusText(course.status) }}</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap space-x-2">
+                    <button @click="openEditCourseDialog(course)" class="text-blue-600 hover:text-blue-900">编辑</button>
+                    <button @click="openResourceUploadDialog(course.id)" class="text-green-600 hover:text-green-900">上传资源</button>
+                    <button @click="onDeleteCourse(course.id)" class="text-red-600 hover:text-red-900">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
         
@@ -129,6 +179,62 @@
             <label class="block text-gray-700 mb-1">课程描述</label>
             <textarea v-model="courseForm.description" rows="3" class="w-full px-3 py-2 border rounded" placeholder="请输入课程描述"></textarea>
           </div>
+          
+          <!-- 企业导师搜索部分 -->
+          <div class="mb-5 border-b pb-5">
+            <label class="block text-gray-700 mb-1">企业导师</label>
+            
+            <div v-if="selectedMentor" class="flex items-center justify-between bg-blue-50 p-3 rounded mb-2">
+              <div>
+                <div class="font-semibold">{{ selectedMentor.name }}</div>
+                <div class="text-xs text-gray-500">导师ID: {{ selectedMentor.id }}</div>
+              </div>
+              <button 
+                type="button" 
+                @click="clearSelectedMentor" 
+                class="text-red-600 text-sm hover:text-red-800"
+              >
+                移除
+              </button>
+            </div>
+            
+            <div v-else>
+              <div class="flex mb-2">
+                <input 
+                  v-model="mentorSearchKeyword" 
+                  class="flex-1 px-3 py-2 border rounded-l" 
+                  placeholder="输入导师邮箱或手机号查询" 
+                />
+                <button 
+                  type="button" 
+                  @click="searchMentor" 
+                  :disabled="mentorSearching" 
+                  class="px-4 py-2 bg-blue-600 text-white rounded-r hover:bg-blue-700 transition"
+                >
+                  {{ mentorSearching ? '查询中...' : '查询' }}
+                </button>
+              </div>
+              
+              <div v-if="mentorSearchResults.length > 0" class="border rounded mt-2 max-h-40 overflow-y-auto">
+                <div 
+                  v-for="mentor in mentorSearchResults" 
+                  :key="mentor.id"
+                  class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-0"
+                  @click="selectMentor(mentor)"
+                >
+                  <div class="font-medium">{{ mentor.nickname || mentor.account }}</div>
+                  <div class="text-xs text-gray-500">
+                    {{ mentor.email || '无邮箱' }} | {{ mentor.phone || '无手机号' }}
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="!selectedMentor" class="text-xs text-gray-500 mt-1">
+                必须选择一位企业导师进行双师课堂的创建
+              </div>
+            </div>
+          </div>
+          
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="mb-3">
               <label class="block text-gray-700 mb-1">课程时间</label>
@@ -207,7 +313,7 @@ import { ref, computed, onMounted } from 'vue'
 import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
+import { getMe, updatePassword, updateUserInfo, uploadAvatar, searchUser } from '@/lib/api/auth'
 import Navbar from '@/components/layout/Navbar.vue'
 // 导入双师课堂相关API
 import { 
@@ -247,14 +353,32 @@ const projects = [
 const resources = [
   { id: 1, title: '教师教学资源', date: '2024-06-20' }
 ]
-const blocks = ref([
+
+// 定义更具体的类型
+interface BlockDataItem {
+  id: number;
+  label: string;
+  extra?: string;
+}
+
+interface BlockItem {
+  title: string;
+  icon: any;
+  color: string;
+  data: BlockDataItem[] | string[];
+  empty: string;
+  footer: { text: string; link: string };
+}
+
+// 修改blocks的定义使用具体类型
+const blocks = ref<BlockItem[]>([
   {
     title: '双师课堂管理',
     icon: UserGroupIcon,
     color: 'text-blue-500',
     data: [],
     empty: '暂无课程',
-    footer: { text: '管理课程', link: '/classroom' }
+    footer: { text: '管理课程', link: '/classroom/manage' }
   },
   {
     title: '项目管理',
@@ -506,8 +630,62 @@ const courseForm = ref<DualTeacherCourseDTO>({
   scheduledTime: '',
   maxStudents: 30,
   location: '',
-  courseType: CourseType.HYBRID
+  courseType: CourseType.HYBRID,
+  mentorId: undefined
 })
+
+// 企业导师搜索相关
+const mentorSearchKeyword = ref('')
+const mentorSearching = ref(false)
+const mentorSearchResults = ref<any[]>([])
+const selectedMentor = ref<{id: number, name: string, role: string} | null>(null)
+
+// 根据关键词搜索企业导师
+async function searchMentor() {
+  if (!mentorSearchKeyword.value.trim()) {
+    alert('请输入企业导师的邮箱或手机号')
+    return
+  }
+  
+  mentorSearching.value = true
+  try {
+    const res = await searchUser(mentorSearchKeyword.value.trim()) as any
+    const user = res.data
+    
+    if (user && (user.role === 'MENTOR' || user.role === 'mentor' || user.role === 'EN_ADMIN' || user.role === 'EN_TEACHER')) {
+      mentorSearchResults.value = [user]
+    } else if (user) {
+      alert('搜索到的用户不是企业导师')
+      mentorSearchResults.value = []
+    } else {
+      alert('未找到匹配的用户')
+      mentorSearchResults.value = []
+    }
+  } catch (error) {
+    console.error('搜索企业导师失败:', error)
+    alert('搜索失败: ' + (error as any).message || '未知错误')
+    mentorSearchResults.value = []
+  } finally {
+    mentorSearching.value = false
+  }
+}
+
+// 选择企业导师
+function selectMentor(mentor: any) {
+  selectedMentor.value = {
+    id: mentor.id,
+    name: mentor.nickname || mentor.account || '未知导师',
+    role: mentor.role
+  }
+  courseForm.value.mentorId = mentor.id
+  mentorSearchResults.value = []
+}
+
+// 清除已选择的企业导师
+function clearSelectedMentor() {
+  selectedMentor.value = null
+  courseForm.value.mentorId = undefined
+}
 
 // 资源上传相关
 const showResourceDialog = ref(false)
@@ -530,7 +708,7 @@ async function fetchTeacherCourses() {
       totalCourses.value = response.data.total
       
       // 更新数据块中的课程信息
-      const courseData = courseList.value.map(course => ({
+      const courseData: BlockDataItem[] = courseList.value.map(course => ({
         id: course.id,
         label: course.title,
         extra: new Date(course.scheduledTime).toLocaleDateString()
@@ -539,7 +717,7 @@ async function fetchTeacherCourses() {
       // 更新blocks中的课程数据
       const courseBlockIndex = blocks.value.findIndex(block => block.title === '双师课堂管理')
       if (courseBlockIndex !== -1) {
-        blocks.value[courseBlockIndex].data = courseData as any[]
+        blocks.value[courseBlockIndex].data = courseData
       }
     }
   } catch (error) {
@@ -549,6 +727,12 @@ async function fetchTeacherCourses() {
 
 // 添加创建/编辑课程的方法
 async function saveCourse() {
+  // 验证导师选择
+  if (!courseForm.value.mentorId) {
+    alert('请选择一位企业导师')
+    return
+  }
+  
   try {
     if (isEditingCourse.value && currentCourseId.value) {
       await updateCourse(currentCourseId.value, courseForm.value)
@@ -602,7 +786,7 @@ function openCreateCourseDialog() {
 }
 
 // 打开编辑课程对话框
-function openEditCourseDialog(course: DualTeacherCourseVO) {
+async function openEditCourseDialog(course: DualTeacherCourseVO) {
   isEditingCourse.value = true
   currentCourseId.value = course.id
   courseForm.value = {
@@ -611,8 +795,21 @@ function openEditCourseDialog(course: DualTeacherCourseVO) {
     scheduledTime: course.scheduledTime,
     maxStudents: course.maxStudents,
     location: course.location,
-    courseType: course.courseType as CourseType
+    courseType: course.courseType as CourseType,
+    mentorId: course.mentorId
   }
+  
+  // 如果有导师信息，则设置已选择导师
+  if (course.mentorId && course.mentorName) {
+    selectedMentor.value = {
+      id: course.mentorId,
+      name: course.mentorName,
+      role: 'mentor'
+    }
+  } else {
+    selectedMentor.value = null
+  }
+  
   showCourseDialog.value = true
 }
 
@@ -624,8 +821,14 @@ function resetCourseForm() {
     scheduledTime: '',
     maxStudents: 30,
     location: '',
-    courseType: CourseType.HYBRID
+    courseType: CourseType.HYBRID,
+    mentorId: undefined
   }
+  
+  // 清空导师搜索相关状态
+  mentorSearchKeyword.value = ''
+  mentorSearchResults.value = []
+  selectedMentor.value = null
 }
 
 // 资源上传相关方法
@@ -666,5 +869,29 @@ async function uploadCourseResource() {
   } finally {
     uploadingResource.value = false
   }
+}
+
+// 获取课程状态显示文本
+function getStatusText(status: string): string {
+  const statusMap: Record<string, string> = {
+    'planning': '筹备中',
+    'open': '开放报名',
+    'in_progress': '进行中',
+    'completed': '已结束',
+    'cancelled': '已取消'
+  }
+  return statusMap[status] || '未知'
+}
+
+// 获取课程状态样式类
+function getStatusClass(status: string): string {
+  const classMap: Record<string, string> = {
+    'planning': 'px-2 py-1 rounded text-xs bg-gray-100 text-gray-800',
+    'open': 'px-2 py-1 rounded text-xs bg-green-100 text-green-800',
+    'in_progress': 'px-2 py-1 rounded text-xs bg-blue-100 text-blue-800',
+    'completed': 'px-2 py-1 rounded text-xs bg-purple-100 text-purple-800',
+    'cancelled': 'px-2 py-1 rounded text-xs bg-red-100 text-red-800'
+  }
+  return classMap[status] || 'px-2 py-1 rounded text-xs bg-gray-100 text-gray-800'
 }
 </script> 

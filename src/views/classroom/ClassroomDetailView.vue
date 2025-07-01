@@ -55,10 +55,20 @@
             </div>
             
             <!-- 课程大纲 -->
-            <CourseChapters v-if="courseChapters.length > 0" :chapters="courseChapters" />
+            <CourseChapters 
+              :course-id="Number(route.params.id)"
+              :is-teacher="isTeacher"
+              :is-student="isStudent"
+              :student-id="studentId"
+            />
             
             <!-- 课程资源 -->
-            <CourseResources :resources="courseResources" />
+            <CourseResources 
+              :course-id="Number(route.params.id)"
+              :is-teacher="isTeacher"
+              :current-user-id="studentId"
+              :is-resource-manager="isTeacher || isMentor"
+            />
             
             <!-- 课程评价 -->
             <div class="bg-white rounded-lg shadow-sm p-6">
@@ -146,13 +156,15 @@ import CourseRating from '@/components/classroom/CourseRating.vue'
 import { 
   getCourseById, 
   getResourcesByCourseId,
+  getChaptersByCourseId,
   getRatingsByCourseId,
   hasRated,
   DualTeacherCourseVO, 
   CourseStatus, 
   CourseType,
   CourseResourceVO,
-  CourseRatingVO
+  CourseRatingVO,
+  CourseChapterVO
 } from '@/lib/api/classroom'
 import { useAppStore } from '@/stores/app'
 
@@ -165,32 +177,32 @@ const error = ref('')
 const course = ref<DualTeacherCourseVO | null>(null)
 const isEnrolled = ref(false)
 const courseResources = ref<CourseResourceVO[]>([])
+const courseChapters = ref<CourseChapterVO[]>([])
 const courseRatings = ref<CourseRatingVO[]>([])
 const hasUserRated = ref(false)
+const chaptersLoading = ref(false)
 
-// 模拟课程章节数据，实际项目中应该从API获取
-const courseChapters = ref([
-  {
-    title: '课程介绍与环境准备',
-    description: '介绍课程内容和学习路线，准备开发环境',
-    duration: '45分钟'
-  },
-  {
-    title: '基础知识与核心概念',
-    description: '讲解相关技术的基础知识和核心概念',
-    duration: '1小时30分钟'
-  },
-  {
-    title: '实战项目开发',
-    description: '基于真实业务场景，进行项目实战开发',
-    duration: '3小时'
-  },
-  {
-    title: '性能优化与最佳实践',
-    description: '讲解性能优化技巧和行业最佳实践',
-    duration: '1小时15分钟'
-  }
-])
+// 用户角色判断
+const isTeacher = computed(() => {
+  const user = appStore.user as any
+  return user && user.role && (user.role.toUpperCase() === 'TEACHER' || user.role.toUpperCase() === 'SCH_ADMIN')
+})
+
+const isStudent = computed(() => {
+  const user = appStore.user as any
+  return user && user.role && user.role.toUpperCase() === 'STUDENT'
+})
+
+const isMentor = computed(() => {
+  const user = appStore.user as any
+  return user && user.role && (user.role.toUpperCase() === 'MENTOR' || user.role.toUpperCase() === 'EN_TEACHER')
+})
+
+// 用户ID
+const studentId = computed(() => {
+  const user = appStore.user as any
+  return user ? user.id : null
+})
 
 // 判断用户是否可以评价课程
 const canRate = computed(() => {
@@ -213,6 +225,9 @@ const fetchCourseDetail = async () => {
     
     // 获取课程资源
     fetchCourseResources(courseId)
+    
+    // 获取课程章节
+    fetchCourseChapters(courseId)
     
     // 获取课程评价
     fetchCourseRatings(courseId)
@@ -246,6 +261,19 @@ const fetchCourseResources = async (courseId: number) => {
     courseResources.value = response.data.records
   } catch (err) {
     console.error('获取课程资源失败:', err)
+  }
+}
+
+// 获取课程章节
+const fetchCourseChapters = async (courseId: number) => {
+  chaptersLoading.value = true
+  try {
+    const response = await getChaptersByCourseId(courseId)
+    courseChapters.value = response.data
+  } catch (err) {
+    console.error('获取课程章节失败:', err)
+  } finally {
+    chaptersLoading.value = false
   }
 }
 
