@@ -151,14 +151,16 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { createProject } from '@/lib/api/project'
-import { uploadFile } from '@/lib/api/file' // 你需要有这个API方法
+import { uploadFile } from '@/lib/api/file' // 确保有这个import
+const appStore = useAppStore()
+const user = appStore.user
+
+// const organizationName = computed(() => user?.organizationName || '')
+// const managerName = computed(() => user?.username || user?.nickname || '')
 
 const router = useRouter()
-const appStore = useAppStore()
 const submitting = ref(false)
-const user = computed(() => appStore.user || {})
-const organizationName = computed(() => user.value.organizationName || '')
-const managerName = computed(() => user.value.username || user.value.nickname || '')
+
 
 // 返回上一页函数
 function goBack() {
@@ -167,10 +169,10 @@ function goBack() {
 
 const form = ref({
   title: '',
-  maxMemberCount: 1,
+  maxMemberCount: 1, // 这里可以不改名，但提交时要映射到 planMemberCount
   description: '',
   difficulty: '',
-  language: '',
+  language: '', // 这里建议改成数组，或者提交时转成数组
   tech: [] as string[],
   code: [] as string[],
   planFile: null as File | null
@@ -210,6 +212,7 @@ function onFileChange(e: Event) {
 }
 
 async function onSubmit() {
+  
   if (!form.value.planFile) {
     alert('请上传项目计划书')
     return
@@ -224,24 +227,29 @@ async function onSubmit() {
   }
   submitting.value = true
   try {
-    // 第一步：先上传文件，拿到文件URL
+    // 1. 先上传文件
     const fileFd = new FormData()
     fileFd.append('file', form.value.planFile)
+    // 如果后端需要 type 参数，可以加上
+    // fileFd.append('type', 'resource')
     const fileRes = await uploadFile(fileFd)
+    // 假设后端返回 { code: 200, data: { url: "xxx" }, ... }
     const fileUrl = fileRes.data.file_url
+    console.log('文件上传返回：', fileRes)
 
-    // 第二步：组装JSON数据，直接用对象
+    // 2. 组装 JSON 数据
     const projectData = {
-      title: form.value.title,
-      maxMemberCount: form.value.maxMemberCount,
-      description: form.value.description,
-      difficulty: form.value.difficulty,
-      supportLanguages: [form.value.language], // 如果是多选就直接传数组
-      techFields: form.value.tech,
-      programmingLanguages: form.value.code,
-      projectProposalUrl: fileUrl
-    }
-    await createProject(projectData) // 这里直接传对象，不用FormData
+    title: form.value.title,
+    planMemberCount: form.value.maxMemberCount,
+    description: form.value.description,
+    difficulty: form.value.difficulty,
+    supportLanguages: form.value.language ? form.value.language.split('&') : [],
+    techFields: form.value.tech,
+    programmingLanguages: form.value.code,
+    projectProposalUrl: fileUrl
+  }
+
+    await createProject(projectData)
     alert('项目发布成功！')
     router.push('/company/projects')
   } catch (e: any) {

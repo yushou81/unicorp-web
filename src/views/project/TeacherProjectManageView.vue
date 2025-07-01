@@ -19,13 +19,13 @@
         <div class="flex justify-center mb-6">
           <input
             v-model="keyword"
-            @keyup.enter="fetchProjects"
+            @keyup.enter="onSearch"
             type="text"
             placeholder="请输入项目名称/项目编号"
             class="flex-1 max-w-2xl border border-blue-400 rounded-l-lg px-4 py-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
           />
           <button
-            @click="fetchProjects"
+            @click="onSearch"
             class="px-8 py-3 rounded-r-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base"
           >查找项目</button>
         </div>
@@ -108,11 +108,16 @@
                 <td class="px-4 py-2 text-center">{{ project.title }}</td>
                 <td class="px-4 py-2 text-center">{{ project.organizationName }}</td>
                 <td class="px-4 py-2 text-center">
-                  <a v-if="project.planUrl" :href="project.planUrl" target="_blank" class="text-blue-600 hover:underline">查看</a>
+                    <a
+                        v-if="project.projectProposalUrl"
+                        href="javascript:void(0)"
+                        @click="downloadFileWithToken(project.projectProposalUrl)"
+                        class="text-blue-600 hover:underline"
+                        >下载</a>
                   <span v-else>-</span>
                 </td>
                 <td class="px-4 py-2 text-center">
-                  {{ project.memberCount || 0 }}/{{ project.maxMemberCount || '-' }}
+                  {{ project.memberCount || 0 }}/{{ project.planMemberCount || '-' }}
                 </td>
                 <td class="px-4 py-2 text-center">
                   <router-link :to="`/project/${project.id}/members`">
@@ -132,6 +137,20 @@
             </tbody>
           </table>
         </div>
+        <!-- 表格下方，紧接着 </div> -->
+        <div class="flex justify-center mt-6">
+          <button
+            :disabled="currentPage === 1"
+            @click="changePage(currentPage - 1)"
+            class="px-3 py-1 mx-1 rounded bg-gray-200"
+          >上一页</button>
+          <span class="mx-2">第 {{ currentPage }} / {{ Math.ceil(total / pageSize) }} 页</span>
+          <button
+            :disabled="currentPage === Math.ceil(total / pageSize)"
+            @click="changePage(currentPage + 1)"
+            class="px-3 py-1 mx-1 rounded bg-gray-200"
+          >下一页</button>
+        </div>
       </div>
     </div>
   </template>
@@ -140,10 +159,13 @@
   import { ref, onMounted } from 'vue'
   import { getProjects, deleteProject } from '@/lib/api/project'
   import { useRouter } from 'vue-router'
+  import { useAppStore } from '@/stores/app'
   
+  const appStore = useAppStore()
   const projects = ref<any[]>([])
   const keyword = ref('')
   const router = useRouter()
+  
   
   // 筛选项
   const difficultyOptions = ['不限', '基础/Basic', '进阶/Advanced']
@@ -157,11 +179,11 @@
     tech: ['不限'] as string[],
     code: ['不限'] as string[]
   })
-  
+  type FilterKey = 'difficulty' | 'language' | 'tech' | 'code'
   const activeBtn = 'px-3 py-1 rounded-md bg-blue-500 text-white font-semibold shadow'
   const inactiveBtn = 'px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-blue-200 shadow'
   
-  function selectFilter(type: string, value: string) {
+  function selectFilter(type: FilterKey, value: string) {
     if (value === '不限') {
       filter.value[type] = ['不限']
     } else {
@@ -178,35 +200,88 @@
         filter.value[type].push(value)
       }
     }
-    fetchProjects()
+    currentPage.value = 1
+    fetchProjects(1)
   }
   
-  function isSelected(type: string, value: string): boolean {
+  function downloadFileWithToken(url: string) {
+  const token = localStorage.getItem('token')
+  fetch(url, {
+    headers: {
+      Authorization: 'Bearer ' + token
+    }
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('下载失败')
+      return res.blob()
+    })
+    .then(blob => {
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = url.split('/').pop() || '文件.pdf'
+      link.click()
+      URL.revokeObjectURL(link.href)
+    })
+    .catch(() => alert('文件下载失败或无权限'))
+}
+
+  function isSelected(type: FilterKey, value: string): boolean {
     return filter.value[type].includes(value)
   }
   
-  async function fetchProjects() {
-    const res = await getProjects({
-      keyword: keyword.value,
-      difficulty: filter.value.difficulty.length > 0 && !filter.value.difficulty.includes('不限') ? filter.value.difficulty : undefined,
-      language: filter.value.language.length > 0 && !filter.value.language.includes('不限') ? filter.value.language : undefined,
-      tech: filter.value.tech.length > 0 && !filter.value.tech.includes('不限') ? filter.value.tech : undefined,
-      code: filter.value.code.length > 0 && !filter.value.code.includes('不限') ? filter.value.code : undefined,
-    })
-    projects.value = (res.data?.records || []).map((item: any) => ({
-      ...item,
-      planUrl: item.planUrl || '',
-      managerName: item.managerName || '',
-      memberCount: item.memberCount || 0,
-      maxMemberCount: item.maxMemberCount || '-',
-    })).sort((a, b) => a.id - b.id)
-  }
+  const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+
+  async function fetchProjects(page = currentPage.value) {
+  const organizationId = appStore.user?.organizationId
+  const res = await getProjects({
+  page,
+  size: pageSize.value,
+  keyword: keyword.value,
+  organizationId,
+  difficulty: filter.value.difficulty.length > 0 && !filter.value.difficulty.includes('不限') ? filter.value.difficulty : undefined,
+  supportLanguages: filter.value.language.length > 0 && !filter.value.language.includes('不限') ? filter.value.language : undefined,
+  techFields: filter.value.tech.length > 0 && !filter.value.tech.includes('不限') ? filter.value.tech : undefined,
+  programmingLanguages: filter.value.code.length > 0 && !filter.value.code.includes('不限') ? filter.value.code : undefined,
+})
+
+console.log('请求参数:', {
+  page,
+  size: pageSize.value,
+  keyword: keyword.value,
+  organizationId,
+  difficulty: filter.value.difficulty.length > 0 && !filter.value.difficulty.includes('不限') ? filter.value.difficulty : undefined,
+  supportLanguages: filter.value.language.length > 0 && !filter.value.language.includes('不限') ? filter.value.language : undefined,
+  techFields: filter.value.tech.length > 0 && !filter.value.tech.includes('不限') ? filter.value.tech : undefined,
+  programmingLanguages: filter.value.code.length > 0 && !filter.value.code.includes('不限') ? filter.value.code : undefined,
+})
+
+  projects.value = (res.data?.records || []).map((item: any) => ({
+    ...item,
+    projectProposalUrl: item.projectProposalUrl || item.planUrl || '',
+    planMemberCount: item.planMemberCount || item.maxMemberCount || '-',
+    memberCount: item.memberCount || 0,
+  }))
+  total.value = res.data?.total || 0
+  currentPage.value = res.data?.current || 1
+}
   
   async function deleteProjectHandler(id: number) {
     if (confirm('确定要删除该项目吗？')) {
       await deleteProject(id)
       fetchProjects()
     }
+  }
+  
+  function changePage(page: number) {
+    currentPage.value = page
+    fetchProjects(page)
+  }
+  
+  function onSearch() {
+    currentPage.value = 1
+    fetchProjects(1)
   }
   
   onMounted(fetchProjects)

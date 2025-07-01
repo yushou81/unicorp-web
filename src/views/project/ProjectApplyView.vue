@@ -65,16 +65,32 @@
   
   async function submitApplication() {
     try {
+      // 拼接所有表单内容
+      const applicationStatement = `
+【自我介绍】
+${form.value.intro}
+
+【申请理由】
+${form.value.reason}
+
+【专业技能/特长】
+${form.value.skills}
+
+【每周可投入时间】
+${form.value.time}
+
+【联系方式】
+${form.value.contact}
+
+【其他补充说明】
+${form.value.extra}
+      `.trim()
+
       await applyForProject(projectId, {
-        intro: form.value.intro,
-        reason: form.value.reason,
-        skills: form.value.skills,
-        time: form.value.time,
-        contact: form.value.contact,
-        extra: form.value.extra
+        applicationStatement // 只传一个字段
       })
       alert('申请已提交！')
-      router.push('/project/search') // 跳转回项目列表或其他页面
+      router.push('/student/projects')
     } catch (e: any) {
       alert('提交失败：' + (e.message || '未知错误'))
     }
