@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, defineEmits } from 'vue'
+import { ref, onMounted, defineProps, defineEmits, watch } from 'vue'
 import { getMyResumes, getResumeById, createMyResume, updateMyResume, deleteMyResume } from '@/lib/api/resume'
 import { 
   FileText as DocumentIcon, 
@@ -226,6 +226,10 @@ const props = defineProps({
   visible: {
     type: Boolean,
     default: false
+  },
+  resumes: {
+    type: Array,
+    default: undefined
   }
 })
 
@@ -245,12 +249,26 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const saving = ref(false)
 const loading = ref(false)
 
-// 在对话框可见时获取简历列表
-onMounted(() => {
-  if (props.visible) {
-    fetchResumeList()
-  }
-})
+// 监听 visible/resumes 变化，弹窗打开时优先用外部传入的 resumes
+watch(
+  () => [props.visible, props.resumes],
+  ([visible, resumes]) => {
+    if (visible) {
+      if (Array.isArray(resumes) && resumes.length > 0) {
+        resumeList.value = resumes
+        // 默认选择第一份简历
+        const firstResumeId = resumeList.value[0].id
+        if (firstResumeId) {
+          activeResumeId.value = firstResumeId
+          resumeData.value = { ...resumeList.value[0] }
+        }
+      } else {
+        fetchResumeList()
+      }
+    }
+  },
+  { immediate: true }
+)
 
 // 监听visible属性变化
 const closeDialog = () => {

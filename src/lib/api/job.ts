@@ -347,17 +347,17 @@ export async function checkUserResume() {
 /**
  * 申请岗位
  * @param jobId 岗位ID
+ * @param resumeId 简历ID
  * @returns 申请结果
  */
-export async function applyJob(jobId: number | string) {
-  const url = `/v1/jobs/${jobId}/apply`
+export async function applyJob(jobId: number | string, resumeId: number | string) {
+  const url = `/v1/jobs/${jobId}/apply?resumeId=${resumeId}`
   console.log(`[applyJob] 请求URL: ${url}`)
-  
   const response = await apiRequest<ApiResponse<number>>(`${url}`, {
     method: 'POST'
   })
   console.log(`[applyJob] 响应数据:`, response)
-  
+
   return response
 }
 
@@ -451,4 +451,5 @@ export async function getPublicJobCategories(params?: { page?: number; size?: nu
 export async function getJobApplications(jobId: number | string, page = 1, size = 10) {
   const url = `/v1/jobs/${jobId}/applications?page=${page}&size=${size}`
   return apiRequest(url)
-} 
+}
+

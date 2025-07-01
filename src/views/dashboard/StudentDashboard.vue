@@ -105,10 +105,11 @@
             
             <!-- 桌面菜单 -->
             <div class="hidden md:flex space-x-6 overflow-x-auto scrollbar-hide">
-              <a class="pb-3 border-b-2 border-indigo-600 font-medium text-indigo-600">个人主页</a>
-              <a class="pb-3 border-b-2 border-transparent hover:border-gray-300 font-medium text-gray-500 hover:text-gray-700">求职记录</a>
-              <a class="pb-3 border-b-2 border-transparent hover:border-gray-300 font-medium text-gray-500 hover:text-gray-700">学习记录</a>
-              <a class="pb-3 border-b-2 border-transparent hover:border-gray-300 font-medium text-gray-500 hover:text-gray-700">课程管理</a>
+              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'home' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'home'">个人主页</a>
+              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'record' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'record'">求职记录</a>
+              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'study' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'study'">学习记录</a>
+              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'course' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'course'">课程管理</a>
+              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'chat' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'chat'">聊天</a>
             </div>
             
             <!-- 移动菜单 -->
@@ -116,10 +117,11 @@
               v-if="mobileMenuOpen"
               class="md:hidden absolute left-0 right-0 top-full bg-white shadow-md z-10 border-b border-gray-100"
             >
-              <a class="block px-4 py-2 text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50">个人主页</a>
-              <a class="block px-4 py-2 text-gray-500 hover:bg-gray-50 border-l-4 border-transparent">求职记录</a>
-              <a class="block px-4 py-2 text-gray-500 hover:bg-gray-50 border-l-4 border-transparent">学习记录</a>
-              <a class="block px-4 py-2 text-gray-500 hover:bg-gray-50 border-l-4 border-transparent">课程管理</a>
+              <a :class="['block px-4 py-2', activeTab === 'home' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'home'">个人主页</a>
+              <a :class="['block px-4 py-2', activeTab === 'record' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'record'">求职记录</a>
+              <a :class="['block px-4 py-2', activeTab === 'study' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'study'">学习记录</a>
+              <a :class="['block px-4 py-2', activeTab === 'course' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'course'">课程管理</a>
+              <a :class="['block px-4 py-2', activeTab === 'chat' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'chat'">聊天</a>
             </div>
           </div>
         </div>
@@ -508,7 +510,7 @@
     </div>
 
     <!-- 简历管理对话框 -->
-    <ResumeManager v-model:visible="showResumeDialog" @resume-updated="onResumeUpdated" />
+    <ResumeManager v-model:visible="showResumeDialog" :resumes="resumes" @resume-updated="onResumeUpdated" />
     
     <!-- Toast提示组件 -->
     <div 
@@ -518,20 +520,64 @@
     >
       {{ toast.message }}
     </div>
+
+    <!-- Tab内容区 -->
+    <div v-if="activeTab === 'home'">
+      <!-- 原主页内容区域 -->
+      <!-- ... existing code ... -->
+    </div>
+    <div v-else-if="activeTab === 'record'" class="bg-white rounded-xl shadow-sm p-8 mt-8">
+      <h2 class="text-xl font-bold mb-6">我的岗位申请记录</h2>
+      <div v-if="applicationsLoading" class="text-center py-10">加载中...</div>
+      <div v-else>
+        <table class="w-full text-left mb-4">
+          <thead>
+            <tr>
+              <th>岗位名称</th>
+              <th>公司</th>
+              <th>状态</th>
+              <th>申请时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in applications" :key="item.id">
+              <td>{{ item.jobTitle }}</td>
+              <td>{{ item.companyName }}</td>
+              <td>{{ formatApplicationStatus(item.status) }}</td>
+              <td>{{ formatDate(item.appliedAt) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="flex justify-between items-center">
+          <span>共 {{ applicationsTotal }} 条</span>
+          <div>
+            <button :disabled="applicationsPage === 1" @click="changeApplicationsPage(applicationsPage-1)">上一页</button>
+            <span class="mx-2">第 {{ applicationsPage }} / {{ applicationsPages }} 页</span>
+            <button :disabled="applicationsPage === applicationsPages" @click="changeApplicationsPage(applicationsPage+1)">下一页</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="activeTab === 'chat'">
+      <ChatPanel :myUserId="myUserId" :myAvatar="userAvatar" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useAppStore } from '@/stores/app'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { BriefcaseIcon, BookmarkIcon, AcademicCapIcon, CalendarDaysIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
 import { getMyResumes, createMyResume, updateMyResume, deleteMyResume } from '@/lib/api/resume'
 import { getFavoriteJobs, unfavoriteJob, getMyApplications, Job, JobApplication } from '@/lib/api/job'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import ResumeManager from '@/components/resume/ResumeManager.vue'
+import { apiRequest } from '@/lib/api/apiClient'
+import { getChatSessions, getSessionMessages, sendChatMessage } from '@/lib/api/chat'
+import ChatPanel from '@/components/chat/ChatPanel.vue'
 
 // 定义API响应类型
 interface ApiResponse<T> {
@@ -703,6 +749,7 @@ const myApplicationsBlock = ref<Block>({
 })
 
 const router = useRouter()
+const route = useRoute()
 const appStore = useAppStore()
 
 const userInfo = computed<AppUser>(() => appStore.user || {})
@@ -748,6 +795,27 @@ const avatarUploading = ref(false)
 
 // 简历管理相关
 const showResumeDialog = ref(false)
+const resumes = ref<ResumeData[]>([])
+
+// 监听 showResumeDialog 打开时拉取简历
+watch(showResumeDialog, (val) => {
+  if (val) {
+    fetchResumes()
+  }
+})
+
+async function fetchResumes() {
+  try {
+    const res = await getMyResumes()
+    if (res.code === 200 && res.data) {
+      resumes.value = res.data.records || res.data || []
+    } else {
+      resumes.value = []
+    }
+  } catch (e) {
+    resumes.value = []
+  }
+}
 
 // Toast提示
 const toast = ref({
@@ -1016,6 +1084,19 @@ onMounted(async () => {
     console.error('获取数据失败:', e)
     isLoading.value = false
   }
+
+  // 支持通过 query 参数 tab=chat&sessionId=xxx 自动切换
+  if (route.query.tab === 'chat') {
+    activeTab.value = 'chat'
+    await fetchChatSessions()
+    if (route.query.sessionId) {
+      const sessionIdNum = Number(route.query.sessionId)
+      if (sessionIdNum) {
+        selectedSessionId.value = sessionIdNum
+        await fetchSessionMessages(sessionIdNum)
+      }
+    }
+  }
 })
 
 // 移动菜单切换
@@ -1027,6 +1108,114 @@ function toggleMobileMenu() {
 function goToJobDetail(jobId: number) {
   router.push(`/job/${jobId}`)
 }
+
+const activeTab = ref('home')
+// 求职记录tab相关
+const applications = ref<any[]>([])
+const applicationsLoading = ref(false)
+const applicationsPage = ref(1)
+const applicationsSize = ref(10)
+const applicationsTotal = ref(0)
+const applicationsPages = ref(1)
+
+watch(activeTab, (val) => {
+  if (val === 'record') {
+    fetchApplications()
+  }
+})
+
+async function fetchApplications() {
+  applicationsLoading.value = true
+  try {
+    const res = await getMyApplications({ page: applicationsPage.value - 1, size: applicationsSize.value })
+    if (res.code === 200 && res.data) {
+      applications.value = res.data.records
+      applicationsTotal.value = res.data.total
+      applicationsPages.value = res.data.pages
+    }
+  } finally {
+    applicationsLoading.value = false
+  }
+}
+function changeApplicationsPage(newPage: number) {
+  applicationsPage.value = newPage
+  fetchApplications()
+}
+function formatDate(date: string) {
+  if (!date) return ''
+  return new Date(date).toLocaleString()
+}
+
+// 聊天相关
+const chatSessions = ref<any[]>([])
+const chatMessages = ref<any[]>([])
+const selectedSessionId = ref<number|null>(null)
+const selectedSession = computed(() => chatSessions.value.find(s => s.id === selectedSessionId.value))
+const newMessage = ref('')
+const myUserId = computed(() => userInfo.value.id)
+// 新增：存储每个会话的otherUserId
+const sessionOtherUserIds = ref<Record<number, number>>({})
+
+async function fetchChatSessions() {
+  try {
+    const res = await getChatSessions()
+    chatSessions.value = res.data || []
+  } catch (e) {
+    chatSessions.value = []
+  }
+}
+
+async function fetchSessionMessages(sessionId: number) {
+  try {
+    const res = await getSessionMessages(sessionId)
+    chatMessages.value = res.data || []
+    // 新增：存储otherUserId
+    if (typeof res.otherUserId === 'number') {
+      sessionOtherUserIds.value[sessionId] = res.otherUserId
+    }
+  } catch (e) {
+    chatMessages.value = []
+  }
+}
+
+function selectSession(sessionId: number) {
+  selectedSessionId.value = sessionId
+  fetchSessionMessages(sessionId)
+}
+
+async function sendMessage() {
+  if (!newMessage.value.trim() || !selectedSession.value) return
+  // 优先用otherUserId
+  const receiverId = sessionOtherUserIds.value[selectedSession.value.id] || selectedSession.value.user?.id || selectedSession.value.toUserId || selectedSession.value.targetUserId
+  if (!receiverId) {
+    alert('无法获取对方用户ID，无法发送消息')
+    return
+  }
+  try {
+    await sendChatMessage({
+      sessionId: selectedSession.value.id,
+      receiverId,
+      content: newMessage.value.trim()
+    })
+    newMessage.value = ''
+    fetchSessionMessages(selectedSession.value.id)
+  } catch (e) {}
+}
+
+// 获取当前用户ID
+onMounted(async () => {
+  try {
+    const res = await apiRequest<any>('/v1/auth/me')
+    myUserId.value = res.data?.id || null
+  } catch {}
+})
+
+// 监听tab切换到聊天时加载会话
+watch(activeTab, (val) => {
+  if (val === 'chat') {
+    fetchChatSessions()
+  }
+})
 </script>
 
 <style scoped>

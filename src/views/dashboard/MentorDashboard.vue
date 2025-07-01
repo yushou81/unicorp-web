@@ -42,6 +42,7 @@
       <div class="flex gap-4 mb-8 mt-4">
         <button :class="['px-6 py-2 rounded-t-lg font-semibold', activeTab === 'job' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700']" @click="activeTab = 'job'">岗位管理</button>
         <button :class="['px-6 py-2 rounded-t-lg font-semibold', activeTab === 'apply' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700']" @click="activeTab = 'apply'">查看申请</button>
+        <button :class="['px-6 py-2 rounded-t-lg font-semibold', activeTab === 'chat' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700']" @click="activeTab = 'chat'">聊天</button>
       </div>
       <!-- Tab 内容 -->
       <div>
@@ -65,6 +66,7 @@
           :statusOptions="statusOptions"
           @update-status="app => onUpdateStatus(app, true)"
         />
+        <ChatPanel v-if="activeTab === 'chat'" :myUserId="myUserId" :myAvatar="userAvatar" />
       </div>
     </div>
     
@@ -196,6 +198,7 @@ import GridJobList from '@/components/job/GridJobList.vue'
 import { getResumeById } from '@/lib/api/resume'
 import JobManagement from '@/components/dashboard/JobManagement.vue'
 import ApplicationSummary from '@/components/dashboard/ApplicationSummary.vue'
+import ChatPanel from '@/components/chat/ChatPanel.vue'
 
 
 const mentor = ref({
@@ -296,7 +299,7 @@ const router = useRouter()
 const appStore = useAppStore()
 
 const userInfo = computed(() => appStore.user as any || {})
-const userAvatar = computed(() => (userInfo.value?.avatar as string) || 'https://randomuser.me/api/portraits/men/34.jpg')
+const userAvatar = computed(() => userInfo.value.avatar || mentor.value.avatar)
 const roleText = computed(() => {
   const role = userInfo.value?.role as string
   const roleMap: Record<string, string> = {
@@ -553,8 +556,6 @@ function onEditProfileClick() {
 
 const jobs = ref<Job[]>([])
 const totalJobs = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
 const totalPages = ref(1)
 const jobsLoading = ref(false)
 const sortBy = ref('latest')
@@ -816,5 +817,6 @@ async function fetchAllApplications() {
   }
 }
 
-const activeTab = ref('job') // 'job' or 'apply'
+const activeTab = ref('job') // 'job' or 'apply' or 'chat'
+const myUserId = computed(() => userInfo.value.id)
 </script> 

@@ -13,7 +13,7 @@
     </div>
     <!-- 个人信息板块 -->
     <div class="flex flex-col items-center mb-8">
-      <img :src="school.logo || 'https://randomuser.me/api/portraits/lego/2.jpg'" class="w-20 h-20 rounded-full shadow-lg border-4 border-white mb-2" />
+      <img :src="userAvatar" class="w-20 h-20 rounded-full shadow-lg border-4 border-white mb-2" />
       <div class="text-xl font-bold text-gray-800">{{ userInfo.nickname || userInfo.account || '学校管理员' }}</div>
       <div class="mt-1 flex items-center space-x-2">
         <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">学校管理员</span>
