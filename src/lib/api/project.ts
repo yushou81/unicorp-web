@@ -115,8 +115,8 @@ export function getProjectMembers(projectId: number): Promise<{ data: ProjectMem
 
 
 // 获取项目申请列表（所有者）
-export function getProjectApplications(id: number): Promise<{ data: ProjectApplication[] }> {
-  return apiRequest(`/v1/projects/${id}/applications`)
+export function getProjectApplications(applicationId: number): Promise<{ data: ProjectApplication[] }> {
+  return apiRequest(`/v1/projects/${applicationId}/applications`)
 }
 
 // 审批项目申请

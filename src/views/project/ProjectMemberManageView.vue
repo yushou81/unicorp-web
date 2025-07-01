@@ -163,19 +163,23 @@
   })
   
   async function approve(appId: number) {
-    await updateApplicationStatus(appId, { status: 'approved' })
-    fetchApplications()
+    if (confirm('确定要同意该申请吗？')) {
+      await updateApplicationStatus(appId, { status: 'approved' })
+      fetchApplications()
+    }
   }
   async function reject(appId: number) {
-    await updateApplicationStatus(appId, { status: 'rejected' })
-    fetchApplications()
+    if (confirm('确定要拒绝该申请吗？')) {
+      await updateApplicationStatus(appId, { status: 'rejected' })
+      fetchApplications()
+    }
   }
   
   // 移除成员（本质上就是把成员状态设为rejected或调用后端移除接口）
-  async function removeMember(memberId: number,projectId: number) {
+  async function removeMember(memberId: number, projectId: number) {
     if (confirm('确定要移除该成员吗？')) {
-      await removeProjectMember(memberId,projectId)
-      fetchApplications()
+      await removeProjectMember(memberId, projectId)
+      fetchMembers()
     }
   }
   

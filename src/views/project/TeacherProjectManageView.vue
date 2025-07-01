@@ -96,7 +96,7 @@
                 <th class="px-4 py-2">项目编号</th>
                 <th class="px-4 py-2">项目名称</th>
                 <th class="px-4 py-2">组织名称</th>
-                <th class="px-4 py-2">项目计划书</th>
+                <th class="px-4 py-2">附件</th>
                 <th class="px-4 py-2">人数</th>
                 <th class="px-4 py-2">管理人员</th>
                 <th class="px-4 py-2">操作</th>

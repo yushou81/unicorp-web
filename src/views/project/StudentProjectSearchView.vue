@@ -114,7 +114,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="project in projects" :key="project.id" class="border-b hover:bg-blue-50 transition">
+            <tr v-for="project in projects" :key="project.applicationId" class="border-b hover:bg-blue-50 transition">
               <td class="px-4 py-2 text-center">{{ project.title }}</td>
               <td class="px-4 py-2 text-center">
                 <button
@@ -133,10 +133,10 @@
                     >取消申请</button>
                   </template>
                   <template v-else-if="project.applicationStatus === 'approved'">
-                    <span class="px-3 py-1 rounded-md text-xs bg-green-500 text-white min-w-[80px] inline-block text-center">已通过</span>
+                    <span class="px-3 py-1 rounded-md text-xs bg-green-500 text-white min-w-[80px] inline-block text-center">申请已通过</span>
                   </template>
                   <template v-else-if="project.applicationStatus === 'rejected'">
-                    <span class="px-3 py-1 rounded-md text-xs bg-red-400 text-white min-w-[80px] inline-block text-center">已拒绝</span>
+                    <span class="px-3 py-1 rounded-md text-xs bg-red-400 text-white min-w-[80px] inline-block text-center">申请被拒绝</span>
                   </template>
                   <template v-else-if="project.applicationStatus === 'viewed'">
                     <button
@@ -291,16 +291,16 @@ myApplications.value = (res.data?.records || []).map((item: any) => ({
 }))
 }
 
-async function applyProject(projectId: number) {
-try {
-  await applyForProject(projectId)
-  alert('申请成功！')
-  fetchProjects()
-  fetchMyApplications()
-} catch (e: any) {
-  alert('申请失败：' + (e.message || '未知错误'))
-}
-}
+// async function applyProject(projectId: number) {
+// try {
+//   await applyForProject(projectId)
+//   alert('申请成功！')
+//   fetchProjects()
+//   fetchMyApplications()
+// } catch (e: any) {
+//   alert('申请失败：' + (e.message || '未知错误'))
+// }
+// }
 
 async function cancelApplication(appId: number) {
   await updateApplicationStatus(appId, { status: 'viewed' })
@@ -310,9 +310,9 @@ async function cancelApplication(appId: number) {
 
 async function reApply(projectId: number) {
   try {
-    await applyForProject(projectId)
-    alert('重新申请成功！')
-    fetchProjects()
+    router.push(`/project/${projectId}/apply`) // 跳转到申请页面
+    //alert('重新申请成功！')
+    //fetchProjects()
   } catch (e: any) {
     alert('重新申请失败：' + (e.message || '未知错误'))
   }
@@ -333,7 +333,7 @@ const statusOptions = [
   { label: '未申请', value: 'no' },
   { label: '待同意', value: 'submitted' },
   { label: '已同意', value: 'approved' },
-  { label: '已拒绝', value: 'rejected' },
+  { label: '已被拒', value: 'rejected' },
   { label: '已取消', value: 'viewed' }
 ]
 const selectedStatus = ref('all')
