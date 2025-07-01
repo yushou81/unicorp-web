@@ -58,8 +58,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { getChatSessions, getSessionMessages, sendChatMessage } from '@/lib/api/chat'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { getChatSessions, getSessionMessages, sendChatMessage, connectChatWebSocket, disconnectChatWebSocket } from '@/lib/api/chat'
 import { apiRequest } from '@/lib/api/apiClient'
 
 const props = defineProps<{ myUserId?: number, myAvatar?: string }>()
@@ -154,5 +154,27 @@ function formatDate(date) {
 
 onMounted(() => {
   fetchChatSessions()
+  // WebSocket 实时推送
+  const token = localStorage.getItem('token')
+  if (token) {
+    connectChatWebSocket(token, (msg) => {
+      // 只推送到当前会话，且sessionId有效
+      if (
+        msg.sessionId &&
+        selectedSessionId.value &&
+        msg.sessionId === selectedSessionId.value
+      ) {
+        fetchSessionMessages(msg.sessionId)
+        markMessagesAsRead(msg.sessionId)
+      }
+      // 会话列表刷新（未读数等）
+      fetchChatSessions()
+    })
+  }
+})
+
+// 离开页面时断开 WebSocket
+onUnmounted(() => {
+  disconnectChatWebSocket()
 })
 </script> 

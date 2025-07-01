@@ -1,4 +1,12 @@
 import { apiRequest } from './apiClient'
+import type { IMessage } from '@stomp/stompjs'
+import { Client } from '@stomp/stompjs'
+// @ts-ignore
+import SockJS from 'sockjs-client'
+// @ts-ignore
+import Stomp from 'stompjs'
+
+let stompClient: any = null
 
 // 获取会话列表
 export async function getChatSessions() {
@@ -16,4 +24,21 @@ export async function sendChatMessage({ sessionId, receiverId, content }: { sess
     method: 'POST',
     body: JSON.stringify({ sessionId, receiverId, content })
   })
+}
+
+export function connectChatWebSocket(token: string, onMessage: (msg: any) => void) {
+  const socket = new SockJS('/api/ws')
+  stompClient = Stomp.over(socket)
+  stompClient.connect(
+    { Authorization: 'Bearer ' + token },
+    (frame: any) => {
+      stompClient.subscribe('/user/queue/messages', (message: any) => {
+        onMessage(JSON.parse(message.body))
+      })
+    }
+  )
+}
+
+export function disconnectChatWebSocket() {
+  if (stompClient) stompClient.disconnect()
 } 
