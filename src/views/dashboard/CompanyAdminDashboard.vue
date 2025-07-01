@@ -1,17 +1,8 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-    <!-- 顶部导航栏 -->
-    <nav class="bg-white/90 shadow-sm border-b border-gray-200 sticky top-0 z-40">
-      <div class="container mx-auto px-4 flex items-center justify-between h-14">
-        <div class="flex items-center space-x-4">
-          <span class="text-lg font-bold text-blue-700 tracking-wide">企业管理平台</span>
-          <span class="text-gray-400 text-sm ml-4">（可在此展示全局信息）</span>
-        </div>
-        <div class="flex items-center space-x-4">
-          <Button @click="onLogout" variant="outline" size="sm">退出登录</Button>
-        </div>
-      </div>
-    </nav>
+    <!-- 使用通用导航栏组件 -->
+    <Navbar />
+    
     <!-- 大标题区 -->
     <div class="w-full py-10 bg-gradient-to-r from-blue-400 to-indigo-400 mb-8 shadow-lg">
       <div class="container mx-auto px-4 flex flex-col items-center">
@@ -22,7 +13,7 @@
     </div>
     <!-- 个人信息板块 -->
     <div class="flex flex-col items-center mb-8">
-      <img :src="company.logo || 'https://randomuser.me/api/portraits/lego/1.jpg'" class="w-20 h-20 rounded-full shadow-lg border-4 border-white mb-2" />
+      <img :src="userAvatar" class="w-20 h-20 rounded-full shadow-lg border-4 border-white mb-2" />
       <div class="text-xl font-bold text-gray-800">{{ userInfo.nickname || userInfo.account || '企业管理员' }}</div>
       <div class="mt-1 flex items-center space-x-2">
         <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">企业管理员</span>
@@ -49,6 +40,14 @@
           <UserGroupIcon class="w-12 h-12 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
           <span class="text-lg font-bold text-blue-800 mb-1">企业导师管理</span>
           <span class="text-sm text-blue-500">管理企业导师账号与权限</span>
+        </div>
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="showJobDialog = true"
+        >
+          <BriefcaseIcon class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-green-800 mb-1">岗位管理</span>
+          <span class="text-sm text-green-500">查看和管理企业岗位</span>
         </div>
         <div
           class="group cursor-pointer bg-gradient-to-br from-purple-100 to-purple-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
@@ -189,6 +188,38 @@
           <h2 class="text-2xl font-bold mb-4 text-purple-700">编辑个人资料</h2>
           <!-- 复用原有个人资料表单 -->
           <form @submit.prevent="onUpdateProfile">
+            <!-- 头像上传 -->
+            <div class="mb-5 flex flex-col items-center">
+              <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
+              <div class="flex items-center mt-2">
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handleAvatarChange"
+                />
+                <button 
+                  type="button" 
+                  @click="fileInput?.click()"
+                  class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
+                >
+                  选择头像
+                </button>
+                <button 
+                  v-if="avatarFile" 
+                  type="button" 
+                  @click="cancelAvatarUpload" 
+                  class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
+                >
+                  取消
+                </button>
+              </div>
+              <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
+                {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
+              </p>
+            </div>
+
             <div class="mb-3">
               <label class="block text-gray-700 mb-1">昵称</label>
               <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
@@ -229,6 +260,22 @@
           </div>
         </div>
       </div>
+      <!-- 岗位管理弹窗 -->
+      <div v-if="showJobDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-5xl overflow-y-auto max-h-[90vh] relative">
+          <button @click="showJobDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-green-600 text-2xl font-bold focus:outline-none">×</button>
+          <h2 class="text-2xl font-bold mb-6 text-green-700">企业岗位管理</h2>
+          <GridJobList
+            :jobs="jobs"
+            :loading="jobsLoading"
+            :totalJobs="totalJobs"
+            :currentPage="currentPage"
+            :totalPages="totalPages"
+            @update:currentPage="fetchJobs"
+            @update:sortBy="onSortByChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -238,10 +285,16 @@ import { BriefcaseIcon, AcademicCapIcon, DocumentTextIcon, ShieldCheckIcon, Buil
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { createMentor, getMentorList, updateMentorStatus, updateMentorInfo } from '@/lib/api/enterpriseAdmin'
-import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
+import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
 import { updateUser } from '@/lib/api/admin'
 import Button from '@/components/ui/Button.vue'
+<<<<<<< HEAD
 import { ClipboardDocumentListIcon } from '@heroicons/vue/24/outline'
+=======
+import Navbar from '@/components/layout/Navbar.vue'
+import { getJobs, Job } from '@/lib/api/job'
+import GridJobList from '@/components/job/GridJobList.vue'
+>>>>>>> 1b1f31a21ec39c76f1e439a7f61e106fe985a7ca
 
 const company = ref({
   logo: 'https://randomuser.me/api/portraits/lego/1.jpg',
@@ -474,21 +527,80 @@ const passwordChange = ref({
 const updateProfileLoading = ref(false)
 const changePasswordLoading = ref(false)
 
+// 头像上传相关
+const fileInput = ref<HTMLInputElement | null>(null)
+const avatarFile = ref<File | null>(null)
+const previewAvatar = ref<string | null>(null)
+const avatarUploading = ref(false)
+
+// 处理头像上传相关函数
+function handleAvatarChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    avatarFile.value = target.files[0]
+    previewAvatar.value = URL.createObjectURL(avatarFile.value)
+  }
+}
+
+function cancelAvatarUpload() {
+  avatarFile.value = null
+  previewAvatar.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+// 格式化文件大小
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i]
+}
+
 async function onUpdateProfile() {
   updateProfileLoading.value = true
   try {
+    // 先更新用户基本信息
     await updateUserInfo({
       nickname: editProfile.value.nickname,
       email: editProfile.value.email,
       phone: editProfile.value.phone
     })
+    
+    // 如果选择了新头像，则上传头像
+    if (avatarFile.value) {
+      avatarUploading.value = true
+      try {
+        await uploadAvatar(avatarFile.value)
+        console.log('头像上传成功')
+      } catch (avatarError: any) {
+        console.error('头像上传失败:', avatarError)
+        alert('头像上传失败: ' + (avatarError.message || '未知错误'))
+        // 继续执行，不影响其他信息的保存
+      } finally {
+        avatarUploading.value = false
+      }
+    }
+    
     showEditProfileDialog.value = false
+    
+    // 重置头像上传状态
+    avatarFile.value = null
+    previewAvatar.value = null
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+    
     await fetchCompanyInfo()
+    
     // 更新store中的用户信息
     const res = await getMe()
     if (res.data) {
       appStore.setUser(res.data)
     }
+    
     alert('个人资料更新成功')
   } catch (e: any) {
     alert('更新失败：' + (e.message || '未知错误'))
@@ -530,4 +642,40 @@ function onEditProfileClick() {
 
 const showMentorDialog = ref(false)
 const showProfileDialog = ref(false)
+const showJobDialog = ref(false)
+
+const jobs = ref<Job[]>([])
+const totalJobs = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = ref(1)
+const jobsLoading = ref(false)
+const sortBy = ref('latest')
+
+function onSortByChange(newSort) {
+  sortBy.value = newSort
+  fetchJobs(1) // 切换排序时回到第一页
+}
+
+async function fetchJobs(page = 1) {
+  jobsLoading.value = true
+  try {
+    const res = await getJobs({
+      organizeId: userInfo.value.organizationId,
+      page: page,
+      size: pageSize.value,
+      sortBy: sortBy.value // 传递排序参数
+    })
+    jobs.value = res.data.records
+    totalJobs.value = res.data.total
+    totalPages.value = res.data.pages
+    currentPage.value = page
+  } finally {
+    jobsLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchJobs()
+})
 </script> 

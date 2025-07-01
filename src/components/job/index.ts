@@ -6,3 +6,4 @@ export { default as JobCard } from './JobCard.vue'
 export { default as JobList } from './JobList.vue'
 export { default as JobSearch } from './JobSearch.vue'
 export { default as FilterSidebar } from './FilterSidebar.vue'
+ 

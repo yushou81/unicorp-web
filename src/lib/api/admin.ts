@@ -10,7 +10,7 @@ export function adminCreateSchool(data: {
   admin_nickname?: string
   admin_password: string
 }) {
-  return apiRequest('/admin/organizations/schools', {
+  return apiRequest('/v1/admin/organizations/schools', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -18,12 +18,12 @@ export function adminCreateSchool(data: {
 
 // 获取待审核组织列表
 export function getPendingOrganizations() {
-  return apiRequest('/admin/approvals/organizations')
+  return apiRequest('/v1/admin/approvals/organizations')
 }
 
 // 审核通过组织
 export function approveOrganization(id: number) {
-  return apiRequest(`/admin/approvals/organizations/${id}/approve`, {
+  return apiRequest(`/v1/admin/approvals/organizations/${id}/approve`, {
     method: 'PATCH'
   })
 }
@@ -38,7 +38,7 @@ export function createSchool(data: {
   adminPassword: string
   adminEmail: string
 }) {
-  return apiRequest('/admin/organizations/schools', {
+  return apiRequest('/v1/admin/organizations/schools', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -46,12 +46,12 @@ export function createSchool(data: {
 
 // 获取待审核企业注册列表
 export function getPendingEnterprises() {
-  return apiRequest('/admin/approvals/organizations')
+  return apiRequest('/v1/admin/approvals/organizations')
 }
 
 // [Admin]批准企业注册
 export function approveEnterprise(id: number) {
-  return apiRequest(`/admin/enterprises/${id}/approve`, {
+  return apiRequest(`/v1/admin/enterprises/${id}/approve`, {
     method: 'PUT'
   })
 }
@@ -63,7 +63,7 @@ export function getAllSchools(page?: number, size?: number) {
   if (size !== undefined) params.append('size', size.toString())
   
   const queryString = params.toString()
-  const url = queryString ? `/admin/schools?${queryString}` : '/admin/schools'
+  const url = queryString ? `/v1/admin/schools?${queryString}` : '/v1/admin/schools'
   
   return apiRequest(url, {
     method: 'GET'
@@ -77,7 +77,7 @@ export function getAllEnterprises(page?: number, size?: number) {
   if (size !== undefined) params.append('size', size.toString())
   
   const queryString = params.toString()
-  const url = queryString ? `/admin/enterprises?${queryString}` : '/admin/enterprises'
+  const url = queryString ? `/v1/admin/enterprises?${queryString}` : '/v1/admin/enterprises'
   
   return apiRequest(url, {
     method: 'GET'
@@ -90,7 +90,7 @@ export function updateUser(id: number, data: {
   email?: string
   phone?: string
 }) {
-  return apiRequest(`/admin/users/${id}`, {
+  return apiRequest(`/v1/admin/users/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data)
   })
@@ -108,7 +108,7 @@ export function getUsers(params?: {
   if (params?.role) queryParams.append('role', params.role)
   
   const queryString = queryParams.toString()
-  const url = queryString ? `/admin/users?${queryString}` : '/admin/users'
+  const url = queryString ? `/v1/admin/users?${queryString}` : '/v1/admin/users'
   
   return apiRequest(url, {
     method: 'GET'
@@ -116,7 +116,7 @@ export function getUsers(params?: {
 } 
 // 修改用户状态（激活/禁用）
 export function updateUserStatus(id: number, status: 'active' | 'inactive') {
-  return apiRequest(`/admin/users/${id}/status`, {
+  return apiRequest(`/v1/admin/users/${id}/status`, {
     method: 'PUT',
     body: JSON.stringify({ status })
   })
@@ -135,7 +135,7 @@ export function getJobCategories(params?: {
   if (params?.name) queryParams.append('name', params.name)
   
   const queryString = queryParams.toString()
-  const url = queryString ? `/admin/job-categories?${queryString}` : '/admin/job-categories'
+  const url = queryString ? `/v1/admin/job-categories?${queryString}` : '/v1/admin/job-categories'
   
   return apiRequest(url, {
     method: 'GET'
@@ -144,14 +144,14 @@ export function getJobCategories(params?: {
 
 // 获取根分类（顶级分类）
 export function getRootJobCategories() {
-  return apiRequest('/job-categories/root', {
+  return apiRequest('/v1/job-categories/root', {
     method: 'GET'
   })
 }
 
 // 获取指定分类的子分类
 export function getJobCategoryChildren(id: number) {
-  return apiRequest(`/job-categories/${id}/children`, {
+  return apiRequest(`/v1/job-categories/${id}/children`, {
     method: 'GET'
   })
 }
@@ -163,7 +163,7 @@ export function createJobCategory(data: {
   sortOrder?: number
   parentId?: number
 }) {
-  return apiRequest('/admin/job-categories', {
+  return apiRequest('/v1/admin/job-categories', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -176,7 +176,7 @@ export function updateJobCategory(id: number, data: {
   sortOrder?: number
   parentId?: number
 }) {
-  return apiRequest(`/admin/job-categories/${id}`, {
+  return apiRequest(`/v1/admin/job-categories/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data)
   })
@@ -184,14 +184,23 @@ export function updateJobCategory(id: number, data: {
 
 // 删除岗位分类
 export function deleteJobCategory(id: number) {
-  return apiRequest(`/admin/job-categories/${id}`, {
+  return apiRequest(`/v1/admin/job-categories/${id}`, {
     method: 'DELETE'
   })
 }
 
 // 获取岗位分类详情
 export function getJobCategoryDetail(id: number) {
-  return apiRequest(`/admin/job-categories/${id}`, {
+  return apiRequest(`/v1/admin/job-categories/${id}`, {
+    method: 'GET'
+  })
+}
+
+/**
+ * 获取所有岗位分类（树形结构）
+ */
+export function getHierarchicalJobCategories() {
+  return apiRequest('/v1/job-categories/hierarchical', {
     method: 'GET'
   })
 }
