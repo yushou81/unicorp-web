@@ -192,6 +192,7 @@ import {
   getResourcesByCourseId
 } from '@/lib/api/classroom'
 
+
 import { getJobs, Job, createJob, JobCreationDTO, updateJob, getPublicJobCategories, getJobApplications, updateApplicationStatus } from '@/lib/api/job'
 import GridJobList from '@/components/job/GridJobList.vue'
 import { getResumeById } from '@/lib/api/resume'
@@ -221,7 +222,25 @@ const projects = [
 const resources = [
   { id: 1, title: '企业导师手册', date: '2024-06-20' }
 ]
-const blocks = ref([
+
+// 定义更具体的类型
+interface BlockDataItem {
+  id: number;
+  label: string;
+  extra?: string;
+}
+
+interface BlockItem {
+  title: string;
+  icon: any;
+  color: string;
+  data: BlockDataItem[];
+  empty: string;
+  footer: { text: string; link: string };
+}
+
+// 修改blocks的定义使用具体类型
+const blocks = ref<BlockItem[]>([
   {
     title: '双师课堂管理',
     icon: UserGroupIcon,
@@ -301,10 +320,10 @@ const roleText = computed(() => {
 })
 
 // 添加课程相关响应式数据
+const classroomCurrentPage = ref(1)
+const classroomPageSize = ref(10)
 const courseList = ref<DualTeacherCourseVO[]>([])
 const totalCourses = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
 const showCourseDetailsDialog = ref(false)
 const currentCourse = ref<DualTeacherCourseVO | null>(null)
 
@@ -345,13 +364,13 @@ async function fetchMentorInfo() {
 // 添加获取导师参与的课程列表的方法
 async function fetchMentorCourses() {
   try {
-    const response = await getMentorCourses(currentPage.value, pageSize.value)
+    const response = await getMentorCourses(classroomCurrentPage.value, classroomPageSize.value)
     if (response && response.data) {
       courseList.value = response.data.records
       totalCourses.value = response.data.total
       
       // 更新数据块中的课程信息
-      const courseData = courseList.value.map(course => ({
+      const courseData: BlockDataItem[] = courseList.value.map(course => ({
         id: course.id,
         label: course.title,
         extra: new Date(course.scheduledTime).toLocaleDateString()
@@ -360,7 +379,7 @@ async function fetchMentorCourses() {
       // 更新blocks中的课程数据
       const courseBlockIndex = blocks.value.findIndex(block => block.title === '双师课堂管理')
       if (courseBlockIndex !== -1) {
-        blocks.value[courseBlockIndex].data = courseData as any[] // 添加类型断言
+        blocks.value[courseBlockIndex].data = courseData
       }
     }
   } catch (error) {

@@ -19,6 +19,11 @@ export function uploadAvatar(file: File) {
   })
 }
 
+// 通过邮箱或手机号查询用户
+export function searchUser(keyword: string) {
+  return apiRequest(`/v1/auth/search?keyword=${encodeURIComponent(keyword)}`)
+}
+
 // 获取当前用户
 export function getMe() {
   return apiRequest('/v1/auth/me')

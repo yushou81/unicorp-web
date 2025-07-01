@@ -357,6 +357,7 @@ export async function applyJob(jobId: number | string, resumeId: number | string
     method: 'POST'
   })
   console.log(`[applyJob] 响应数据:`, response)
+
   return response
 }
 
@@ -451,3 +452,4 @@ export async function getJobApplications(jobId: number | string, page = 1, size 
   const url = `/v1/jobs/${jobId}/applications?page=${page}&size=${size}`
   return apiRequest(url)
 }
+
