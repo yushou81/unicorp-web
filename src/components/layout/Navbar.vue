@@ -66,14 +66,21 @@ const userAvatar = computed(() => {
 const getDashboardRoute = () => {
   if (!isLoggedIn.value) return '/login'
   
-  const role = appStore.user ? ((appStore.user as unknown) as UserInfo)?.role || '' : ''
+  // 直接从store获取用户对象，避免类型转换问题
+  const user = appStore.user as any || {}
+  const role = (user.role || '').toUpperCase() // 统一转为大写处理
+  
+  console.log('当前用户角色:', role, '原始值:', user.role) // 调试信息
   
   switch (role) {
     case 'SYSADMIN':
+    case 'ADMIN':
       return '/dashboard/admin'
     case 'SCH_ADMIN':
+    case 'SCHOOLADMIN':
       return '/dashboard/school'
     case 'EN_ADMIN':
+    case 'COMPANYADMIN':
       return '/dashboard/company'
     case 'TEACHER':
       return '/dashboard/teacher'
@@ -83,6 +90,7 @@ const getDashboardRoute = () => {
     case 'STUDENT':
       return '/dashboard/student'
     default:
+      console.log('未匹配到对应角色路由，使用默认/dashboard') // 调试信息
       return '/dashboard'
   }
 }
