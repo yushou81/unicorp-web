@@ -115,6 +115,91 @@
         </div>
       </div>
     </div>
+    
+    <!-- 课程创建/编辑对话框 -->
+    <div v-if="showCourseDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
+        <h2 class="text-xl font-bold mb-4">{{ isEditingCourse ? '编辑课程' : '创建新课程' }}</h2>
+        <form @submit.prevent="saveCourse">
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">课程标题</label>
+            <input v-model="courseForm.title" required class="w-full px-3 py-2 border rounded" placeholder="请输入课程标题" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">课程描述</label>
+            <textarea v-model="courseForm.description" rows="3" class="w-full px-3 py-2 border rounded" placeholder="请输入课程描述"></textarea>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">课程时间</label>
+              <input v-model="courseForm.scheduledTime" type="datetime-local" required class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">最大学生人数</label>
+              <input v-model="courseForm.maxStudents" type="number" min="1" class="w-full px-3 py-2 border rounded" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">课程地点</label>
+              <input v-model="courseForm.location" class="w-full px-3 py-2 border rounded" placeholder="请输入课程地点" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">课程类型</label>
+              <select v-model="courseForm.courseType" class="w-full px-3 py-2 border rounded">
+                <option value="online">线上</option>
+                <option value="offline">线下</option>
+                <option value="hybrid">混合</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" @click="showCourseDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button type="submit" class="px-4 py-1 rounded bg-blue-600 text-white">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- 资源上传对话框 -->
+    <div v-if="showResourceDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">上传课程资源</h2>
+        <form @submit.prevent="uploadCourseResource">
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">资源标题</label>
+            <input v-model="resourceForm.title" required class="w-full px-3 py-2 border rounded" placeholder="请输入资源标题" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">资源描述</label>
+            <textarea v-model="resourceForm.description" rows="2" class="w-full px-3 py-2 border rounded" placeholder="请输入资源描述"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">资源类型</label>
+            <select v-model="resourceForm.resourceType" class="w-full px-3 py-2 border rounded">
+              <option value="document">文档</option>
+              <option value="video">视频</option>
+              <option value="code">代码</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+          <div class="mb-5">
+            <label class="block text-gray-700 mb-1">选择文件</label>
+            <input
+              ref="resourceFileInput"
+              type="file"
+              @change="handleResourceFileChange"
+              class="w-full px-3 py-2 border rounded"
+              required
+            />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button type="button" @click="showResourceDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button type="submit" :disabled="uploadingResource" class="px-4 py-1 rounded bg-blue-600 text-white">
+              {{ uploadingResource ? '上传中...' : '上传' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -124,6 +209,22 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
 import Navbar from '@/components/layout/Navbar.vue'
+// 导入双师课堂相关API
+import { 
+  createCourse, 
+  updateCourse,
+  deleteCourse, 
+  updateCourseStatus, 
+  getTeacherCourses,
+  CourseStatus,
+  CourseType,
+  DualTeacherCourseDTO,
+  DualTeacherCourseVO,
+  CourseResourceDTO,
+  uploadResource,
+  deleteResource,
+  getResourcesByCourseId
+} from '@/lib/api/classroom'
 
 const teacher = ref({
   avatar: 'https://randomuser.me/api/portraits/men/33.jpg',
@@ -151,11 +252,9 @@ const blocks = ref([
     title: '双师课堂管理',
     icon: UserGroupIcon,
     color: 'text-blue-500',
-    data: [
-      { id: 1, label: '创新创业指导', extra: '2024-07-10' }
-    ],
+    data: [],
     empty: '暂无课程',
-    footer: { text: '管理课程', link: '/courses' }
+    footer: { text: '管理课程', link: '/classroom' }
   },
   {
     title: '项目管理',
@@ -206,10 +305,10 @@ const blocks = ref([
 const router = useRouter()
 const appStore = useAppStore()
 
-const userInfo = computed(() => appStore.user || {})
-const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/men/33.jpg')
+const userInfo = computed(() => appStore.user as any || {})
+const userAvatar = computed(() => (userInfo.value?.avatar as string) || 'https://randomuser.me/api/portraits/men/33.jpg')
 const roleText = computed(() => {
-  const role = userInfo.value.role
+  const role = userInfo.value?.role as string
   const roleMap: Record<string, string> = {
     'admin': '系统管理员',
     'SYSADMIN': '系统管理员',
@@ -229,7 +328,7 @@ const roleText = computed(() => {
 
 async function fetchTeacherInfo() {
   try {
-    const res = await getMe()
+    const res = await getMe() as any
     const userData = res.data
     if (userData) {
       teacher.value = {
@@ -250,6 +349,7 @@ async function fetchTeacherInfo() {
 
 onMounted(() => {
   fetchTeacherInfo()
+  fetchTeacherCourses()
 })
 
 function onLogout() {
@@ -314,7 +414,7 @@ async function onUpdateProfile() {
     await fetchTeacherInfo() // 重新获取教师信息
     
     // 更新store中的用户信息
-    const res = await getMe()
+    const res = await getMe() as any
     if (res.data) {
       appStore.setUser(res.data)
     }
@@ -378,9 +478,9 @@ function formatFileSize(bytes: number): string {
 // 当打开编辑对话框时，初始化表单数据
 function openEditDialog() {
   editProfile.value = {
-    nickname: userInfo.value.nickname || userInfo.value.account || '',
-    email: userInfo.value.email || '',
-    phone: userInfo.value.phone || ''
+    nickname: userInfo.value?.nickname || userInfo.value?.account || '',
+    email: userInfo.value?.email || '',
+    phone: userInfo.value?.phone || ''
   }
   showEditProfileDialog.value = true
 }
@@ -388,5 +488,183 @@ function openEditDialog() {
 // 修改按钮点击事件
 function onEditProfileClick() {
   openEditDialog()
+}
+
+// 添加课程相关响应式数据
+const courseList = ref<DualTeacherCourseVO[]>([])
+const totalCourses = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const showCourseDialog = ref(false)
+const isEditingCourse = ref(false)
+const currentCourseId = ref<number | null>(null)
+
+// 课程表单数据
+const courseForm = ref<DualTeacherCourseDTO>({
+  title: '',
+  description: '',
+  scheduledTime: '',
+  maxStudents: 30,
+  location: '',
+  courseType: CourseType.HYBRID
+})
+
+// 资源上传相关
+const showResourceDialog = ref(false)
+const resourceForm = ref<CourseResourceDTO>({
+  courseId: 0,
+  title: '',
+  description: '',
+  resourceType: 'document'
+})
+const resourceFile = ref<File | null>(null)
+const resourceFileInput = ref<HTMLInputElement | null>(null)
+const uploadingResource = ref(false)
+
+// 添加获取教师课程列表的方法
+async function fetchTeacherCourses() {
+  try {
+    const response = await getTeacherCourses(currentPage.value, pageSize.value)
+    if (response && response.data) {
+      courseList.value = response.data.records
+      totalCourses.value = response.data.total
+      
+      // 更新数据块中的课程信息
+      const courseData = courseList.value.map(course => ({
+        id: course.id,
+        label: course.title,
+        extra: new Date(course.scheduledTime).toLocaleDateString()
+      }))
+      
+      // 更新blocks中的课程数据
+      const courseBlockIndex = blocks.value.findIndex(block => block.title === '双师课堂管理')
+      if (courseBlockIndex !== -1) {
+        blocks.value[courseBlockIndex].data = courseData as any[]
+      }
+    }
+  } catch (error) {
+    console.error('获取教师课程列表失败:', error)
+  }
+}
+
+// 添加创建/编辑课程的方法
+async function saveCourse() {
+  try {
+    if (isEditingCourse.value && currentCourseId.value) {
+      await updateCourse(currentCourseId.value, courseForm.value)
+      console.log('课程更新成功')
+    } else {
+      await createCourse(courseForm.value)
+      console.log('课程创建成功')
+    }
+    
+    showCourseDialog.value = false
+    resetCourseForm()
+    await fetchTeacherCourses()
+  } catch (error) {
+    console.error('保存课程失败:', error)
+    alert('保存课程失败: ' + (error as any).message || '未知错误')
+  }
+}
+
+// 添加删除课程的方法
+async function onDeleteCourse(courseId: number) {
+  if (confirm('确定要删除此课程吗？此操作不可恢复。')) {
+    try {
+      await deleteCourse(courseId)
+      console.log('课程删除成功')
+      await fetchTeacherCourses()
+    } catch (error) {
+      console.error('删除课程失败:', error)
+      alert('删除课程失败: ' + (error as any).message || '未知错误')
+    }
+  }
+}
+
+// 添加更新课程状态的方法
+async function onUpdateCourseStatus(courseId: number, status: CourseStatus) {
+  try {
+    await updateCourseStatus(courseId, status)
+    console.log('课程状态更新成功')
+    await fetchTeacherCourses()
+  } catch (error) {
+    console.error('更新课程状态失败:', error)
+    alert('更新课程状态失败: ' + (error as any).message || '未知错误')
+  }
+}
+
+// 打开创建课程对话框
+function openCreateCourseDialog() {
+  isEditingCourse.value = false
+  currentCourseId.value = null
+  resetCourseForm()
+  showCourseDialog.value = true
+}
+
+// 打开编辑课程对话框
+function openEditCourseDialog(course: DualTeacherCourseVO) {
+  isEditingCourse.value = true
+  currentCourseId.value = course.id
+  courseForm.value = {
+    title: course.title,
+    description: course.description,
+    scheduledTime: course.scheduledTime,
+    maxStudents: course.maxStudents,
+    location: course.location,
+    courseType: course.courseType as CourseType
+  }
+  showCourseDialog.value = true
+}
+
+// 重置课程表单
+function resetCourseForm() {
+  courseForm.value = {
+    title: '',
+    description: '',
+    scheduledTime: '',
+    maxStudents: 30,
+    location: '',
+    courseType: CourseType.HYBRID
+  }
+}
+
+// 资源上传相关方法
+function openResourceUploadDialog(courseId: number) {
+  resourceForm.value.courseId = courseId
+  resourceForm.value.title = ''
+  resourceForm.value.description = ''
+  resourceForm.value.resourceType = 'document'
+  resourceFile.value = null
+  showResourceDialog.value = true
+}
+
+function handleResourceFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    resourceFile.value = target.files[0]
+  }
+}
+
+async function uploadCourseResource() {
+  if (!resourceFile.value) {
+    alert('请选择要上传的文件')
+    return
+  }
+  
+  uploadingResource.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', resourceFile.value)
+    formData.append('data', JSON.stringify(resourceForm.value))
+    
+    await uploadResource(formData)
+    showResourceDialog.value = false
+    alert('资源上传成功')
+  } catch (error) {
+    console.error('资源上传失败:', error)
+    alert('资源上传失败: ' + (error as any).message || '未知错误')
+  } finally {
+    uploadingResource.value = false
+  }
 }
 </script> 

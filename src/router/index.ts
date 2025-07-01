@@ -1,5 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
+import LoginView from '@/views/LoginView.vue'
+import RegisterView from '@/views/RegisterView.vue'
+import JobView from '@/views/JobView.vue'
+import JobDetailView from '@/views/JobDetailView.vue'
+import ClassroomListView from '@/views/classroom/ClassroomListView.vue'
+import ClassroomDetailView from '@/views/classroom/ClassroomDetailView.vue'
+import StudentDashboard from '@/views/dashboard/StudentDashboard.vue'
+import CompanyAdminDashboard from '@/views/dashboard/CompanyAdminDashboard.vue'
+import TeacherDashboard from '@/views/dashboard/TeacherDashboard.vue'
+import AdminDashboard from '@/views/dashboard/AdminDashboard.vue'
+import MentorDashboard from '@/views/dashboard/MentorDashboard.vue'
+import SchoolAdminDashboard from '@/views/dashboard/SchoolAdminDashboard.vue'
 import { getMe } from '@/lib/api/auth'
 import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
@@ -15,42 +27,105 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/LoginView.vue')
+      component: LoginView
     },
     {
       path: '/register',
       name: 'register',
-      component: () => import('@/views/RegisterView.vue')
+      component: RegisterView
+    },
+    {
+      path: '/job',
+      name: 'job-list',
+      component: JobView
+    },
+    {
+      path: '/job/:id',
+      name: 'job-detail',
+      component: JobDetailView
+    },
+    {
+      path: '/classroom',
+      name: 'classroom-list',
+      component: ClassroomListView
+    },
+    {
+      path: '/classroom/:id',
+      name: 'classroom-detail',
+      component: ClassroomDetailView
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      redirect: to => {
+        const appStore = useAppStore()
+        if (!appStore.user) {
+          return { name: 'login' }
+        }
+        
+        // 获取角色并统一转大写
+        const user = appStore.user as any
+        const role = (user.role || '').toUpperCase()
+        console.log('重定向处理用户角色:', role) // 调试用
+        
+        switch (role) {
+          case 'STUDENT':
+            return { name: 'student-dashboard' }
+          case 'EN_ADMIN':
+          case 'COMPANYADMIN':
+            return { name: 'company-dashboard' }
+          case 'TEACHER':
+            return { name: 'teacher-dashboard' }
+          case 'SYSADMIN':
+          case 'ADMIN':
+            return { name: 'admin-dashboard' }
+          case 'MENTOR':
+          case 'EN_TEACHER':
+            return { name: 'mentor-dashboard' } // 添加企业导师路由
+          case 'SCH_ADMIN':
+          case 'SCHOOLADMIN':
+            return { name: 'school-dashboard' } // 添加学校管理员路由
+          default:
+            console.log('未匹配到角色，回到首页:', role)
+            return { name: 'home' }
+        }
+      }
     },
     {
       path: '/dashboard/student',
-      name: 'dashboard-student',
-      component: () => import('@/views/dashboard/StudentDashboard.vue')
+      name: 'student-dashboard',
+      component: StudentDashboard,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dashboard/company',
-      name: 'dashboard-company',
-      component: () => import('@/views/dashboard/CompanyAdminDashboard.vue')
-    },
-    {
-      path: '/dashboard/school',
-      name: 'dashboard-school',
-      component: () => import('@/views/dashboard/SchoolAdminDashboard.vue')
+      name: 'company-dashboard',
+      component: CompanyAdminDashboard,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dashboard/teacher',
-      name: 'dashboard-teacher',
-      component: () => import('@/views/dashboard/TeacherDashboard.vue')
-    },
-    {
-      path: '/dashboard/mentor',
-      name: 'dashboard-mentor',
-      component: () => import('@/views/dashboard/MentorDashboard.vue')
+      name: 'teacher-dashboard',
+      component: TeacherDashboard,
+      meta: { requiresAuth: true }
     },
     {
       path: '/dashboard/admin',
-      name: 'dashboard-admin',
-      component: () => import('@/views/dashboard/AdminDashboard.vue')
+      name: 'admin-dashboard',
+      component: AdminDashboard,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/dashboard/mentor',
+      name: 'mentor-dashboard',
+      component: MentorDashboard,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/dashboard/school',
+      name: 'school-dashboard',
+      component: SchoolAdminDashboard,
+      meta: { requiresAuth: true }
     },
     {
       path: '/apply',
@@ -58,29 +133,9 @@ const router = createRouter({
       component: () => import('@/views/ApplyView.vue')
     },
     {
-      path: '/job',
-      name: 'job',
-      component: () => import('@/views/JobView.vue')
-    },
-    {
-      path: '/job/:id',
-      name: 'job-detail',
-      component: () => import('@/views/JobDetailView.vue')
-    },
-    {
       path: '/learn',
       name: 'learn',
       component: () => import('@/views/LearnView.vue')
-    },
-    {
-      path: '/classroom',
-      name: 'classroom',
-      component: () => import('@/views/classroom/ClassroomListView.vue')
-    },
-    {
-      path: '/classroom/:id',
-      name: 'classroom-detail',
-      component: () => import('@/views/classroom/ClassroomDetailView.vue')
     },
     {
       path: '/project/list',
@@ -149,7 +204,7 @@ router.beforeEach(async (to, from, next) => {
       return
     }
     
-    const allowedRoles = ['SYSADMIN', 'admin']
+    const allowedRoles = ['SYSADMIN', 'admin', 'ADMIN']
     if (!allowedRoles.includes(user.role)) {
       console.warn(`用户角色 ${user.role} 尝试访问管理员面板`)
       next('/')
@@ -157,7 +212,11 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  next()
+  if (to.meta.requiresAuth && !appStore.user) {
+    next({ name: 'login' })
+  } else {
+    next()
+  }
 })
 
 export default router 

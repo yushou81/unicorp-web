@@ -83,6 +83,106 @@
         </div>
       </div>
     </div>
+    
+    <!-- 课程详情对话框 -->
+    <div v-if="showCourseDetailsDialog && currentCourse" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl overflow-y-auto max-h-[90vh]">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">课程详情</h2>
+          <button @click="showCourseDetailsDialog = false" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-lg font-semibold">{{ currentCourse.title }}</h3>
+            <p class="text-gray-600 mt-1">{{ currentCourse.description }}</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">授课教师</p>
+              <p>{{ currentCourse.teacherName }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">企业导师</p>
+              <p>{{ currentCourse.mentorName }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">课程时间</p>
+              <p>{{ formatDate(currentCourse.scheduledTime) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">课程地点</p>
+              <p>{{ currentCourse.location || '未指定' }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">课程类型</p>
+              <p>{{ getCourseTypeText(currentCourse.courseType as CourseType) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">当前状态</p>
+              <p>{{ getCourseStatusText(currentCourse.status as CourseStatus) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">已报名/最大人数</p>
+              <p>{{ currentCourse.enrolledCount }}/{{ currentCourse.maxStudents }}</p>
+            </div>
+          </div>
+          <div class="flex justify-end mt-4 space-x-2">
+            <button @click="openResourceUploadDialog(currentCourse.id)" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+              上传资源
+            </button>
+            <button @click="showCourseDetailsDialog = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+              关闭
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 资源上传对话框 -->
+    <div v-if="showResourceDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">上传课程资源</h2>
+        <form @submit.prevent="uploadCourseResource">
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">资源标题</label>
+            <input v-model="resourceForm.title" required class="w-full px-3 py-2 border rounded" placeholder="请输入资源标题" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">资源描述</label>
+            <textarea v-model="resourceForm.description" rows="2" class="w-full px-3 py-2 border rounded" placeholder="请输入资源描述"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">资源类型</label>
+            <select v-model="resourceForm.resourceType" class="w-full px-3 py-2 border rounded">
+              <option value="document">文档</option>
+              <option value="video">视频</option>
+              <option value="code">代码</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+          <div class="mb-5">
+            <label class="block text-gray-700 mb-1">选择文件</label>
+            <input
+              ref="resourceFileInput"
+              type="file"
+              @change="handleResourceFileChange"
+              class="w-full px-3 py-2 border rounded"
+              required
+            />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button type="button" @click="showResourceDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button type="submit" :disabled="uploadingResource" class="px-4 py-1 rounded bg-blue-600 text-white">
+              {{ uploadingResource ? '上传中...' : '上传' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -92,6 +192,18 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
 import Navbar from '@/components/layout/Navbar.vue'
+// 导入双师课堂相关API
+import { 
+  getMentorCourses,
+  updateCourse,
+  CourseStatus,
+  CourseType,
+  DualTeacherCourseVO,
+  CourseResourceDTO,
+  uploadResource,
+  deleteResource,
+  getResourcesByCourseId
+} from '@/lib/api/classroom'
 
 const mentor = ref({
   avatar: 'https://randomuser.me/api/portraits/men/34.jpg',
@@ -119,11 +231,9 @@ const blocks = ref([
     title: '双师课堂管理',
     icon: UserGroupIcon,
     color: 'text-blue-500',
-    data: [
-      { id: 1, label: '大数据实战', extra: '2024-07-01' }
-    ],
+    data: [],
     empty: '暂无课程',
-    footer: { text: '管理课程', link: '/courses' }
+    footer: { text: '管理课程', link: '/classroom' }
   },
   {
     title: '项目管理',
@@ -174,10 +284,10 @@ const blocks = ref([
 const router = useRouter()
 const appStore = useAppStore()
 
-const userInfo = computed(() => appStore.user || {})
-const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/men/34.jpg')
+const userInfo = computed(() => appStore.user as any || {})
+const userAvatar = computed(() => (userInfo.value?.avatar as string) || 'https://randomuser.me/api/portraits/men/34.jpg')
 const roleText = computed(() => {
-  const role = userInfo.value.role
+  const role = userInfo.value?.role as string
   const roleMap: Record<string, string> = {
     'admin': '系统管理员',
     'SYSADMIN': '系统管理员',
@@ -195,9 +305,30 @@ const roleText = computed(() => {
   return roleMap[role] || '未知角色'
 })
 
+// 添加课程相关响应式数据
+const courseList = ref<DualTeacherCourseVO[]>([])
+const totalCourses = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const showCourseDetailsDialog = ref(false)
+const currentCourse = ref<DualTeacherCourseVO | null>(null)
+
+// 资源上传相关
+const showResourceDialog = ref(false)
+const resourceForm = ref<CourseResourceDTO>({
+  courseId: 0,
+  title: '',
+  description: '',
+  resourceType: 'document'
+})
+const resourceFile = ref<File | null>(null)
+const resourceFileInput = ref<HTMLInputElement | null>(null)
+const uploadingResource = ref(false)
+
+// 添加 fetchMentorInfo 函数
 async function fetchMentorInfo() {
   try {
-    const res = await getMe()
+    const res = await getMe() as any
     const userData = res.data
     if (userData) {
       mentor.value = {
@@ -216,8 +347,115 @@ async function fetchMentorInfo() {
   }
 }
 
+// 添加获取导师参与的课程列表的方法
+async function fetchMentorCourses() {
+  try {
+    const response = await getMentorCourses(currentPage.value, pageSize.value)
+    if (response && response.data) {
+      courseList.value = response.data.records
+      totalCourses.value = response.data.total
+      
+      // 更新数据块中的课程信息
+      const courseData = courseList.value.map(course => ({
+        id: course.id,
+        label: course.title,
+        extra: new Date(course.scheduledTime).toLocaleDateString()
+      }))
+      
+      // 更新blocks中的课程数据
+      const courseBlockIndex = blocks.value.findIndex(block => block.title === '双师课堂管理')
+      if (courseBlockIndex !== -1) {
+        blocks.value[courseBlockIndex].data = courseData as any[] // 添加类型断言
+      }
+    }
+  } catch (error) {
+    console.error('获取导师课程列表失败:', error)
+  }
+}
+
+// 查看课程详情
+function viewCourseDetails(course: DualTeacherCourseVO) {
+  currentCourse.value = course
+  showCourseDetailsDialog.value = true
+}
+
+// 资源上传相关方法
+function openResourceUploadDialog(courseId: number) {
+  resourceForm.value.courseId = courseId
+  resourceForm.value.title = ''
+  resourceForm.value.description = ''
+  resourceForm.value.resourceType = 'document'
+  resourceFile.value = null
+  showResourceDialog.value = true
+}
+
+function handleResourceFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    resourceFile.value = target.files[0]
+  }
+}
+
+async function uploadCourseResource() {
+  if (!resourceFile.value) {
+    alert('请选择要上传的文件')
+    return
+  }
+  
+  uploadingResource.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', resourceFile.value)
+    formData.append('data', JSON.stringify(resourceForm.value))
+    
+    await uploadResource(formData)
+    showResourceDialog.value = false
+    alert('资源上传成功')
+  } catch (error) {
+    console.error('资源上传失败:', error)
+    alert('资源上传失败: ' + (error as any).message || '未知错误')
+  } finally {
+    uploadingResource.value = false
+  }
+}
+
+// 格式化日期显示
+function formatDate(dateString: string) {
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 获取课程状态中文名称
+function getCourseStatusText(status: CourseStatus) {
+  const statusMap: Record<string, string> = {
+    'planning': '筹备中',
+    'open': '开放报名',
+    'in_progress': '进行中',
+    'completed': '已结束',
+    'cancelled': '已取消'
+  }
+  return statusMap[status] || '未知状态'
+}
+
+// 获取课程类型中文名称
+function getCourseTypeText(type: CourseType) {
+  const typeMap: Record<string, string> = {
+    'online': '线上',
+    'offline': '线下',
+    'hybrid': '混合'
+  }
+  return typeMap[type] || '未知类型'
+}
+
 onMounted(() => {
   fetchMentorInfo()
+  fetchMentorCourses()
 })
 
 function onLogout() {
@@ -250,7 +488,7 @@ async function onUpdateProfile() {
     showEditProfileDialog.value = false
     await fetchMentorInfo() // 重新获取导师信息
     // 更新store中的用户信息
-    const res = await getMe()
+    const res = await getMe() as any
     if (res.data) {
       appStore.setUser(res.data)
     }
@@ -287,9 +525,9 @@ async function onChangePassword() {
 // 当打开编辑对话框时，初始化表单数据
 function openEditDialog() {
   editProfile.value = {
-    nickname: userInfo.value.nickname || userInfo.value.account || '',
-    email: userInfo.value.email || '',
-    phone: userInfo.value.phone || ''
+    nickname: userInfo.value?.nickname || userInfo.value?.account || '',
+    email: userInfo.value?.email || '',
+    phone: userInfo.value?.phone || ''
   }
   showEditProfileDialog.value = true
 }
