@@ -205,6 +205,15 @@
                 <div v-if="!job.postedByUser?.nickname && !job.postedByUser?.email && !job.postedByUser?.phone" class="text-gray-500 italic">
                   暂无联系方式
                 </div>
+                <div v-if="job.postedByUser?.id" class="mt-4 flex justify-center">
+                  <button
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+                    @click="startChatWithMentor"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8l-4.28 1.07a1 1 0 01-1.22-1.22L4.8 17A8.96 8.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    发起聊天
+                  </button>
+                </div>
               </div>
             </div>
             
@@ -249,7 +258,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getJobDetail, Job, favoriteJob, unfavoriteJob, ApiResponse, applyJob } from '@/lib/api/job'
 import { getEnterpriseById } from '@/lib/api/organization'
 import { getMyResumes } from '@/lib/api/resume'
@@ -276,6 +285,8 @@ import {
   ExternalLink as ExternalLinkIcon,
   Gift as GiftIcon
 } from 'lucide-vue-next'
+import { getMe } from '@/lib/api/auth'
+import { apiRequest } from '@/lib/api/apiClient'
 
 // 组织接口
 interface Organization {
@@ -301,6 +312,7 @@ interface Resume {
 
 const route = useRoute()
 const jobId = route.params.id as string
+const router = useRouter()
 
 const job = ref<Job | null>(null)
 const loading = ref(true)
@@ -632,8 +644,8 @@ const handleApplicationSubmit = async (applicationData: any) => {
   applyLoading.value = true
   
   try {
-    // 调用申请岗位API
-    const response = await applyJob(jobId)
+    // 调用申请岗位API，传递 jobId 和 applicationData.resumeId
+    const response = await applyJob(jobId, applicationData.resumeId)
     
     // 提交成功后关闭模态框
     applicationModalVisible.value = false
@@ -645,6 +657,23 @@ const handleApplicationSubmit = async (applicationData: any) => {
     showToast(err instanceof Error ? err.message : '申请失败，请稍后再试')
   } finally {
     applyLoading.value = false
+  }
+}
+
+async function startChatWithMentor() {
+  if (!job.value?.postedByUser?.id) return
+  try {
+    const data = await apiRequest<any>(`/v1/chat/sessions?userId=${job.value.postedByUser.id}`, { method: 'POST' })
+    if (data.code === 200 && data.data && data.data.id) {
+      router.push({
+        path: '/dashboard/student',
+        query: { tab: 'chat', sessionId: data.data.id }
+      })
+    } else {
+      alert(data.message || '发起聊天失败')
+    }
+  } catch (e: any) {
+    alert(e.message || '发起聊天失败')
   }
 }
 

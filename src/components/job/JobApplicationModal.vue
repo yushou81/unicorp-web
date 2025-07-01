@@ -61,28 +61,6 @@
                 </router-link>
               </div>
             </div>
-            
-            <div class="border-t pt-4 mt-4">
-              <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-medium mb-2">求职意向 <span class="text-red-500">*</span></label>
-                <input 
-                  type="text" 
-                  v-model="jobIntention" 
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="请输入您的求职意向"
-                />
-              </div>
-              
-              <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-medium mb-2">自我介绍</label>
-                <textarea 
-                  v-model="selfIntroduction" 
-                  rows="5" 
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="简要介绍自己的技能、经验和求职意愿（选填）"
-                ></textarea>
-              </div>
-            </div>
           </div>
         </div>
         
@@ -167,7 +145,7 @@ const selfIntroduction = ref('')
 
 // 计算属性：提交按钮是否禁用
 const isSubmitDisabled = computed(() => {
-  return !props.selectedResumeId || !jobIntention.value || props.userResumes.length === 0
+  return !props.selectedResumeId || props.userResumes.length === 0
 })
 
 // 选择简历
@@ -185,13 +163,9 @@ const closeModal = () => {
 // 提交申请
 const submitApplication = () => {
   if (isSubmitDisabled.value) return
-  
   const applicationData = {
-    resumeId: props.selectedResumeId,
-    jobIntention: jobIntention.value,
-    selfIntroduction: selfIntroduction.value
+    resumeId: props.selectedResumeId
   }
-  
   emit('submit', applicationData)
 }
 

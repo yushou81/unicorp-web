@@ -6,7 +6,7 @@
     <div class="py-10">
       <div class="container mx-auto px-4">
         <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
-          <img :src="teacher.avatar" class="w-20 h-20 rounded-full border-2 border-blue-200 mr-6" alt="avatar" />
+          <img :src="userAvatar" class="w-20 h-20 rounded-full border-2 border-blue-200 mr-6" alt="avatar" />
           <div class="flex-1">
             <div class="flex items-center mb-2">
               <span class="text-2xl font-bold text-gray-900 mr-2">{{ teacher.name }}</span>

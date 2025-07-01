@@ -347,17 +347,19 @@ export async function checkUserResume() {
 /**
  * 申请岗位
  * @param jobId 岗位ID
+ * @param resumeId 简历ID
  * @returns 申请结果
  */
-export async function applyJob(jobId: number | string) {
-  const url = `/v1/jobs/${jobId}/apply`
+export async function applyJob(jobId: number | string, resumeId: number | string) {
+  const url = `/v1/jobs/${jobId}/apply?resumeId=${resumeId}`
   console.log(`[applyJob] 请求URL: ${url}`)
-  
   const response = await apiRequest<ApiResponse<number>>(`${url}`, {
     method: 'POST'
   })
   console.log(`[applyJob] 响应数据:`, response)
-  
+  return response
+}
+
 /**
  * 创建新岗位
  * @param data 岗位创建数据
@@ -392,6 +394,8 @@ export async function updateApplicationStatus(applicationId: number, statusData:
   console.log(`[updateApplicationStatus] 响应数据:`, response)
   
   return response
+}
+
 /**
  * 更新岗位信息
  * @param id 岗位ID
@@ -447,16 +451,3 @@ export async function getJobApplications(jobId: number | string, page = 1, size 
   const url = `/v1/jobs/${jobId}/applications?page=${page}&size=${size}`
   return apiRequest(url)
 }
-
-/**
- * 更新岗位申请状态
- * @param applicationId 申请ID
- * @param data { status, feedback }
- */
-export async function updateApplicationStatus(applicationId: number, data: { status: string, feedback?: string }) {
-  return apiRequest(`/v1/applications/${applicationId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-    headers: { 'Content-Type': 'application/json' }
-  })
-} 
