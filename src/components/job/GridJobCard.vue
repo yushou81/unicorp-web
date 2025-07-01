@@ -6,9 +6,15 @@
         <router-link :to="`/job/${job.id}`" class="text-base font-medium text-gray-900 hover:text-blue-600 truncate max-w-[80%]">
           {{ job.title }}
         </router-link>
-        <div class="flex space-x-1">
+        <div class="flex space-x-1 items-center">
           <span v-if="isNew" class="px-1 py-0.5 bg-green-100 text-green-600 text-xs rounded-full whitespace-nowrap">新</span>
           <span v-if="isHot" class="px-1 py-0.5 bg-red-100 text-red-600 text-xs rounded-full whitespace-nowrap">热</span>
+          <button
+            v-if="showEdit"
+            @click.stop="$emit('edit', job)"
+            class="ml-2 px-2 py-0.5 text-xs rounded bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100"
+            title="编辑岗位"
+          >编辑</button>
         </div>
       </div>
       
@@ -52,7 +58,8 @@ import { MapPinIcon } from 'lucide-vue-next'
 import { Job } from '@/lib/api/job'
 
 const props = defineProps<{
-  job: Job
+  job: Job,
+  showEdit?: boolean
 }>()
 
 // 计算属性：是否为新发布的职位（7天内）
