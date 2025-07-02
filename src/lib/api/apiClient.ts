@@ -1,19 +1,28 @@
-const API_BASE_URL =  'http://127.0.0.1:8081/api/v1'
+// 我自己留着测的
+const API_BASE_URL =  'http://localhost:8081/api'
+
+
+//const API_BASE_URL =  'http://192.168.58.162:8081/api'
+
+
 
 let token = ''
 export function setToken(t: string) {
   token = t
 }
 
-// API响应类型定义
-export interface ApiResponse<T = any> {
-  code: number
-  message: string
-  data: T
-}
-
-export async function apiRequest<T = any>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+export async function apiRequest<T>(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`
+
+
+
+  //我写的，先留着
+  // let headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) }
+  // if (!(options.body instanceof FormData)) {
+  //   headers['Content-Type'] = 'application/json'
+  // }
+
+
   
   // 初始化headers
   let headers: Record<string, string> = {}
@@ -41,17 +50,22 @@ export async function apiRequest<T = any>(endpoint: string, options: RequestInit
 
   let response, rawText, data
   try {
+
+    //未带时间戳的，可能没用，先留着
+    //response = await fetch(url, { ...options, headers, body: options.body })
+
     // 添加时间戳，避免缓存
     const urlWithTimestamp = url.includes('?') 
       ? `${url}&_t=${Date.now()}` 
       : `${url}?_t=${Date.now()}`
     
     response = await fetch(urlWithTimestamp, { ...options, headers })
+
     rawText = await response.text()
     
     // 对于 204 No Content 状态码，不需要解析 JSON
     if (response.status === 204) {
-      data = { code: 204, message: 'No Content', success: true, data: null }
+      data = { success: true }
     } else {
       try {
         data = JSON.parse(rawText)
