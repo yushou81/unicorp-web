@@ -2,15 +2,31 @@ import { apiRequest } from './apiClient'
 
 // 登录
 export function login(data: { loginType: 'account'|'email'|'phone'; principal: string; password: string }) {
-  return apiRequest<{ token: string }>('/auth/login', {
+  return apiRequest<{ token: string }>('/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify(data)
   })
 }
 
+// 上传用户头像
+export function uploadAvatar(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  return apiRequest('/v1/auth/avatar', {
+    method: 'POST',
+    body: formData
+  })
+}
+
+// 通过邮箱或手机号查询用户
+export function searchUser(keyword: string) {
+  return apiRequest(`/v1/auth/search?keyword=${encodeURIComponent(keyword)}`)
+}
+
 // 获取当前用户
 export function getMe() {
-  return apiRequest('/auth/me')
+  return apiRequest('/v1/auth/me')
 }
 
 // 修改用户密码
@@ -19,7 +35,7 @@ export function updatePassword(data: {
   newPassword: string
   confirmPassword: string
 }) {
-  return apiRequest('/auth/password', {
+  return apiRequest('/v1/auth/password', {
     method: 'PUT',
     body: JSON.stringify(data)
   })
@@ -31,7 +47,7 @@ export function updateUserInfo(data: {
   email?: string
   phone?: string
 }) {
-  return apiRequest('/auth/profile', {
+  return apiRequest('/v1/auth/profile', {
     method: 'PUT',
     body: JSON.stringify(data)
   })
@@ -47,7 +63,7 @@ export function registerStudent(data: {
   real_name: string
   id_card: string
 }) {
-  return apiRequest('/auth/register/student', {
+  return apiRequest('/v1/auth/register/student', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -68,7 +84,7 @@ export function registerEnterprise(data: {
   adminPassword: string
   adminPhone?: string
 }) {
-  return apiRequest('/auth/register/enterprise', {
+  return apiRequest('/v1/auth/register/enterprise', {
     method: 'POST',
     body: JSON.stringify(data)
   })

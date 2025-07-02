@@ -13,7 +13,7 @@
               v-for="type in loginTypes"
               :key="type.value"
               :class="['px-4 py-1 rounded-t', loginType === type.value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600']"
-              @click.prevent="loginType = type.value"
+              @click.prevent="loginType = type.value as 'account' | 'email' | 'phone'"
               type="button"
             >
               {{ type.label }}
@@ -60,12 +60,40 @@ import { login, getMe } from '@/lib/api/auth'
 import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
 
+// 定义API响应类型
+interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
+}
+
+// 登录响应类型
+interface LoginResponse {
+  token: string;
+  userId?: number;
+  role?: 'SYSADMIN' | 'SCHOOL_ADMIN' | 'ENTERPRISE_ADMIN' | 'TEACHER' | 'MENTOR' | 'STUDENT' | string;
+  account?: string;
+}
+
+// 用户信息类型
+interface UserInfo {
+  id?: number;
+  account?: string;
+  nickname?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  avatar?: string;
+  organizationId?: number;
+  organizationName?: string;
+}
+
 const loginTypes = [
   { value: 'account', label: '账号登录' },
   { value: 'email', label: '邮箱登录' },
   { value: 'phone', label: '手机号登录' }
 ]
-const loginType = ref('account')
+const loginType = ref<'account'|'email'|'phone'>('account')
 const account = ref('')
 const password = ref('')
 const router = useRouter()
@@ -90,19 +118,30 @@ async function onLogin() {
   }
   console.log('[登录] 登录参数:', payload)
   try {
-    const res = await login(payload)
+    const res = await login(payload) as unknown as ApiResponse<LoginResponse>
     errorMsg.value = '' // 登录成功清空错误
     console.log('[登录] 登录成功:', res)
     // 保存 token
     setToken(res.data.token)
     localStorage.setItem('token', res.data.token)
-    // 获取用户信息（如有需要）
-    let role = res.data.role
+    // 保存临时角色信息
+    let role = res.data.role || ''
+    const appStore = useAppStore()
+    
+    // 保存初始用户信息
+    appStore.setUser({
+      id: res.data.userId,
+      role: res.data.role,
+      account: res.data.account || account.value,
+    })
+    
     // 兼容 getMe 返回的 role
     try {
-      const userInfo = await getMe()
-      useAppStore().setUser(userInfo.data)
-      if (userInfo.data && userInfo.data.role) role = userInfo.data.role
+      const userInfo = await getMe() as unknown as ApiResponse<UserInfo>
+      if (userInfo.data) {
+        appStore.setUser(userInfo.data) // 用完整的用户信息更新
+        if (userInfo.data.role) role = userInfo.data.role
+      }
     } catch (e) {
       // getMe 失败时依然用登录返回的 role
       console.error('[登录] 获取用户信息失败:', e)
@@ -110,10 +149,10 @@ async function onLogin() {
     // 跳转到对应 dashboard
     let target = '/dashboard'
     if (role === 'SYSADMIN') target = '/dashboard/admin'
-    else if (role === 'SCH_ADMIN') target = '/dashboard/school'
-    else if (role === 'EN_ADMIN') target = '/dashboard/company'
+    else if (role === 'SCHOOL_ADMIN') target = '/dashboard/school'
+    else if (role === 'ENTERPRISE_ADMIN') target = '/dashboard/company'
     else if (role === 'TEACHER') target = '/dashboard/teacher'
-    else if (role === 'EN_TEACHER') target = '/dashboard/mentor'
+    else if (role === 'MENTOR') target = '/dashboard/mentor'
     else if (role === 'STUDENT') target = '/dashboard/student'
     router.push(target)
   } catch (e: any) {

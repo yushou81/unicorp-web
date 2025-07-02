@@ -14,24 +14,22 @@ export interface ApiResponse<T = any> {
 
 export async function apiRequest<T = any>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`
-  const headers = { ...options.headers } as Record<string, string>
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-
-  // Handle Content-Type
-  if (options.body instanceof FormData) {
-    // For FormData, we must delete the Content-Type header.
-    // The browser will automatically set it to 'multipart/form-data'
-    // with the correct boundary.
-    delete headers['Content-Type']
+  
+  // 初始化headers
+  let headers: Record<string, string> = {}
+  
+  // 如果提供了自定义headers，使用它
+  if (options.headers !== undefined) {
+    headers = Object.assign({}, options.headers) as Record<string, string>
   } else {
-    // For other requests, default to 'application/json' if not provided.
-    if (!headers['Content-Type']) {
+    // 否则设置默认的Content-Type，但如果是FormData则不设置
+    if (!(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json'
     }
   }
+  
+  // 添加认证token
+  if (token) headers['Authorization'] = `Bearer ${token}`
 
   // 调试输出
   console.log('[apiRequest] 请求:', {
@@ -43,7 +41,12 @@ export async function apiRequest<T = any>(endpoint: string, options: RequestInit
 
   let response, rawText, data
   try {
-    response = await fetch(url, { ...options, headers })
+    // 添加时间戳，避免缓存
+    const urlWithTimestamp = url.includes('?') 
+      ? `${url}&_t=${Date.now()}` 
+      : `${url}?_t=${Date.now()}`
+    
+    response = await fetch(urlWithTimestamp, { ...options, headers })
     rawText = await response.text()
     
     // 对于 204 No Content 状态码，不需要解析 JSON
@@ -70,6 +73,26 @@ export async function apiRequest<T = any>(endpoint: string, options: RequestInit
     rawText
   })
 
-  if (!response.ok) throw new Error(data.message || '请求失败')
-  return data as ApiResponse<T>
+
+  // 检查响应状态和业务状态码
+  if (!response.ok) {
+    const errorMsg = data?.message || '请求失败'
+    console.error(`[apiRequest] HTTP错误: ${response.status} - ${errorMsg}`)
+    throw new Error(errorMsg)
+  }
+  
+  // 检查业务状态码
+  if (data?.code !== 200) {
+    const errorMsg = data?.message || '业务处理失败'
+    console.error(`[apiRequest] 业务错误: ${data?.code} - ${errorMsg}`)
+    throw new Error(errorMsg)
+  }
+
+  // 检查分页数据
+  if (data?.data?.pages !== undefined) {
+    console.log(`[apiRequest] 分页数据: 当前页=${data.data.current}, 总页数=${data.data.pages}, 总记录数=${data.data.total}`)
+  }
+
+
+  return data as T
 } 
