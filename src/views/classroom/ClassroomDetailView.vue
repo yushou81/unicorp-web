@@ -88,7 +88,10 @@
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
               <h2 class="text-xl font-bold text-gray-900 mb-4">讲师信息</h2>
               <div class="flex items-center mb-4">
-                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
+                <div v-if="course.teacherAvatar" class="w-16 h-16 rounded-full mr-4 overflow-hidden">
+                  <img :src="course.teacherAvatar" alt="讲师头像" class="w-full h-full object-cover" />
+                </div>
+                <div v-else class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
                   {{ course.teacherName.substring(0, 1) }}
                 </div>
                 <div>
@@ -101,7 +104,10 @@
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
               <h2 class="text-xl font-bold text-gray-900 mb-4">企业导师信息</h2>
               <div class="flex items-center mb-4">
-                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
+                <div v-if="course.mentorAvatar" class="w-16 h-16 rounded-full mr-4 overflow-hidden">
+                  <img :src="course.mentorAvatar" alt="导师头像" class="w-full h-full object-cover" />
+                </div>
+                <div v-else class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
                   {{ course.mentorName.substring(0, 1) }}
                 </div>
                 <div>
@@ -159,6 +165,7 @@ import {
   getChaptersByCourseId,
   getRatingsByCourseId,
   hasRated,
+  isEnrolledInCourse,
   DualTeacherCourseVO, 
   CourseStatus, 
   CourseType,
@@ -233,8 +240,18 @@ const fetchCourseDetail = async () => {
     fetchCourseRatings(courseId)
     
     // 检查用户是否已报名
-    // TODO: 实际项目中应该从API获取
-    isEnrolled.value = false
+    if (appStore.user) {
+      try {
+        const enrollmentResponse = await isEnrolledInCourse(courseId)
+        console.log('报名状态响应:', enrollmentResponse) // 添加日志以便调试
+        isEnrolled.value = enrollmentResponse.data
+      } catch (err) {
+        console.error('检查课程报名状态失败:', err)
+        isEnrolled.value = false
+      }
+    } else {
+      isEnrolled.value = false
+    }
     
     // 检查用户是否已评价过课程
     if (appStore.user) {
