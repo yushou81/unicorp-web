@@ -51,8 +51,10 @@ export interface DualTeacherCourseVO {
   description: string
   teacherId: number
   teacherName: string
+  teacherAvatar?: string
   mentorId: number
   mentorName: string
+  mentorAvatar?: string
   enterpriseName: string
   scheduledTime: string
   maxStudents: number
@@ -456,4 +458,9 @@ export async function getCoursesList(params: {
   if (courseType) url += `&courseType=${courseType}`;
   
   return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(url);
+}
+
+// 检查学生是否已报名课程
+export async function isEnrolledInCourse(courseId: number) {
+  return apiRequest<ApiResponse<boolean>>(`/v1/dual-courses/${courseId}/enrollment-status`);
 } 

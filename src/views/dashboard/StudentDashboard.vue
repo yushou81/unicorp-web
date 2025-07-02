@@ -713,8 +713,8 @@ const blocks = ref<Block[]>([
     color: 'text-yellow-500',
     type: 'list',
     data: [],
-    empty: '点击下方查找并申请项目',
-    footer: { text: '查找项目', link: '/student/projects' }
+    empty: '如有意向加入企业项目，请点击下方入口',
+    footer: { text: '申请加入企业项目', link: '/apply' }
   },
   {
     title: '学校信息浏览',

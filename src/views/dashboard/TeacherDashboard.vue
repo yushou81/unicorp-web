@@ -48,13 +48,6 @@
             </ul>
             <div v-if="block.footer">
               <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium mt-2">{{ block.footer.text }}</router-link>
-              <router-link
-                v-if="block.footer.extra"
-                :to="block.footer.extra.link"
-                class="ml-4 text-green-600 hover:underline text-xs font-medium mt-2"
-              >
-                {{ block.footer.extra.text }}
-              </router-link>
             </div>
           </div>
         </div>
@@ -395,11 +388,7 @@ const blocks = ref<BlockItem[]>([
       { id: 1, label: '智慧校园课题', extra: '进行中' }
     ],
     empty: '暂无项目',
-    footer: { 
-      text: '管理项目', 
-      link: '/teacher/projects',
-      extra: { text: '发布新项目', link: '/project/publish' }
-    }
+    footer: { text: '管理项目', link: '/project' }
   },
   {
     title: '学生成果查看',

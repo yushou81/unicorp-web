@@ -312,20 +312,6 @@ const blocks = ref([
   {
     title: '项目管理',
     icon: BriefcaseIcon,
-    color: 'text-blue-500',
-    data: [
-      { id: 1, label: 'AI创新项目', extra: '进行中' }
-    ],
-    empty: '暂无项目',
-    footer: { 
-      text: '管理项目', 
-      link: '/company/projects',
-      extra: { text: '发布新项目', link: '/project/publish' }
-    }
-  },
-  {
-    title: '职位/简历管理',
-    icon: ClipboardDocumentListIcon,
     color: 'text-green-500',
     data: [
       { id: 1, label: '进行中项目', extra: '5个' }
@@ -495,9 +481,9 @@ const roleText = computed(() => {
     'admin': '系统管理员',
     'SYSADMIN': '系统管理员',
     'schoolAdmin': '学校管理员',
-    'SCH_ADMIN': '学校管理员',
+    'SCHOOL_ADMIN': '学校管理员',
     'companyAdmin': '企业管理员',
-    'EN_ADMIN': '企业管理员',
+    'ENTERPRISE_ADMIN': '企业管理员',
     'teacher': '教师',
     'TEACHER': '教师',
     'mentor': '企业导师',

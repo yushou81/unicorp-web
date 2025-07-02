@@ -1,25 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-interface User {
-  id: number
-  organizationId?: number
-  organizationName?: string
-  username?: string
-  nickname?: string
-  // 其他字段...
-}
-
 export const useAppStore = defineStore('app', () => {
   const isLoading = ref(false)
-  const user = ref<User | null>(null)
+  const user = ref(null)
   const theme = ref('light')
 
   const setLoading = (loading: boolean) => {
     isLoading.value = loading
   }
 
-  const setUser = (userData: User) => {
+  const setUser = (userData: any) => {
     user.value = userData
   }
 
