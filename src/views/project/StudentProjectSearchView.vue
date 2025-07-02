@@ -110,6 +110,7 @@
               <th class="px-4 py-2">项目简介</th>
               <th class="px-4 py-2">人数</th>
               <th class="px-4 py-2">组织名称</th>
+              <th class="px-4 py-2">附件</th>
               <th class="px-4 py-2">操作</th>
             </tr>
           </thead>
@@ -124,6 +125,15 @@
               </td>
               <td class="px-4 py-2 text-center">{{ project.memberCount || 0 }}/{{ project.planMemberCount || '-' }}</td>
               <td class="px-4 py-2 text-center">{{ project.organizationName }}</td>
+              <td class="px-4 py-2 text-center">
+                <a
+                  v-if="project.projectProposalUrl"
+                  href="javascript:void(0)"
+                  @click="showFilesModal(project.projectProposalUrl)"
+                  class="text-blue-600 hover:underline"
+                >查看</a>
+                <span v-else>-</span>
+              </td>
               <td class="px-4 py-2 text-center">
                 <template v-if="project.applied">
                   <template v-if="project.applicationStatus === 'submitted'">
@@ -153,7 +163,7 @@
               </td>
             </tr>
             <tr v-if="projects.length === 0">
-              <td colspan="5" class="text-center text-gray-400 py-6">暂无可申请项目</td>
+              <td colspan="6" class="text-center text-gray-400 py-6">暂无可申请项目</td>
             </tr>
           </tbody>
         </table>
@@ -187,6 +197,40 @@
       </div>
     </div>
   </div>
+  <div v-if="showFileListModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 min-w-[300px] max-w-[90vw]">
+      <h3 class="text-lg font-bold mb-4">附件下载</h3>
+      <ul>
+        <li
+          v-for="(url, idx) in currentFileUrl"
+          :key="url"
+          class="mb-2 flex items-center justify-between"
+        >
+          <div class="flex items-center min-w-0">
+            <span class="mr-2">附件{{ idx + 1 }}</span>
+            <span
+              class="ml-2 text-xs text-gray-400 break-all max-w-[180px] truncate"
+              :title="url"
+            >{{ url }}</span>
+          </div>
+          <div class="flex items-center ml-2 space-x-2 flex-shrink-0">
+            <a
+              :href="getFullUrl(url)"
+              target="_blank"
+              class="inline-flex items-center px-3 py-1 rounded-md bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition"
+            >查看</a>
+            <button
+              @click="downloadFileWithToken(url)"
+              class="inline-flex items-center px-3 py-1 rounded-md bg-green-500 text-white font-medium hover:bg-green-600 transition"
+            >下载</button>
+          </div>
+        </li>
+      </ul>
+      <div class="flex justify-center mt-4">
+        <button @click="showFileListModal = false" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">关闭</button>
+      </div>
+    </div>
+  </div>
 </div>
 </template>
 
@@ -194,6 +238,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getProjects, applyForProject, getMyApplications, updateApplicationStatus } from '@/lib/api/project'
+import { downloadFile } from '@/lib/api/file'
 
 const router = useRouter()
 function goBack() {
@@ -253,6 +298,9 @@ const total = ref(0)
 
 const descDialogVisible = ref(false)
 const currentDescription = ref('')
+
+const showFileListModal = ref(false)
+const currentFileUrl = ref<string[]>([])
 
 function showDescription(desc: string) {
   currentDescription.value = desc
@@ -342,6 +390,38 @@ function selectStatus(status: string) {
   selectedStatus.value = status
   currentPage.value = 1
   fetchProjects(1)
+}
+
+// 拼接完整的文件URL
+function getFullUrl(url: string) {
+  if (url.startsWith('http')) return url
+  // 这里根据你的后端实际前缀调整
+  return `http://localhost:8081/api/v1/files/${url}`
+}
+
+// 拆分多个附件
+function getProposalUrls(urls: string | null) {
+  if (!urls) return []
+  return urls.split(',').filter(Boolean)
+}
+
+
+function downloadFileWithToken(url: string) {
+  const filename = url.split('/').pop() || url
+  downloadFile(filename)
+    .then(blob => {
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = filename
+      link.click()
+      URL.revokeObjectURL(link.href)
+    })
+    .catch(() => alert('文件下载失败或无权限'))
+}
+
+function showFilesModal(urls: string) {
+  currentFileUrl.value = urls.split(',').map(s => s.trim()).filter(Boolean)
+  showFileListModal.value = true
 }
 
 fetchProjects()

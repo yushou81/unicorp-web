@@ -93,8 +93,8 @@
           <table class="min-w-full">
             <thead>
               <tr class="bg-gray-100 text-gray-700 text-base">
-                <th class="px-4 py-2">项目编号</th>
                 <th class="px-4 py-2">项目名称</th>
+                <th class="px-4 py-2">项目描述</th>
                 <th class="px-4 py-2">组织名称</th>
                 <th class="px-4 py-2">附件</th>
                 <th class="px-4 py-2">人数</th>
@@ -104,16 +104,21 @@
             </thead>
             <tbody>
               <tr v-for="project in projects" :key="project.id" class="border-b hover:bg-blue-50 transition">
-                <td class="px-4 py-2 text-center">{{ project.id }}</td>
                 <td class="px-4 py-2 text-center">{{ project.title }}</td>
+                <td class="px-4 py-2 text-center">
+                  <button
+                    class="text-blue-600 underline hover:text-blue-800"
+                    @click="showDescription(project.description)"
+                  >查看</button>
+                </td>
                 <td class="px-4 py-2 text-center">{{ project.organizationName }}</td>
                 <td class="px-4 py-2 text-center">
-                    <a
-                        v-if="project.projectProposalUrl"
-                        href="javascript:void(0)"
-                        @click="downloadFileWithToken(project.projectProposalUrl)"
-                        class="text-blue-600 hover:underline"
-                        >下载</a>
+                  <a
+                    v-if="project.projectProposalUrl"
+                    href="javascript:void(0)"
+                    @click="showFilesModal(project.projectProposalUrl)"
+                    class="text-blue-600 hover:underline"
+                  >查看</a>
                   <span v-else>-</span>
                 </td>
                 <td class="px-4 py-2 text-center">
@@ -150,6 +155,62 @@
             @click="changePage(currentPage + 1)"
             class="px-3 py-1 mx-1 rounded bg-gray-200"
           >下一页</button>
+        </div>
+      </div>
+    </div>
+    <!-- 文件列表弹窗 -->
+    <div v-if="showFileListModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 min-w-[300px] max-w-[90vw]">
+        <h3 class="text-lg font-bold mb-4">附件下载</h3>
+        <ul>
+          <li
+            v-for="(url, idx) in currentFileUrl"
+            :key="url"
+            class="mb-2 flex items-center justify-between"
+          >
+            <div class="flex items-center min-w-0">
+              <span class="mr-2">附件{{ idx + 1 }}</span>
+              <span
+                class="ml-2 text-xs text-gray-400 break-all max-w-[180px] truncate"
+                :title="url"
+              >{{ url }}</span>
+            </div>
+            <div class="flex items-center ml-2 space-x-2 flex-shrink-0">
+              <template v-if="/\.docx?$/i.test(url)">
+      <span class="inline-flex items-center px-3 py-1 rounded-md bg-gray-200 text-gray-500 font-medium cursor-not-allowed">
+        暂不支持在线查看word文档
+      </span>
+    </template>
+    <template v-else>
+      <a
+        :href="getPreviewUrl(url)"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center px-3 py-1 rounded-md bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition"
+      >查看</a>
+    </template>
+              <button
+                @click="downloadFileWithToken(url)"
+                class="inline-flex items-center px-3 py-1 rounded-md bg-green-500 text-white font-medium hover:bg-green-600 transition"
+              >下载</button>
+            </div>
+          </li>
+        </ul>
+        <div class="flex justify-center mt-4">
+          <button @click="showFileListModal = false" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">关闭</button>
+        </div>
+      </div>
+    </div>
+    <!-- 项目描述弹窗 -->
+    <div v-if="descDialogVisible" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold">项目描述</h3>
+          <button @click="descDialogVisible = false" class="text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+        </div>
+        <div class="text-gray-700 whitespace-pre-line">{{ currentDescription }}</div>
+        <div class="flex justify-end mt-6">
+          <button @click="descDialogVisible = false" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">关闭</button>
         </div>
       </div>
     </div>
@@ -278,6 +339,40 @@ console.log('请求参数:', {
   function onSearch() {
     currentPage.value = 1
     fetchProjects(1)
+  }
+  
+  const showFileListModal = ref(false)
+  const currentFileUrl = ref<string[]>([])
+  
+  function showFilesModal(urls: string) {
+    currentFileUrl.value = urls.split(',').map(s => s.trim()).filter(Boolean)
+    showFileListModal.value = true
+  }
+
+  // 拼接完整的文件URL
+function getFullUrl(url: string) {
+  if (url.startsWith('http')) return url
+  // 这里根据你的后端实际前缀调整
+  return `http://localhost:8081/api/v1/files/${url}`
+}
+
+  const descDialogVisible = ref(false)
+  const currentDescription = ref('')
+
+  function showDescription(desc: string) {
+    currentDescription.value = desc
+    descDialogVisible.value = true
+  }
+  
+  function getPreviewUrl(url: string) {
+    const fullUrl = getFullUrl(url)
+    if (/\.docx?$/i.test(url)) {
+      // Office Online 预览
+      return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fullUrl)}`
+      
+    }
+    // 其它类型（如pdf、图片等）直接用原链接
+    return fullUrl
   }
   
   onMounted(fetchProjects)

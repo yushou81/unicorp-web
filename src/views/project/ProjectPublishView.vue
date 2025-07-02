@@ -113,19 +113,48 @@
               </div>
             </div>
 
-            <!-- 项目计划书 -->
+            <!-- 附件 -->
             <div class="mb-8">
-              <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">项目计划书</h3>
-              <div>
-                <label class="block text-gray-700 mb-2 font-medium">上传项目计划书（PDF格式）*</label>
-                <input 
-                  type="file" 
-                  accept="application/pdf" 
-                  @change="onFileChange" 
-                  required 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <p class="text-sm text-gray-500 mt-1">支持PDF格式，文件大小不超过10MB</p>
+              <h3 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">附件</h3>
+              <div class="bg-gray-50 rounded-lg p-4">
+                <label class="block text-gray-700 mb-2 font-medium">上传附件（PDF或Word格式）*</label>
+                <!-- 自定义上传按钮 -->
+                <div class="flex items-center gap-4">
+                  <label
+                    class="inline-block px-4 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600"
+                    for="file-upload"
+                  >选择文件</label>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    @change="onFileChange"
+                    multiple
+                    class="hidden"
+                  />
+                  <!-- 只显示已选文件数量 -->
+                  <span v-if="form.planFiles.length" class="text-gray-700 text-sm">
+                    已选择 {{ form.planFiles.length }} 个文件
+                  </span>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">支持PDF或Word格式，文件大小不超过10MB</p>
+                <!-- 附件列表 -->
+                <div v-if="form.planFiles.length" class="flex flex-wrap gap-2 mt-4">
+                  <div
+                    v-for="(file, idx) in form.planFiles"
+                    :key="file.name + file.size + file.lastModified"
+                    class="flex items-center bg-white border rounded px-3 py-1 shadow mr-2 mb-2"
+                  >
+                    <span class="text-sm text-gray-700 mr-2">{{ file.name }} ({{ (file.size / 1024).toFixed(1) }}KB)</span>
+                    <button
+                      type="button"
+                      @click="removeFile(idx)"
+                      class="text-gray-400 hover:text-red-500 ml-1"
+                      title="移除"
+                    >×</button>
+                  </div>
+                </div>
+                <div v-else class="text-gray-400 text-sm mt-4">暂无已上传附件</div>
               </div>
             </div>
 
@@ -175,7 +204,7 @@ const form = ref({
   language: '', // 这里建议改成数组，或者提交时转成数组
   tech: [] as string[],
   code: [] as string[],
-  planFile: null as File | null
+  planFiles: [] as File[]
 })
 
 const techOptions = ['.NET', 'AI', 'ARM', 'Angular', 'AWS', 'AndroidX', 'Apache', 'Appium']
@@ -205,16 +234,29 @@ function toggleCode(item: string) {
 function onFileChange(e: Event) {
   const files = (e.target as HTMLInputElement).files
   if (files && files.length > 0) {
-    form.value.planFile = files[0]
-  } else {
-    form.value.planFile = null
+    const newFiles = Array.from(files)
+    const existing = form.value.planFiles
+    
+    for (const f of newFiles) {
+      if (!existing.some(ef => ef.name === f.name && ef.size === f.size && ef.lastModified === f.lastModified)) {
+        existing.push(f)
+      }
+    }
+    
+    (e.target as HTMLInputElement).value = ''
   }
 }
 
+function removeFile(idx: number) {
+  form.value.planFiles.splice(idx, 1)
+}
+
+
+
 async function onSubmit() {
   
-  if (!form.value.planFile) {
-    alert('请上传项目计划书')
+  if (!form.value.planFiles.length) {
+    alert('请上传附件')
     return
   }
   if (form.value.tech.length === 0) {
@@ -227,17 +269,17 @@ async function onSubmit() {
   }
   submitting.value = true
   try {
-    // 1. 先上传文件
-    const fileFd = new FormData()
-    fileFd.append('file', form.value.planFile)
-    // 如果后端需要 type 参数，可以加上
-    // fileFd.append('type', 'resource')
-    const fileRes = await uploadFile(fileFd)
-    // 假设后端返回 { code: 200, data: { url: "xxx" }, ... }
-    const fileUrl = fileRes.data.file_url
-    console.log('文件上传返回：', fileRes)
+    // 上传所有文件
+    const fileUrls: string[] = []
+    for (const file of form.value.planFiles) {
+      const fileFd = new FormData()
+      fileFd.append('file', file)
+      const fileRes = await uploadFile(fileFd)
+      fileUrls.push(fileRes.data.file_url)
+    }
+    console.log('文件上传返回：', fileUrls)
 
-    // 2. 组装 JSON 数据
+    // 组装 JSON 数据
     const projectData = {
     title: form.value.title,
     planMemberCount: form.value.maxMemberCount,
@@ -246,7 +288,7 @@ async function onSubmit() {
     supportLanguages: form.value.language ? form.value.language.split('&') : [],
     techFields: form.value.tech,
     programmingLanguages: form.value.code,
-    projectProposalUrl: fileUrl
+    projectProposalUrls: fileUrls
   }
 
     await createProject(projectData)
