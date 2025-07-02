@@ -170,30 +170,39 @@
             </div>
           </form>
         </div>
-      </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1">项目类型</label>
+          <select v-model="type" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="科研">科研</option>
+            <option value="人才培养">人才培养</option>
+            <option value="创新">创新</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1">项目简介</label>
+          <textarea v-model="desc" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1">联系人</label>
+          <input v-model="contact" type="text" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <button type="submit" class="w-full py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">提交发布</button>
+      </form>
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAppStore } from '@/stores/app'
-import { createProject } from '@/lib/api/project'
-import { uploadFile } from '@/lib/api/file' // 确保有这个import
-const appStore = useAppStore()
-const user = appStore.user
-
-// const organizationName = computed(() => user?.organizationName || '')
-// const managerName = computed(() => user?.username || user?.nickname || '')
-
+const title = ref('')
+const type = ref('科研')
+const desc = ref('')
+const contact = ref('')
 const router = useRouter()
-const submitting = ref(false)
-
-
-// 返回上一页函数
-function goBack() {
-  router.back()
+function onSubmit() {
+  // 这里可接入API
+  alert('项目发布成功，等待审核/对接！')
+  router.push('/project/list')
 }
 
 const form = ref({

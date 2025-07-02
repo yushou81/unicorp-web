@@ -74,7 +74,7 @@
                 </div>
                 
                 <a 
-                  :href="getDownloadUrl(resource.id)" 
+                  :href="resource.fileUrl" 
                   target="_blank" 
                   class="text-blue-600 hover:text-blue-800 p-1"
                   title="下载"
@@ -193,7 +193,6 @@ import {
   getChapterById,
   getChaptersByCourseId,
   getResourcesByCourseId,
-  getResourceDownloadUrl,
   getStudentProgressInChapter,
   getStudentProgressInCourse,
   updateLearningProgress,
@@ -304,7 +303,7 @@ const loadCourseChapters = async () => {
             const progressInfo = progressRes.data.find(p => p.chapterId === chapter.id)
             return {
               ...chapter,
-              progressInfo: progressInfo || null
+              progressInfo: progressInfo || undefined
             }
           })
         }
@@ -385,10 +384,7 @@ const getFileTypeText = (resourceType: string) => {
   return typeTexts[resourceType] || '未知类型'
 }
 
-// 获取资源下载链接
-const getDownloadUrl = (resourceId: number) => {
-  return getResourceDownloadUrl(resourceId)
-}
+// 不再需要特殊的下载URL函数，直接使用资源的fileUrl
 
 // 监听路由参数变化
 watch([() => route.params.chapterId, () => route.params.courseId], () => {

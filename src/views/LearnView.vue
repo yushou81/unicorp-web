@@ -1,91 +1,53 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-4">在线学习</h1>
-        <p class="text-xl text-gray-600">
-          培训报名、智选课堂、学习记录
-        </p>
+  <div class="min-h-screen bg-gray-50">
+    <!-- 导航栏 -->
+    <Navbar />
+    
+    <!-- 顶部横幅 -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+      <div class="container mx-auto px-4 max-w-5xl">
+        <div class="flex justify-between items-center mb-4">
+          <h1 class="text-3xl font-bold">资源共享中心</h1>
+          <router-link 
+            v-if="isTeacherOrMentor"
+            to="/resource/upload" 
+            class="px-4 py-2 bg-white text-blue-700 font-semibold rounded-md hover:bg-blue-50 transition-colors"
+          >
+            上传资源
+          </router-link>
+        </div>
+        <p class="text-lg opacity-90 mb-8 max-w-2xl">探索科研设备、课程资料与知识产权资源，促进校内资源高效共享与交流</p>
+        
+        <!-- 搜索栏 -->
+        <ResourceSearch 
+          :resource-types="allResourceTypes"
+          @search="handleSearch"
+        />
       </div>
+    </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- 课程列表 -->
-        <div class="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>推荐课程</CardTitle>
-              <CardDescription>精选优质培训课程</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div 
-                  v-for="course in courses" 
-                  :key="course.id"
-                  class="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <div class="h-48 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                    <GraduationCap class="w-16 h-16 text-white" />
-                  </div>
-                  <div class="p-4">
-                    <h3 class="font-semibold text-lg mb-2">{{ course.title }}</h3>
-                    <p class="text-gray-600 text-sm mb-3">{{ course.description }}</p>
-                    <div class="flex justify-between items-center">
-                      <span class="text-sm text-gray-500">{{ course.duration }}</span>
-                      <Button size="sm">立即报名</Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    <!-- 主要内容区 -->
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- 左侧筛选栏 -->
+        <div class="lg:w-64 flex-shrink-0">
+          <ResourceFilterSidebar 
+            :resource-types="allResourceTypes"
+            :stats="resourceStats"
+            v-model:filters="filters"
+          />
         </div>
 
-        <!-- 侧边栏 -->
-        <div class="space-y-6">
-          <!-- 学习进度 -->
-          <Card>
-            <CardHeader>
-              <CardTitle>我的学习</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                  <span>学习进度</span>
-                  <span class="font-semibold">75%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="bg-blue-600 h-2 rounded-full" style="width: 75%"></div>
-                </div>
-                <div class="text-sm text-gray-500">
-                  已完成 3/4 门课程
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <!-- 学习记录 -->
-          <Card>
-            <CardHeader>
-              <CardTitle>最近学习</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div class="space-y-3">
-                <div 
-                  v-for="record in learningRecords" 
-                  :key="record.id"
-                  class="flex items-center space-x-3"
-                >
-                  <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <GraduationCap class="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div class="flex-1">
-                    <p class="text-sm font-medium">{{ record.course }}</p>
-                    <p class="text-xs text-gray-500">{{ record.date }}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <!-- 右侧资源列表 -->
+        <div class="flex-1">
+          <ResourceList 
+            :resources="filteredResources" 
+            :current-page="currentPage"
+            :total-pages="totalPages"
+            @collect="collectResource"
+            @page-change="handlePageChange"
+            @sort="handleSort"
+          />
         </div>
       </div>
     </div>
@@ -93,44 +55,197 @@
 </template>
 
 <script setup lang="ts">
-import { GraduationCap } from 'lucide-vue-next'
-import Button from '@/components/ui/Button.vue'
-import Card from '@/components/ui/Card.vue'
-import CardHeader from '@/components/ui/CardHeader.vue'
-import CardTitle from '@/components/ui/CardTitle.vue'
-import CardDescription from '@/components/ui/CardDescription.vue'
-import CardContent from '@/components/ui/CardContent.vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import Navbar from '@/components/layout/Navbar.vue'
+import ResourceSearch from '@/components/resource/ResourceSearch.vue'
+import ResourceFilterSidebar from '@/components/resource/ResourceFilterSidebar.vue'
+import ResourceList from '@/components/resource/ResourceList.vue'
+import { getResources, collectResource as apiCollectResource } from '@/lib/api/resource'
+import { useAppStore } from '@/stores/app'
 
-const courses = [
-  {
-    id: 1,
-    title: "Vue.js 开发实战",
-    description: "从零开始学习Vue.js框架，掌握现代前端开发技能",
-    duration: "20小时"
-  },
-  {
-    id: 2,
-    title: "React 进阶课程",
-    description: "深入学习React核心概念和高级特性",
-    duration: "25小时"
-  },
-  {
-    id: 3,
-    title: "TypeScript 基础",
-    description: "学习TypeScript类型系统和最佳实践",
-    duration: "15小时"
-  },
-  {
-    id: 4,
-    title: "Node.js 后端开发",
-    description: "使用Node.js构建高性能后端服务",
-    duration: "30小时"
+// 应用状态
+const appStore = useAppStore()
+
+// 检查用户角色
+const userRole = computed(() => (appStore.user as any)?.role || '')
+const isTeacherOrMentor = computed(() => ['TEACHER', 'MENTOR'].includes(userRole.value))
+
+// 搜索和筛选状态
+const searchKeyword = ref('')
+const selectedResourceType = ref('')
+const currentPage = ref(1)
+const totalPages = ref(5)
+const sortOption = ref('latest')
+const filters = ref({
+  resourceTypes: [] as string[]
+})
+
+// 资源类型列表
+const allResourceTypes = ['实验设备', '技术文档', '数据集', '教学案例', '课件', '精品课程', '著作权', '专利']
+
+// 资源数据
+const resources = ref<any[]>([])
+
+// 资源统计
+const resourceStats = ref({
+  total: 0,
+  available: 0,
+  newThisMonth: 0
+})
+
+// 根据筛选条件过滤资源
+const filteredResources = computed(() => {
+  return resources.value.filter(resource => {
+    // 关键词搜索
+    if (searchKeyword.value && 
+        !resource.title.includes(searchKeyword.value) && 
+        !resource.provider?.includes(searchKeyword.value) && 
+        !resource.description?.includes(searchKeyword.value) && 
+        !resource.organizationName?.includes(searchKeyword.value)) {
+      return false
+    }
+    
+    // 资源类型筛选 - 下拉菜单
+    if (selectedResourceType.value && resource.resourceType !== selectedResourceType.value) {
+      return false
+    }
+    
+    // 资源类型筛选 - 复选框
+    if (filters.value.resourceTypes.length > 0 && !filters.value.resourceTypes.includes(resource.resourceType)) {
+      return false
+    }
+    
+    return true
+  })
+})
+
+// 处理搜索
+const handleSearch = (searchParams: { keyword: string, resourceType: string }) => {
+  searchKeyword.value = searchParams.keyword
+  selectedResourceType.value = searchParams.resourceType
+}
+
+// 处理分页
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+}
+
+// 处理排序
+const handleSort = (option: string) => {
+  sortOption.value = option
+  // 实际项目中这里应该根据排序选项对数据进行排序
+}
+
+// 收藏资源
+const collectResource = async (resourceId: number) => {
+  try {
+    console.log('收藏资源', resourceId)
+    await apiCollectResource(resourceId)
+    alert('收藏成功')
+  } catch (error) {
+    console.error('收藏资源失败:', error)
+    alert('收藏失败，请稍后重试')
   }
-]
+}
 
-const learningRecords = [
-  { id: 1, course: "Vue.js 开发实战", date: "2024-01-15" },
-  { id: 2, course: "React 进阶课程", date: "2024-01-14" },
-  { id: 3, course: "TypeScript 基础", date: "2024-01-13" }
-]
+// 加载资源数据
+const loading = ref(false)
+const total = ref(0)
+const pageSize = ref(10)
+
+const fetchResources = async () => {
+  try {
+    loading.value = true
+    
+    // 构建查询参数
+    const queryParams: any = {
+      page: currentPage.value,  // 服务器使用1-based分页
+      size: pageSize.value,
+      keyword: searchKeyword.value
+    }
+    
+    // 添加资源类型筛选 - 下拉菜单
+    if (selectedResourceType.value) {
+      queryParams.type = selectedResourceType.value
+    }
+    
+    // 添加来自复选框的筛选条件 - 资源类型
+    if (filters.value.resourceTypes.length > 0) {
+      queryParams.type = filters.value.resourceTypes.join(',')
+    }
+    
+    console.log('查询参数:', queryParams)
+    const response = await getResources(queryParams)
+    
+    console.log('API响应:', response)
+    
+    if (response && response.code === 200 && response.data && response.data.records) {
+      // 处理API返回的数据
+      resources.value = response.data.records.map((item: any) => ({
+        ...item,
+        // 根据创建时间判断是否为新资源（7天内）
+        isNew: new Date(item.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000,
+        // 这里可以添加其他字段映射，例如从resourceType判断类别
+        category: getCategoryFromResourceType(item.resourceType),
+        // 假设热门资源由后端标记或根据某些规则确定
+        isHot: item.isHot || false,
+        // 临时使用的状态和使用方式，实际应从API获取
+        status: item.status || '可用',
+        usage: item.visibility === 'public' ? '免费使用' : '需申请',
+        // 将nickname作为提供者
+        provider: item.authorName || item.nickname || item.organizationName
+      }))
+      
+      total.value = response.data.total
+      totalPages.value = response.data.pages
+      
+      // 更新资源统计数据
+      resourceStats.value.total = response.data.total
+      resourceStats.value.available = resources.value.filter(r => r.status === '可用').length
+      
+      // 计算本月新增
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      resourceStats.value.newThisMonth = resources.value.filter(r => 
+        new Date(r.createdAt) >= startOfMonth
+      ).length
+    } else {
+      console.error('API返回数据格式不符合预期:', response)
+      resources.value = [] // 清空资源列表
+      total.value = 0
+      totalPages.value = 0
+      resourceStats.value = { total: 0, available: 0, newThisMonth: 0 }
+    }
+  } catch (error) {
+    console.error('获取资源列表失败:', error)
+    resources.value = [] // 发生错误时清空资源列表
+  } finally {
+    loading.value = false
+  }
+}
+
+// 根据资源类型推断分类
+const getCategoryFromResourceType = (type: string) => {
+  const typeMap: Record<string, string> = {
+    '实验设备': '科研设备',
+    '数据集': '科研数据',
+    '技术手册': '技术文档',
+    '课件': '精品课程',
+    '视频': '精品课程',
+    '专利文献': '专利',
+    '论文': '技术文档',
+    '软件': '其他'
+  }
+  return typeMap[type] || '其他'
+}
+
+// 监听筛选条件变化，重新加载数据
+watch([currentPage, searchKeyword, selectedResourceType, filters, sortOption], () => {
+  fetchResources()
+})
+
+// 组件挂载时加载资源数据
+onMounted(() => {
+  fetchResources()
+})
 </script> 
