@@ -219,11 +219,12 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { BriefcaseIcon, AcademicCapIcon, DocumentTextIcon, ShieldCheckIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
+import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, DocumentTextIcon, BuildingOffice2Icon, ShieldCheckIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getAllUsers, createTeacher, updateUserInfo as updateSchoolUserInfo, updateUserStatus } from '@/lib/api/schoolAdmin'
 import { getMe, updatePassword, updateUserInfo as updateAuthUserInfo } from '@/lib/api/auth'
+import { getEquipmentBookings, reviewEquipmentBooking } from '@/lib/api/resource'
 import Button from '@/components/ui/Button.vue'
 
 const school = ref({
@@ -240,6 +241,24 @@ const partnerCompanies = [
 ]
 
 const blocks = ref([
+  {
+    title: '设备申请管理',
+    icon: BriefcaseIcon,
+    color: 'text-orange-500',
+    data: [
+      { id: 1, label: '待审核申请', extra: '3个' }
+    ],
+    empty: '暂无待审核申请',
+    footer: { text: '管理设备申请', link: '/equipment/bookings' }
+  },
+  {
+    title: '资源上传',
+    icon: ArrowUpTrayIcon,
+    color: 'text-purple-500',
+    data: [],
+    empty: '暂无上传资源',
+    footer: { text: '上传资源', link: '/resource/upload' }
+  },
   {
     title: '用户管理',
     icon: AcademicCapIcon,
@@ -420,6 +439,7 @@ async function fetchSchoolInfo() {
 onMounted(() => {
   fetchSchoolInfo()
   fetchTeachers()
+  updateDashboardData() // 更新仪表盘数据
 })
 
 const router = useRouter()
@@ -515,5 +535,27 @@ function openEditDialog() {
 // 修改按钮点击事件
 function onEditProfileClick() {
   openEditDialog()
+}
+
+// 更新仪表盘数据
+async function updateDashboardData() {
+  try {
+    // 获取待审核设备申请数量
+    const res = await getEquipmentBookings({ 
+      page: 0, 
+      size: 1,
+      status: 'PENDING'
+    })
+    
+    if (res.code === 200 && res.data) {
+      // 更新blocks中的待审核数量
+      const bookingBlock = blocks.value.find(b => b.title === '设备申请管理')
+      if (bookingBlock && bookingBlock.data && bookingBlock.data.length > 0) {
+        bookingBlock.data[0].extra = `${res.data.total || 0}个`
+      }
+    }
+  } catch (e: any) {
+    console.error('获取设备申请数量失败:', e)
+  }
 }
 </script> 

@@ -68,6 +68,8 @@
       </div>
     </div>
     
+
+    
     <!-- 编辑个人资料对话框 -->
     <div v-if="showEditProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
       <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
@@ -120,6 +122,8 @@ import { ref, computed, onMounted } from 'vue'
 import { BriefcaseIcon, BookmarkIcon, AcademicCapIcon, CalendarDaysIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
+import { getMyEquipmentBookings, cancelEquipmentBooking } from '@/lib/api/resource'
+import Button from '@/components/ui/Button.vue'
 
 const user = ref({
   avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
@@ -149,10 +153,6 @@ async function fetchUserInfo() {
     // 保持默认值
   }
 }
-
-onMounted(() => {
-  fetchUserInfo()
-})
 
 // 最近投递岗位
 const appliedJobs = [
@@ -340,4 +340,96 @@ function openEditDialog() {
 function onEditProfileClick() {
   openEditDialog()
 }
+
+// 添加我的设备预约相关数据和方法
+const myBookings = ref<any[]>([])
+const bookingLoading = ref(false)
+const bookingError = ref('')
+
+// 获取我的设备预约申请
+const fetchMyBookings = async () => {
+  bookingLoading.value = true
+  bookingError.value = ''
+  try {
+    const res = await getMyEquipmentBookings()
+    if (res.code === 200 && res.data) {
+      myBookings.value = res.data
+      
+      // 更新blocks中的设备预约数据
+      const bookingBlock = blocks.value.find(b => b.title === '设备预约申请')
+      if (bookingBlock) {
+        bookingBlock.data = myBookings.value.slice(0, 3).map(booking => ({
+          id: booking.id,
+          label: `${booking.resourceTitle} (${formatBookingTime(booking.startTime)})`,
+          extra: getBookingStatusText(booking.status)
+        }))
+      } else {
+        // 如果不存在，则添加一个新的block
+        blocks.value.push({
+          title: '设备预约申请',
+          icon: CalendarDaysIcon,
+          color: 'text-purple-500',
+          type: 'list',
+          data: myBookings.value.slice(0, 3).map(booking => ({
+            id: booking.id,
+            label: `${booking.resourceTitle} (${formatBookingTime(booking.startTime)})`,
+            extra: getBookingStatusText(booking.status)
+          })),
+          empty: '暂无设备预约申请',
+          footer: { text: '查看全部预约', link: '/bookings' }
+        })
+      }
+    }
+  } catch (e: any) {
+    bookingError.value = e.message || '获取预约列表失败'
+    myBookings.value = []
+  } finally {
+    bookingLoading.value = false
+  }
+}
+
+// 取消预约申请
+const cancelBooking = async (bookingId: number) => {
+  try {
+    await cancelEquipmentBooking(bookingId)
+    alert('预约已取消')
+    fetchMyBookings() // 重新加载预约列表
+  } catch (e: any) {
+    alert('取消失败: ' + (e.message || '未知错误'))
+  }
+}
+
+// 格式化预约时间
+const formatBookingTime = (timeString: string) => {
+  if (!timeString) return ''
+  const date = new Date(timeString)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+// 获取预约状态文本
+const getBookingStatusText = (status: string) => {
+  const statusMap: Record<string, string> = {
+    'PENDING': '待审核',
+    'APPROVED': '已通过',
+    'REJECTED': '已拒绝',
+    'CANCELED': '已取消'
+  }
+  return statusMap[status] || status
+}
+
+// 获取预约状态颜色
+const getBookingStatusColor = (status: string) => {
+  const colorMap: Record<string, string> = {
+    'PENDING': 'bg-yellow-100 text-yellow-800',
+    'APPROVED': 'bg-green-100 text-green-800',
+    'REJECTED': 'bg-red-100 text-red-800',
+    'CANCELED': 'bg-gray-100 text-gray-800'
+  }
+  return colorMap[status] || 'bg-gray-100 text-gray-800'
+}
+
+onMounted(() => {
+  fetchUserInfo()
+  fetchMyBookings()
+})
 </script> 

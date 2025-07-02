@@ -68,9 +68,29 @@ const router = createRouter({
       component: () => import('@/views/JobDetailView.vue')
     },
     {
-      path: '/learn',
-      name: 'learn',
+      path: '/resource',
+      name: 'resource',
       component: () => import('@/views/LearnView.vue')
+    },
+    {
+      path: '/resource/upload',
+      name: 'resource-upload',
+      component: () => import('@/views/resource/ResourceUploadView.vue')
+    },
+    {
+      path: '/resource/:id',
+      name: 'resource-detail',
+      component: () => import('@/views/ResourceDetailView.vue')
+    },
+    {
+      path: '/bookings',
+      name: 'my-bookings',
+      component: () => import('@/views/dashboard/MyBookingsView.vue')
+    },
+    {
+      path: '/equipment/bookings',
+      name: 'equipment-bookings',
+      component: () => import('@/views/resource/EquipmentBookingManageView.vue')
     },
     {
       path: '/project/list',
