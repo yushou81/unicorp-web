@@ -160,6 +160,7 @@
   import { getProjects, deleteProject } from '@/lib/api/project'
   import { useRouter } from 'vue-router'
   import { useAppStore } from '@/stores/app'
+  import { downloadFile } from '@/lib/api/file'
   
   const appStore = useAppStore()
   const projects = ref<any[]>([])
@@ -205,25 +206,20 @@
   }
   
   function downloadFileWithToken(url: string) {
-  const token = localStorage.getItem('token')
-  fetch(url, {
-    headers: {
-      Authorization: 'Bearer ' + token
-    }
-  })
-    .then(res => {
-      if (!res.ok) throw new Error('下载失败')
-      return res.blob()
-    })
-    .then(blob => {
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = url.split('/').pop() || '文件.pdf'
-      link.click()
-      URL.revokeObjectURL(link.href)
-    })
-    .catch(() => alert('文件下载失败或无权限'))
-}
+    // url 可能是 "resources/xxx.pdf" 或 "/files/resources/xxx.pdf"
+    // 只取文件名部分
+    const filename = url.split('/').pop() || url
+    console.log('下载文件:', filename)
+    downloadFile(filename)
+      .then(blob => {
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = filename
+        link.click()
+        URL.revokeObjectURL(link.href)
+      })
+      .catch(() => alert('文件下载失败或无权限'))
+  }
 
   function isSelected(type: FilterKey, value: string): boolean {
     return filter.value[type].includes(value)
