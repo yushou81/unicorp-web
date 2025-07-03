@@ -47,7 +47,7 @@ export async function getResources(params: {
   }
 
   console.log('API请求参数:', queryParams.toString())
-  return apiRequest(`/resources?${queryParams.toString()}`)
+  return apiRequest(`/v1/resources?${queryParams.toString()}`)
 }
 
 /**
@@ -55,7 +55,7 @@ export async function getResources(params: {
  * @param id 资源ID
  */
 export async function getResourceById(id: string | number) {
-  return apiRequest(`/resources/${id}`)
+  return apiRequest(`/v1/resources/${id}`)
 }
 
 /**
@@ -78,7 +78,7 @@ export async function uploadResource(data: {
   if (data.file) formData.append('file', data.file)
   if (data.image) formData.append('image', data.image)
   
-  return apiRequest(`/resources/upload`, {
+  return apiRequest(`/v1/resources/upload`, {
     method: 'POST',
     body: formData
   })
@@ -108,7 +108,7 @@ export async function updateResourceWithFile(
   if (data.file) formData.append('file', data.file)
   if (data.image) formData.append('image', data.image)
   
-  return apiRequest(`/resources/${id}/upload`, {
+  return apiRequest(`/v1/resources/${id}/upload`, {
     method: 'POST',
     body: formData
   })
@@ -125,7 +125,7 @@ export async function createResource(data: {
   fileType?: string
   visibility?: 'public' | 'private' | 'organization_only'
 }) {
-  return apiRequest('/resources', {
+  return apiRequest('/v1/resources', {
     method: 'POST',
     body: JSON.stringify(data)
   })
@@ -145,7 +145,7 @@ export async function updateResource(
     visibility?: 'public' | 'private' | 'organization_only'
   }
 ) {
-  return apiRequest(`/resources/${id}`, {
+  return apiRequest(`/v1/resources/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data)
   })
@@ -156,7 +156,7 @@ export async function updateResource(
  * @param id 资源ID
  */
 export async function deleteResource(id: string | number) {
-  return apiRequest(`/resources/${id}`, {
+  return apiRequest(`/v1/resources/${id}`, {
     method: 'DELETE'
   })
 }
@@ -168,7 +168,7 @@ export async function uploadFile(file: File, type: string = 'resource') {
   const formData = new FormData()
   formData.append('file', file)
   
-  return apiRequest(`/files/upload?type=${type}`, {
+  return apiRequest(`/v1/files/upload?type=${type}`, {
     method: 'POST',
     body: formData
   })
@@ -189,7 +189,7 @@ export async function submitResourceApplication(
     endTime: string
   }
 ) {
-  return apiRequest(`/resources/equipment/bookings`, {
+  return apiRequest(`/v1/resources/equipment/bookings`, {
     method: 'POST',
     body: JSON.stringify({
       resourceId,
@@ -205,7 +205,7 @@ export async function submitResourceApplication(
  * @param resourceId 资源ID
  */
 export async function collectResource(resourceId: string | number) {
-  return apiRequest(`/resources/${resourceId}/collect`, {
+  return apiRequest(`/v1/resources/${resourceId}/collect`, {
     method: 'POST'
   })
 }
@@ -216,7 +216,7 @@ export async function collectResource(resourceId: string | number) {
  * @param content 评价内容
  */
 export async function addResourceComment(resourceId: string | number, content: string) {
-  return apiRequest(`/resources/${resourceId}/comments`, {
+  return apiRequest(`/v1/resources/${resourceId}/comments`, {
     method: 'POST',
     body: JSON.stringify({ content })
   })
@@ -227,7 +227,7 @@ export async function addResourceComment(resourceId: string | number, content: s
  * @param resourceId 资源ID
  */
 export async function getResourceComments(resourceId: string | number) {
-  return apiRequest(`/resources/${resourceId}/comments`)
+  return apiRequest(`/v1/resources/${resourceId}/comments`)
 }
 
 /**
@@ -250,7 +250,7 @@ export async function getEquipmentBookings(params: {
   if (params.status) queryParams.append('status', params.status)
   if (params.organizationId !== undefined) queryParams.append('organizationId', params.organizationId.toString())
   
-  return apiRequest(`/resources/equipment/bookings?${queryParams.toString()}`)
+  return apiRequest(`/v1/resources/equipment/bookings?${queryParams.toString()}`)
 }
 
 /**
@@ -258,7 +258,7 @@ export async function getEquipmentBookings(params: {
  * @param id 预约ID
  */
 export async function getEquipmentBookingById(id: string | number) {
-  return apiRequest(`/resources/equipment/bookings/${id}`)
+  return apiRequest(`/v1/resources/equipment/bookings/${id}`)
 }
 
 /**
@@ -277,7 +277,7 @@ export async function reviewEquipmentBooking(data: {
     rejectReason: data.rejectReason
   }
   
-  return apiRequest(`/resources/equipment/bookings/review`, {
+  return apiRequest(`/v1/resources/equipment/bookings/review`, {
     method: 'POST',
     body: JSON.stringify(requestData)
   })
@@ -288,7 +288,7 @@ export async function reviewEquipmentBooking(data: {
  * @param id 预约ID
  */
 export async function cancelEquipmentBooking(id: string | number) {
-  return apiRequest(`/resources/equipment/bookings/${id}/cancel`, {
+  return apiRequest(`/v1/resources/equipment/bookings/${id}/cancel`, {
     method: 'POST'
   })
 }
@@ -298,14 +298,14 @@ export async function cancelEquipmentBooking(id: string | number) {
  * @param resourceId 资源ID
  */
 export async function getResourceBookings(resourceId: string | number) {
-  return apiRequest(`/resources/${resourceId}/bookings`)
+  return apiRequest(`/v1/resources/${resourceId}/bookings`)
 }
 
 /**
  * 获取用户的所有设备预约申请
  */
 export async function getMyEquipmentBookings() {
-  return apiRequest('/resources/equipment/bookings/my')
+  return apiRequest('/v1/resources/equipment/bookings/my')
 }
 
 /**
