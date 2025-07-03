@@ -15,7 +15,7 @@
       </div>
       
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">发布新项目</h2>
+        <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">更新项目</h2>
         
         <div class="bg-white rounded-2xl shadow-lg p-8">
           <form @submit.prevent="onSubmit" enctype="multipart/form-data">
@@ -292,10 +292,10 @@ async function onSubmit() {
   }
 
     await createProject(projectData)
-    alert('项目发布成功！')
+    alert('项目更新成功！')
     router.push('/company/projects')
   } catch (e: any) {
-    alert('发布失败：' + (e.message || '未知错误'))
+    alert('更新失败：' + (e.message || '未知错误'))
   } finally {
     submitting.value = false
   }

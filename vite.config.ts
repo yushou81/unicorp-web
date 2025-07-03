@@ -13,15 +13,21 @@ export default defineConfig({
     },
   },
   server: {
-    port: 8082,
+    //我自己留着测的
+     host: '127.0.0.1',
+     port: 3001,
+
+    //port: 8081,
+
     open: true,
-    host: '0.0.0.0',
+    //host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://192.168.58.162:8081',
+        target: 'http://localhost:8081',
+        //target: 'http://192.168.58.162:8081',
         changeOrigin: true,
         ws: true,
-      },
+      }
     },
   },
 }) 

@@ -388,7 +388,7 @@ const blocks = ref<BlockItem[]>([
       { id: 1, label: '智慧校园课题', extra: '进行中' }
     ],
     empty: '暂无项目',
-    footer: { text: '管理项目', link: '/project' }
+    footer: { text: '管理项目', link: '/teacher/projects' }
   },
   {
     title: '学生成果查看',

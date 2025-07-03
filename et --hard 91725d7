@@ -1,0 +1,14 @@
+[33m8503866[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: pull origin main: Fast-forward
+[33m91725d7[m HEAD@{1}: reset: moving to 91725d7
+[33m8503866[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{2}: pull origin main: Fast-forward
+[33m91725d7[m HEAD@{3}: commit: 再试一次
+[33m2ee7d9a[m HEAD@{4}: reset: moving to 2ee7d9a
+[33m2ee7d9a[m HEAD@{5}: reset: moving to HEAD
+[33m2ee7d9a[m HEAD@{6}: commit: 处理一些小bug
+[33m7e5ff7e[m HEAD@{7}: commit: 小问题基本改完了
+[33m9cc84ae[m HEAD@{8}: commit: 解决了一些小问题
+[33m380e9bb[m HEAD@{9}: commit: 改了一些小问题
+[33m4f50799[m HEAD@{10}: commit (merge): 项目管理
+[33mea7c7d2[m HEAD@{11}: commit (merge): 项目管理
+[33mdfd9b50[m HEAD@{12}: commit: 项目管理的一些页面
+[33m7f5dfa2[m HEAD@{13}: clone: from github.com:yushou81/unicorp-web.git
