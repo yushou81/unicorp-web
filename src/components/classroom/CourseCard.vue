@@ -17,6 +17,14 @@
       
       <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ course.description }}</p>
       
+      <!-- 课程评价摘要 -->
+      <div class="mb-3">
+        <CourseRatingSummary 
+          :average-rating="course.averageRating || 0"
+          :total-ratings="course.totalRatings || 0"
+        />
+      </div>
+      
       <div class="flex items-center mb-3">
         <div class="flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,6 +62,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { DualTeacherCourseVO, CourseStatus, CourseType } from '@/lib/api/classroom'
+import CourseRatingSummary from './CourseRatingSummary.vue'
 
 // 课程封面图（随机图片）
 const courseImages = [

@@ -66,12 +66,25 @@
             <CourseResources 
               :course-id="Number(route.params.id)"
               :is-teacher="isTeacher"
-              :current-user-id="studentId"
+              :current-user-id="appStore.user?.id"
               :is-resource-manager="isTeacher || isMentor"
             />
             
             <!-- 课程评价 -->
             <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-900">课程评价</h2>
+                <router-link 
+                  v-if="isTeacher || isAdmin"
+                  :to="`/classroom/${route.params.id}/ratings`"
+                  class="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  评价管理
+                </router-link>
+              </div>
               <CourseRating 
                 :course-id="Number(route.params.id)"
                 :ratings="courseRatings"
@@ -79,6 +92,7 @@
                 :has-rated="hasUserRated"
                 @submit-success="handleRatingSuccess"
                 @error="handleRatingError"
+                @update-ratings="handleRatingsUpdate"
               />
             </div>
           </div>
@@ -88,11 +102,8 @@
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
               <h2 class="text-xl font-bold text-gray-900 mb-4">讲师信息</h2>
               <div class="flex items-center mb-4">
-                <div v-if="course.teacherAvatar" class="w-16 h-16 rounded-full mr-4 overflow-hidden">
-                  <img :src="course.teacherAvatar" alt="讲师头像" class="w-full h-full object-cover" />
-                </div>
-                <div v-else class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
-                  {{ course.teacherName.substring(0, 1) }}
+                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
+                  {{ course.teacherName ? course.teacherName.substring(0, 1) : '' }}
                 </div>
                 <div>
                   <div class="font-medium text-gray-900">{{ course.teacherName }}</div>
@@ -104,11 +115,8 @@
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
               <h2 class="text-xl font-bold text-gray-900 mb-4">企业导师信息</h2>
               <div class="flex items-center mb-4">
-                <div v-if="course.mentorAvatar" class="w-16 h-16 rounded-full mr-4 overflow-hidden">
-                  <img :src="course.mentorAvatar" alt="导师头像" class="w-full h-full object-cover" />
-                </div>
-                <div v-else class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
-                  {{ course.mentorName.substring(0, 1) }}
+                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
+                  {{ course.mentorName ? course.mentorName.substring(0, 1) : '' }}
                 </div>
                 <div>
                   <div class="font-medium text-gray-900">{{ course.mentorName }}</div>
@@ -136,6 +144,12 @@
             </div>
           </div>
         </div>
+        <!-- 新增：教师可见的查看学生名单按钮 -->
+        <div v-if="isTeacher && course && course.teacherId === appStore.user?.id" class="bg-white rounded-lg shadow-sm p-6 mt-6">
+          <button @click="openStudentList" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            查看学生名单
+          </button>
+        </div>
       </template>
     </div>
     
@@ -144,6 +158,56 @@
       copyright="© 2023-2024 校企联盟平台 版权所有"
       contactInfo="联系方式：contact@example.com"
     />
+    <!-- 学生名单弹窗 -->
+    <div v-if="showStudentDialog" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">已报名学生列表</h2>
+          <button @click="showStudentDialog = false" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div v-if="studentLoading" class="flex justify-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+        <div v-else-if="studentError" class="bg-red-50 text-red-600 p-4 rounded-lg text-center my-4">
+          {{ studentError }}
+        </div>
+        <div v-else-if="students.length === 0" class="bg-gray-50 p-8 rounded-lg text-center">
+          <p class="text-gray-500">暂无学生报名</p>
+        </div>
+        <div v-else>
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">账号</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">邮箱</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">手机号</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学校</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="stu in students" :key="stu.id">
+                <td class="px-6 py-4 whitespace-nowrap">{{ stu.nickname }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ stu.account }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ stu.email }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ stu.phone }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ stu.organizationName }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span :class="stu.status === 'active' ? 'px-2 py-1 rounded text-xs bg-green-100 text-green-800' : 'px-2 py-1 rounded text-xs bg-gray-100 text-gray-800'">
+                    {{ stu.status === 'active' ? '在读' : stu.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -164,14 +228,14 @@ import {
   getResourcesByCourseId,
   getChaptersByCourseId,
   getRatingsByCourseId,
-  hasRated,
-  isEnrolledInCourse,
+  hasStudentRated,
   DualTeacherCourseVO, 
   CourseStatus, 
   CourseType,
   CourseResourceVO,
   CourseRatingVO,
-  CourseChapterVO
+  CourseChapterVO,
+  getCourseStudents
 } from '@/lib/api/classroom'
 import { useAppStore } from '@/stores/app'
 
@@ -189,6 +253,12 @@ const courseRatings = ref<CourseRatingVO[]>([])
 const hasUserRated = ref(false)
 const chaptersLoading = ref(false)
 
+// 学生名单相关
+const showStudentDialog = ref(false)
+const students = ref<any[]>([])
+const studentLoading = ref(false)
+const studentError = ref('')
+
 // 用户角色判断
 const isTeacher = computed(() => {
   const user = appStore.user as any
@@ -203,6 +273,17 @@ const isStudent = computed(() => {
 const isMentor = computed(() => {
   const user = appStore.user as any
   return user && user.role && (user.role.toUpperCase() === 'MENTOR' || user.role.toUpperCase() === 'EN_TEACHER')
+})
+
+// 判断用户是否为管理员
+const isAdmin = computed(() => {
+  const user = appStore.user as any
+  return user && user.role && (
+    user.role.toUpperCase() === 'ADMIN' || 
+    user.role.toUpperCase() === 'SYSADMIN' || 
+    user.role.toUpperCase() === 'SCHOOL_ADMIN' || 
+    user.role.toUpperCase() === 'SCH_ADMIN'
+  )
 })
 
 // 用户ID
@@ -240,23 +321,13 @@ const fetchCourseDetail = async () => {
     fetchCourseRatings(courseId)
     
     // 检查用户是否已报名
-    if (appStore.user) {
-      try {
-        const enrollmentResponse = await isEnrolledInCourse(courseId)
-        console.log('报名状态响应:', enrollmentResponse) // 添加日志以便调试
-        isEnrolled.value = enrollmentResponse.data
-      } catch (err) {
-        console.error('检查课程报名状态失败:', err)
-        isEnrolled.value = false
-      }
-    } else {
-      isEnrolled.value = false
-    }
+    // TODO: 实际项目中应该从API获取
+    isEnrolled.value = false
     
-    // 检查用户是否已评价过课程
-    if (appStore.user) {
+    // 检查用户是否已评价过课程（仅学生调用）
+    if (appStore.user && appStore.user.role && appStore.user.role.toUpperCase() === 'STUDENT') {
       try {
-        const ratedResponse = await hasRated(courseId)
+        const ratedResponse = await hasStudentRated(courseId, appStore.user.id)
         hasUserRated.value = ratedResponse.data
       } catch (err) {
         console.error('检查用户是否已评价失败:', err)
@@ -297,11 +368,27 @@ const fetchCourseChapters = async (courseId: number) => {
 // 获取课程评价
 const fetchCourseRatings = async (courseId: number) => {
   try {
-    const response = await getRatingsByCourseId(courseId)
+    const response = await getRatingsByCourseId(courseId, 1, 10)
     courseRatings.value = response.data.records
   } catch (err) {
     console.error('获取课程评价失败:', err)
   }
+}
+
+// 处理评价成功
+const handleRatingSuccess = async () => {
+  // 重新获取课程评价
+  await fetchCourseRatings(Number(route.params.id))
+}
+
+// 处理评价错误
+const handleRatingError = (message: string) => {
+  showToast(message)
+}
+
+// 处理评价列表更新
+const handleRatingsUpdate = (ratings: any[]) => {
+  courseRatings.value = ratings
 }
 
 // 处理报名成功
@@ -331,17 +418,6 @@ const handleEnrollError = (message: string) => {
   toast.error(message)
 }
 
-// 处理评价成功
-const handleRatingSuccess = () => {
-  hasUserRated.value = true
-  fetchCourseRatings(Number(route.params.id))
-}
-
-// 处理评价错误
-const handleRatingError = (message: string) => {
-  toast.error(message)
-}
-
 // 获取状态对应的文本
 const getStatusText = (status: CourseStatus) => {
   const statusTexts = {
@@ -368,4 +444,48 @@ const getModeText = (mode: CourseType) => {
 onMounted(() => {
   fetchCourseDetail()
 })
+
+function openStudentList() {
+  showStudentDialog.value = true
+  studentLoading.value = true
+  studentError.value = ''
+  students.value = []
+  getCourseStudents(Number(route.params.id))
+    .then(res => {
+      if (res.code === 200) {
+        students.value = res.data || []
+      } else {
+        studentError.value = res.message || '获取学生列表失败'
+      }
+    })
+    .catch(err => {
+      studentError.value = err?.message || '获取学生列表失败'
+    })
+    .finally(() => {
+      studentLoading.value = false
+    })
+}
+
+function formatDate(dateStr: string) {
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+}
+
+function enrollStatusText(status: string) {
+  const map: Record<string, string> = {
+    enrolled: '已报名',
+    completed: '已完成',
+    cancelled: '已取消'
+  }
+  return map[status] || status
+}
+
+function enrollStatusClass(status: string) {
+  const map: Record<string, string> = {
+    enrolled: 'px-2 py-1 rounded text-xs bg-green-100 text-green-800',
+    completed: 'px-2 py-1 rounded text-xs bg-blue-100 text-blue-800',
+    cancelled: 'px-2 py-1 rounded text-xs bg-red-100 text-red-800'
+  }
+  return map[status] || 'px-2 py-1 rounded text-xs bg-gray-100 text-gray-800'
+}
 </script> 

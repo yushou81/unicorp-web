@@ -29,389 +29,192 @@
     
     <!-- 主内容 -->
     <div v-else class="container mx-auto px-4 py-8">
-      <!-- 个人资料区域 -->
-      <div class="bg-white rounded-xl shadow-sm mb-8 hover-card">
-        <!-- 顶部信息区 -->
-        <div class="relative">
-          <!-- 封面背景 -->
-          <div class="h-40 w-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-xl"></div>
-          
-          <!-- 头像和基本信息 -->
-          <div class="flex flex-col md:flex-row px-6 py-4">
-            <div class="flex flex-col items-center md:items-start -mt-16 md:-mt-12">
-              <div class="relative group avatar-hover">
-                <img 
-                  :src="userAvatar" 
-                  class="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover" 
-                  alt="用户头像" 
-                />
-                <div 
-                  @click="onEditProfileClick"
-                  class="absolute inset-0 rounded-full bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-200"
-                >
-                  <span class="text-white text-sm">更换头像</span>
+      <!-- 个人信息卡片 -->
+      <UserProfileInfo
+        :avatar="userAvatar"
+        :name="user.nickname"
+        :role="roleText"
+        :organization="user.school"
+        :phone="user.phone"
+        :email="user.email"
+        :editable="true"
+        :verified="user.verified"
+        :onEdit="onEditProfileClick"
+      />
+      <!-- Tab栏 -->
+      <DashboardTabs :tabs="tabList" :activeTab="activeTab" @change="val => activeTab = val" />
+      <div class="mt-6">
+        <div v-if="activeTab === 'record'">
+          <!-- 求职记录tab内容 -->
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <h2 class="text-xl font-bold mb-6">我的岗位申请记录</h2>
+            <div v-if="applicationsLoading" class="text-center py-10">加载中...</div>
+            <div v-else>
+              <div v-if="applications.length === 0" class="text-gray-400 text-center py-8">暂无岗位申请记录</div>
+              <div v-else class="overflow-x-auto rounded-lg shadow">
+                <table class="min-w-full bg-white rounded-lg">
+                  <thead>
+                    <tr class="bg-indigo-50">
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">岗位名称</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">公司</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">状态</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">申请时间</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">简历ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in applications" :key="item.applicationId" class="hover:bg-indigo-50 transition">
+                      <td class="px-6 py-4 font-medium text-gray-900">{{ item.jobInfo?.jobTitle || '未知岗位' }}</td>
+                      <td class="px-6 py-4">{{ item.jobInfo?.organizationName || '-' }}</td>
+                      <td class="px-6 py-4">
+                        <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold"
+                          :class="getStatusColor(item.status)">
+                          {{ formatApplicationStatus(item.status) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">{{ formatDate(item.appliedAt) }}</td>
+                      <td class="px-6 py-4">{{ item.resumeId }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="flex justify-between items-center mt-6">
+                <span>共 {{ applicationsTotal }} 条</span>
+                <div>
+                  <button
+                    :disabled="applicationsPage === 1"
+                    @click="changeApplicationsPage(applicationsPage-1)"
+                    class="px-3 py-1 rounded bg-gray-200 text-gray-700 mr-2 disabled:opacity-50"
+                  >上一页</button>
+                  <span class="mx-2">第 {{ applicationsPage }} / {{ applicationsPages }} 页</span>
+                  <button
+                    :disabled="applicationsPage === applicationsPages"
+                    @click="changeApplicationsPage(applicationsPage+1)"
+                    class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2 disabled:opacity-50"
+                  >下一页</button>
                 </div>
               </div>
-              
-              <div class="mt-4 md:mt-6 flex flex-col items-center md:items-start">
-                <div class="flex items-center flex-wrap justify-center md:justify-start">
-                  <h1 class="text-2xl font-bold text-gray-900">{{ user.nickname }}</h1>
-                  <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">{{ roleText }}</span>
-                  <span v-if="user.verified" class="ml-2 mt-1 md:mt-0 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">已认证</span>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="activeTab === 'study'">
+          <!-- 学习记录tab内容 -->
+          <!-- ... existing code ... -->
+        </div>
+        <div v-else-if="activeTab === 'course'">
+          <!-- 课程管理tab内容 -->
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <h2 class="text-xl font-bold mb-6">我已报名的课程</h2>
+            <div v-if="enrolledCoursesLoading" class="text-center py-10">加载中...</div>
+            <div v-else>
+              <div v-if="enrolledCourses.length === 0" class="text-gray-400 text-center py-8">暂无已报名课程</div>
+              <div v-else class="overflow-x-auto rounded-lg shadow">
+                <table class="min-w-full bg-white rounded-lg">
+                  <thead>
+                    <tr class="bg-indigo-50">
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">课程名称</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">授课教师</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">企业导师</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">时间</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">状态</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in enrolledCourses" :key="item.id" class="hover:bg-indigo-50 transition">
+                      <td class="px-6 py-4 font-medium text-gray-900">{{ item.title }}</td>
+                      <td class="px-6 py-4">{{ item.teacherName }}</td>
+                      <td class="px-6 py-4">{{ item.mentorName }}</td>
+                      <td class="px-6 py-4">{{ new Date(item.scheduledTime).toLocaleString() }}</td>
+                      <td class="px-6 py-4">
+                        <span
+                          :class="{
+                            'bg-green-100 text-green-800': item.status === 'open',
+                            'bg-blue-100 text-blue-800': item.status === 'in_progress',
+                            'bg-gray-100 text-gray-800': item.status === 'planning',
+                            'bg-purple-100 text-purple-800': item.status === 'completed',
+                            'bg-red-100 text-red-800': item.status === 'cancelled'
+                          }"
+                          class="px-2 py-1 rounded text-xs font-semibold"
+                        >
+                          {{ statusText(item.status) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">
+                        <router-link
+                          :to="`/classroom/${item.id}`"
+                          class="inline-block px-4 py-1 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700 transition"
+                        >详情</router-link>
+                        <button
+                          class="inline-block px-4 py-1 rounded bg-red-500 text-white text-sm hover:bg-red-600 transition ml-2"
+                          @click="onCancelEnrollment(item.id)"
+                          :disabled="cancelingId === item.id"
+                        >
+                          <span v-if="cancelingId === item.id">取消中...</span>
+                          <span v-else>取消报名</span>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!-- 分页控件 -->
+              <div class="flex justify-between items-center mt-6">
+                <span>共 {{ enrolledCoursesTotal }} 条</span>
+                <div>
+                  <button
+                    :disabled="enrolledCoursesPage === 1"
+                    @click="changeEnrolledCoursesPage(enrolledCoursesPage-1)"
+                    class="px-3 py-1 rounded bg-gray-200 text-gray-700 mr-2 disabled:opacity-50"
+                  >上一页</button>
+                  <span class="mx-2">第 {{ enrolledCoursesPage }} / {{ enrolledCoursesPages }} 页</span>
+                  <button
+                    :disabled="enrolledCoursesPage === enrolledCoursesPages"
+                    @click="changeEnrolledCoursesPage(enrolledCoursesPage+1)"
+                    class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2 disabled:opacity-50"
+                  >下一页</button>
                 </div>
-                <p class="text-gray-500 mt-1">{{ user.school || '未绑定学校' }}</p>
               </div>
-            </div>
-            
-            <div class="ml-0 md:ml-auto mt-6 md:mt-0 flex flex-col md:flex-row items-center gap-3">
-              <div class="flex flex-col items-center md:items-end">
-                <div class="text-gray-600 text-sm">{{ user.email }}</div>
-                <div class="text-gray-600 text-sm">{{ user.phone }}</div>
-              </div>
-              <div class="flex gap-2 mt-3 md:mt-0">
-                <button 
-                  @click="onEditProfileClick" 
-                  class="px-4 py-2 rounded-full bg-blue-50 text-blue-600 font-medium hover:bg-blue-100 transition flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
-                  编辑资料
-                </button>
-                <button 
-                  @click="showResumeDialog = true" 
-                  class="px-4 py-2 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
-                  </svg>
-                  我的简历
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 导航标签栏 -->
-          <div class="px-6 pt-2 pb-0 border-b relative">
-            <!-- 移动端菜单按钮 -->
-            <button 
-              @click="toggleMobileMenu" 
-              class="md:hidden absolute right-4 top-2 text-gray-500 hover:text-gray-700"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
-            </button>
-            
-            <!-- 桌面菜单 -->
-            <div class="hidden md:flex space-x-6 overflow-x-auto scrollbar-hide">
-              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'home' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'home'">个人主页</a>
-              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'record' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'record'">求职记录</a>
-              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'study' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'study'">学习记录</a>
-              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'course' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'course'">课程管理</a>
-              <a :class="['pb-3 border-b-2 font-medium', activeTab === 'chat' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300']" @click="activeTab = 'chat'">聊天</a>
-            </div>
-            
-            <!-- 移动菜单 -->
-            <div 
-              v-if="mobileMenuOpen"
-              class="md:hidden absolute left-0 right-0 top-full bg-white shadow-md z-10 border-b border-gray-100"
-            >
-              <a :class="['block px-4 py-2', activeTab === 'home' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'home'">个人主页</a>
-              <a :class="['block px-4 py-2', activeTab === 'record' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'record'">求职记录</a>
-              <a :class="['block px-4 py-2', activeTab === 'study' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'study'">学习记录</a>
-              <a :class="['block px-4 py-2', activeTab === 'course' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'course'">课程管理</a>
-              <a :class="['block px-4 py-2', activeTab === 'chat' ? 'text-indigo-600 border-l-4 border-indigo-600 bg-indigo-50' : 'text-gray-500 border-l-4 border-transparent hover:bg-gray-50']" @click="activeTab = 'chat'">聊天</a>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- 数据卡片区域 -->
-      <div class="mb-10">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-800 mb-2 md:mb-0">我的数据</h2>
-          <div class="flex space-x-2">
-            <button class="px-3 py-1.5 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+        <div v-else-if="activeTab === 'resume'">
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <h2 class="text-xl font-bold mb-6">我的简历</h2>
+            <div v-if="resumes.length === 0" class="text-center p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 mb-6">
+              <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
-              筛选
-            </button>
-            <button class="px-3 py-1.5 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+              <p class="text-gray-600">您还没有创建简历</p>
+              <button @click="showResumeDialog = true" class="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">开始创建简历</button>
+            </div>
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div v-for="resume in resumes" :key="resume.id" class="p-5 border rounded-lg shadow hover:shadow-lg transition bg-white flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="font-bold text-lg text-blue-700">{{ resume.major || '未设置专业' }}</div>
+                    <span class="px-2 py-1 rounded text-xs font-semibold bg-indigo-100 text-indigo-700">{{ resume.educationLevel }}</span>
+                  </div>
+                  <div class="text-sm text-gray-500 mb-2">更新时间: {{ resume.updatedAt ? new Date(resume.updatedAt).toLocaleString() : '未知' }}</div>
+                  <div class="text-gray-700 line-clamp-2 mb-2">{{ resume.achievements || '暂无成就描述' }}</div>
+                </div>
+                <div class="flex space-x-2 mt-2">
+                  <button v-if="resume.resumeUrl" @click="window.open(resume.resumeUrl, '_blank')" class="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs">预览</button>
+                  <button @click="onDeleteResume(resume.id)" class="px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs">删除</button>
+                </div>
+              </div>
+            </div>
+            <button @click="showResumeDialog = true" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
-              排序
+              新建简历
             </button>
           </div>
+          <ResumeManager v-model:visible="showResumeDialog" :resumes="resumes" @resume-updated="onResumeUpdated" />
         </div>
-
-        <!-- 上半部分数据卡片 - 使用大卡片布局 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 equal-height-cards">
-          <!-- 收藏/投递职位 卡片 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
-            <!-- 卡片头部 -->
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
-              <div class="flex items-center">
-                <span class="bg-blue-100 p-2 rounded-lg mr-3">
-                  <component :is="blocks[0].icon" class="w-5 h-5 text-blue-600" />
-                </span>
-                <h3 class="font-medium text-gray-800">{{ blocks[0].title }}</h3>
-              </div>
-              <button class="text-gray-400 hover:text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                </svg>
-              </button>
-            </div>
-            
-            <!-- 卡片内容 -->
-            <div class="p-5">
-              <!-- 加载状态 -->
-              <div v-if="blocks[0].loading" class="flex justify-center items-center py-4">
-                <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </div>
-              
-              <!-- 岗位列表 -->
-              <ul v-else class="space-y-3">
-                <li 
-                  v-for="item in blocks[0].data" 
-                  :key="item.id" 
-                  class="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-all"
-                >
-                  <div 
-                    class="flex items-center flex-grow cursor-pointer" 
-                    @click="goToJobDetail(item.jobId as number)"
-                  >
-                    <div class="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                    <span class="text-gray-700 mr-2">{{ item.label }}</span>
-                    <span v-if="item.status" class="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">{{ item.status }}</span>
-                  </div>
-                  <div class="flex items-center">
-                    <span class="text-xs text-gray-500 mr-2">{{ item.extra }}</span>
-                    <button 
-                      @click="handleUnfavorite(item.jobId as number)" 
-                      class="text-gray-400 hover:text-red-500 transition-colors"
-                      title="取消收藏"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                </li>
-                <li v-if="blocks[0].data.length === 0" class="text-gray-400 text-sm p-2">{{ blocks[0].empty }}</li>
-              </ul>
-            </div>
-            
-            <!-- 卡片底部 -->
-            <div class="border-t border-gray-100 p-4 mt-auto">
-              <router-link v-if="blocks[0].footer" :to="blocks[0].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center justify-center">
-                {{ blocks[0].footer.text }}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </router-link>
-            </div>
-          </div>
-          
-          <!-- 学习记录 卡片 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
-            <!-- 卡片头部 -->
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
-              <div class="flex items-center">
-                <span class="bg-green-100 p-2 rounded-lg mr-3">
-                  <component :is="blocks[1].icon" class="w-5 h-5 text-green-600" />
-                </span>
-                <h3 class="font-medium text-gray-800">{{ blocks[1].title }}</h3>
-              </div>
-              <button class="text-gray-400 hover:text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                </svg>
-              </button>
-            </div>
-            
-            <!-- 卡片内容 -->
-            <div class="p-5">
-              <ul class="space-y-3">
-                <li v-for="item in blocks[1].data" :key="item.id" class="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-all">
-                  <div class="flex items-center">
-                    <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                    <span class="text-gray-700">{{ item.label }}</span>
-                  </div>
-                  <span class="text-xs px-2 py-1 bg-green-50 text-green-600 rounded-full">{{ item.extra }}</span>
-                </li>
-                <li v-if="blocks[1].data.length === 0" class="text-gray-400 text-sm p-2">{{ blocks[1].empty }}</li>
-              </ul>
-            </div>
-            
-            <!-- 卡片底部 -->
-            <div class="border-t border-gray-100 p-4 mt-auto">
-              <router-link v-if="blocks[1].footer" :to="blocks[1].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center justify-center">
-                {{ blocks[1].footer.text }}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </router-link>
-            </div>
-          </div>
-          
-          <!-- 报名课程 卡片 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
-            <!-- 卡片头部 -->
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
-              <div class="flex items-center">
-                <span class="bg-indigo-100 p-2 rounded-lg mr-3">
-                  <component :is="blocks[2].icon" class="w-5 h-5 text-indigo-600" />
-                </span>
-                <h3 class="font-medium text-gray-800">{{ blocks[2].title }}</h3>
-              </div>
-              <button class="text-gray-400 hover:text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                </svg>
-              </button>
-            </div>
-            
-            <!-- 卡片内容 -->
-            <div class="p-5">
-              <ul class="space-y-3">
-                <li v-for="item in blocks[2].data" :key="item.id" class="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-all">
-                  <div class="flex items-center">
-                    <div class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></div>
-                    <span class="text-gray-700">{{ item.label }}</span>
-                  </div>
-                  <span class="text-xs px-2 py-1 bg-indigo-50 text-indigo-600 rounded-full">{{ item.extra }}</span>
-                </li>
-                <li v-if="blocks[2].data.length === 0" class="text-gray-400 text-sm p-2">{{ blocks[2].empty }}</li>
-              </ul>
-            </div>
-            
-            <!-- 卡片底部 -->
-            <div class="border-t border-gray-100 p-4 mt-auto">
-              <router-link v-if="blocks[2].footer" :to="blocks[2].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center justify-center">
-                {{ blocks[2].footer.text }}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </router-link>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 下半部分数据卡片 - 使用紧凑的水平卡片布局 -->
-        <h3 class="text-lg font-medium text-gray-800 mb-4">快速入口</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- 我的岗位申请卡片 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
-            <div class="p-4">
-              <div class="flex items-center mb-3">
-                <span class="rounded-lg p-2 bg-purple-50 mr-3">
-                  <component :is="myApplicationsBlock.icon" class="w-5 h-5 text-purple-600" />
-                </span>
-                <h3 class="font-medium text-gray-800">{{ myApplicationsBlock.title }}</h3>
-              </div>
-              
-              <!-- 加载状态 -->
-              <div v-if="myApplicationsBlock.loading" class="flex justify-center items-center py-4">
-                <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </div>
-              
-              <!-- 申请列表 -->
-              <ul v-else class="space-y-2">
-                <li 
-                  v-for="item in myApplicationsBlock.data" 
-                  :key="item.id" 
-                  class="flex justify-between items-center p-1.5 hover:bg-gray-50 rounded-md transition-all"
-                  @click="goToJobDetail(item.jobId as number)"
-                >
-                  <div class="flex items-center cursor-pointer">
-                    <div class="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
-                    <span class="text-gray-700 text-sm">{{ item.label }}</span>
-                  </div>
-                  <span 
-                    class="text-xs px-2 py-0.5 rounded-full" 
-                    :class="item.statusColor || 'bg-gray-100 text-gray-600'"
-                  >
-                    {{ item.status }}
-                  </span>
-                </li>
-                <li v-if="myApplicationsBlock.data.length === 0" class="text-gray-400 text-sm p-1.5">{{ myApplicationsBlock.empty }}</li>
-              </ul>
-              
-              <router-link v-if="myApplicationsBlock.footer" :to="myApplicationsBlock.footer.link" class="mt-3 text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center">
-                {{ myApplicationsBlock.footer.text }}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </router-link>
-            </div>
-          </div>
-          
-          <!-- 企业申请入口 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
-            <div class="p-4 flex">
-              <div class="rounded-lg p-3 bg-yellow-50 mr-4">
-                <component :is="blocks[3].icon" class="w-6 h-6 text-yellow-600" />
-              </div>
-              <div>
-                <h3 class="font-medium text-gray-800 mb-1">{{ blocks[3].title }}</h3>
-                <p class="text-sm text-gray-500 mb-2">{{ blocks[3].empty }}</p>
-                <router-link v-if="blocks[3].footer" :to="blocks[3].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center">
-                  {{ blocks[3].footer.text }}
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                  </svg>
-                </router-link>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 学校信息浏览 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
-            <div class="p-4 flex">
-              <div class="rounded-lg p-3 bg-green-50 mr-4">
-                <component :is="blocks[4].icon" class="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <h3 class="font-medium text-gray-800 mb-1">{{ blocks[4].title }}</h3>
-                <p class="text-sm text-gray-500 mb-2">{{ blocks[4].empty }}</p>
-                <router-link v-if="blocks[4].footer" :to="blocks[4].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center">
-                  {{ blocks[4].footer.text }}
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                  </svg>
-                </router-link>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 企业信息浏览 -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover-card">
-            <div class="p-4 flex">
-              <div class="rounded-lg p-3 bg-yellow-50 mr-4">
-                <component :is="blocks[5].icon" class="w-6 h-6 text-yellow-600" />
-              </div>
-              <div>
-                <h3 class="font-medium text-gray-800 mb-1">{{ blocks[5].title }}</h3>
-                <p class="text-sm text-gray-500 mb-2">{{ blocks[5].empty }}</p>
-                <router-link v-if="blocks[5].footer" :to="blocks[5].footer.link" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center">
-                  {{ blocks[5].footer.text }}
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                  </svg>
-                </router-link>
-              </div>
-            </div>
-          </div>
+        <div v-else-if="activeTab === 'chat'">
+          <ChatPanel :myUserId="myUserId" :myAvatar="userAvatar" />
         </div>
       </div>
     </div>
@@ -510,9 +313,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 简历管理对话框 -->
-    <ResumeManager v-model:visible="showResumeDialog" :resumes="resumes" @resume-updated="onResumeUpdated" />
     
     <!-- Toast提示组件 -->
     <div 
@@ -521,47 +321,6 @@
       :class="{'opacity-0 translate-y-2': toast.hiding, 'opacity-100 translate-y-0': !toast.hiding}"
     >
       {{ toast.message }}
-    </div>
-
-    <!-- Tab内容区 -->
-    <div v-if="activeTab === 'home'">
-      <!-- 原主页内容区域 -->
-      <!-- ... existing code ... -->
-    </div>
-    <div v-else-if="activeTab === 'record'" class="bg-white rounded-xl shadow-sm p-8 mt-8">
-      <h2 class="text-xl font-bold mb-6">我的岗位申请记录</h2>
-      <div v-if="applicationsLoading" class="text-center py-10">加载中...</div>
-      <div v-else>
-        <table class="w-full text-left mb-4">
-          <thead>
-            <tr>
-              <th>岗位名称</th>
-              <th>公司</th>
-              <th>状态</th>
-              <th>申请时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in applications" :key="item.id">
-              <td>{{ item.jobTitle }}</td>
-              <td>{{ item.companyName }}</td>
-              <td>{{ formatApplicationStatus(item.status) }}</td>
-              <td>{{ formatDate(item.appliedAt) }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="flex justify-between items-center">
-          <span>共 {{ applicationsTotal }} 条</span>
-          <div>
-            <button :disabled="applicationsPage === 1" @click="changeApplicationsPage(applicationsPage-1)">上一页</button>
-            <span class="mx-2">第 {{ applicationsPage }} / {{ applicationsPages }} 页</span>
-            <button :disabled="applicationsPage === applicationsPages" @click="changeApplicationsPage(applicationsPage+1)">下一页</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div v-if="activeTab === 'chat'">
-      <ChatPanel :myUserId="myUserId" :myAvatar="userAvatar" />
     </div>
   </div>
 </template>
@@ -582,6 +341,9 @@ import ResumeManager from '@/components/resume/ResumeManager.vue'
 import { apiRequest } from '@/lib/api/apiClient'
 import { getChatSessions, getSessionMessages, sendChatMessage } from '@/lib/api/chat'
 import ChatPanel from '@/components/chat/ChatPanel.vue'
+import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
+import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
+import { getStudentEnrolledCourses, cancelEnrollment } from '@/lib/api/classroom'
 
 // 定义API响应类型
 interface ApiResponse<T> {
@@ -1217,6 +979,9 @@ watch(activeTab, (val) => {
   if (val === 'record') {
     fetchApplications()
   }
+  if (val === 'resume') {
+    fetchResumes()
+  }
 })
 
 async function fetchApplications() {
@@ -1311,6 +1076,87 @@ watch(activeTab, (val) => {
     fetchChatSessions()
   }
 })
+
+const tabList = [
+  { label: '求职记录', value: 'record' },
+  { label: '学习记录', value: 'study' },
+  { label: '课程管理', value: 'course' },
+  { label: '我的简历', value: 'resume' },
+  { label: '聊天', value: 'chat' }
+]
+
+const enrolledCourses = ref<any[]>([])
+const enrolledCoursesLoading = ref(false)
+const enrolledCoursesPage = ref(1)
+const enrolledCoursesSize = ref(10)
+const enrolledCoursesTotal = ref(0)
+const enrolledCoursesPages = ref(1)
+
+watch(activeTab, (val) => {
+  if (val === 'course') {
+    fetchEnrolledCourses()
+  }
+})
+
+async function fetchEnrolledCourses() {
+  enrolledCoursesLoading.value = true
+  try {
+    const res = await getStudentEnrolledCourses(enrolledCoursesPage.value, enrolledCoursesSize.value)
+    if (res.code === 200 && res.data) {
+      enrolledCourses.value = res.data.records
+      enrolledCoursesTotal.value = res.data.total
+      enrolledCoursesPages.value = res.data.pages
+    }
+  } finally {
+    enrolledCoursesLoading.value = false
+  }
+}
+function changeEnrolledCoursesPage(newPage: number) {
+  enrolledCoursesPage.value = newPage
+  fetchEnrolledCourses()
+}
+function statusText(status: string) {
+  const map: Record<string, string> = {
+    planning: '筹备中',
+    open: '开放报名',
+    in_progress: '进行中',
+    completed: '已结束',
+    cancelled: '已取消'
+  }
+  return map[status] || status
+}
+
+function onDeleteResume(resumeId) {
+  if (!resumeId) return
+  if (confirm('确定要删除这份简历吗？此操作不可恢复。')) {
+    deleteMyResume(resumeId).then(() => {
+      fetchResumes()
+      showToast('简历删除成功')
+    }).catch(e => {
+      showToast('删除失败：' + (e.message || '未知错误'))
+    })
+  }
+}
+
+const cancelingId = ref<number | null>(null)
+
+async function onCancelEnrollment(courseId: number) {
+  if (!confirm('确定要取消报名该课程吗？')) return
+  cancelingId.value = courseId
+  try {
+    const res = await cancelEnrollment(courseId)
+    if (res.code === 200) {
+      await fetchEnrolledCourses()
+      showToast('取消报名成功')
+    } else {
+      showToast(res.message || '取消报名失败')
+    }
+  } catch (e: any) {
+    showToast(e.message || '取消报名失败')
+  } finally {
+    cancelingId.value = null
+  }
+}
 </script>
 
 <style scoped>
