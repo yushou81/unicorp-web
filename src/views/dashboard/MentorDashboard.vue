@@ -594,7 +594,7 @@ const blocks = ref<BlockItem[]>([
     color: 'text-purple-500',
     data: [],
     empty: '暂无上传资源',
-    footer: { text: '上传资源', link: '/resources' }
+    footer: { text: '上传资源', link: '/resource/upload' }
   },
   {
     title: '学校信息浏览',
