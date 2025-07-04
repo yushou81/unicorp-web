@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <Loading :loading="appStore.isLoading" />
+    <Navbar />
     <router-view />
     <Toaster />
   </div>
@@ -9,6 +10,7 @@
 <script setup lang="ts">
 import { useAppStore } from '@/stores/app'
 import Loading from '@/components/ui/Loading.vue'
+import Navbar from '@/components/layout/Navbar.vue'
 
 const appStore = useAppStore()
 </script>

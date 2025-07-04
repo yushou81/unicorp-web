@@ -7,7 +7,6 @@
           资金补贴、培训补贴、社保补贴申报
         </p>
       </div>
-
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card 
           v-for="type in applicationTypes" 

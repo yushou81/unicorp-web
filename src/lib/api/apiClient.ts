@@ -1,10 +1,9 @@
 // 我自己留着测的
-const API_BASE_URL =  'http://localhost:8081/api'
+//const API_BASE_URL =  'http://localhost:8081/api'
 
+import axios from 'axios'
 
-//const API_BASE_URL =  'http://192.168.58.162:8081/api'
-
-
+const API_BASE_URL =  'http://192.168.58.17:8081/api'
 
 let token = ''
 export function setToken(t: string) {
@@ -109,4 +108,62 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
 
   return data as T
-} 
+}
+
+// 创建axios实例
+export const request = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// 请求拦截器
+request.interceptors.request.use(
+  config => {
+    // 从localStorage获取token
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  error => {
+    return Promise.reject(error)
+  }
+)
+
+// 响应拦截器
+request.interceptors.response.use(
+  response => {
+    // 如果响应成功,直接返回数据
+    return response.data
+  },
+  error => {
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          // token过期或无效,清除token并跳转到登录页
+          localStorage.removeItem('token')
+          window.location.href = '/login'
+          break
+        case 403:
+          // 权限不足
+          console.error('权限不足')
+          break
+        case 404:
+          // 请求的资源不存在
+          console.error('请求的资源不存在')
+          break
+        case 500:
+          // 服务器错误
+          console.error('服务器错误')
+          break
+        default:
+          console.error(`未知错误: ${error.response.status}`)
+      }
+    }
+    return Promise.reject(error)
+  }
+) 

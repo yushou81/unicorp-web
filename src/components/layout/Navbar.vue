@@ -11,7 +11,7 @@
         <router-link to="/job" class="hover:text-blue-600 transition">人才招聘</router-link>
         <router-link to="/classroom" class="hover:text-blue-600 transition">双师课堂</router-link>
         <router-link to="/resource" class="hover:text-blue-600 transition">资源共享</router-link>
-        <router-link to="/student/achievement" class="hover:text-blue-600 transition">成果展示</router-link>
+        <router-link to="/achievement" class="hover:text-blue-600 transition">成果展示</router-link>
         <router-link :to="getDashboardRoute()" class="hover:text-blue-600 transition">我的</router-link>
       </nav>
       <div class="flex items-center space-x-2">
