@@ -63,7 +63,7 @@ const stats = computed(() => [
     <div 
       v-for="stat in stats" 
       :key="stat.label"
-      class="bg-white rounded-lg p-4 shadow-sm"
+      class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300 ease-in-out cursor-pointer border border-transparent hover:border-gray-200"
     >
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-medium text-gray-500">{{ stat.label }}</h3>

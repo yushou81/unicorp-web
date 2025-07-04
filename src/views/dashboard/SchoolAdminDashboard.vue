@@ -69,6 +69,16 @@
           <span class="text-lg font-bold text-purple-800 mb-1">编辑个人资料</span>
           <span class="text-sm text-purple-500">修改个人信息与密码</span>
         </div>
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="router.push('/achievement/school')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <span class="text-lg font-bold text-green-800 mb-1">成果管理</span>
+          <span class="text-sm text-green-500">管理学校成果展示</span>
+        </div>
       </div>
       
       <!-- 双师课堂管理界面 -->

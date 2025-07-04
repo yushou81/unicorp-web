@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
@@ -15,11 +15,14 @@ import AdminDashboard from '@/views/dashboard/AdminDashboard.vue'
 import MentorDashboard from '@/views/dashboard/MentorDashboard.vue'
 import SchoolAdminDashboard from '@/views/dashboard/SchoolAdminDashboard.vue'
 import { getMe } from '@/lib/api/auth'
-import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
 
 // 添加成果展示相关的组件导入
 import AchievementOverview from '@/views/achievement/AchievementOverview.vue'
+import TeacherVerifyView from '@/views/achievement/TeacherVerifyView.vue'
+import EnterpriseAchievementView from '@/views/achievement/EnterpriseAchievementView.vue'
+import SchoolAchievementManageView from '@/views/achievement/SchoolAchievementManageView.vue'
+import SchoolAchievementDetailView from '@/views/achievement/SchoolAchievementDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -220,51 +223,51 @@ const router = createRouter({
         component: () => import('@/views/dashboard/Accounts.vue')
       },
     
+    // 学校管理员路由
+    {
+      path: '/admin/school',
+      component: () => import('@/views/admin/AdminLayout.vue'),
+      meta: { requiresAuth: true, role: 'SCHOOL_ADMIN' },
+      children: [
+        {
+          path: '',
+          redirect: { name: 'SchoolAchievementManage' }
+        }
+        // 成果管理相关路由已移至 /achievement/school
+      ]
+    },
+
     // 成果展示相关路由
     {
       path: '/achievement',
-      name: 'achievement',
-      component: AchievementOverview,
-      // 暂时注释掉登录要求，方便开发调试
-      // meta: { requiresAuth: true }
+      component: () => import('@/views/achievement/AchievementLayout.vue'),
+      children: [
+        {
+          path: '',
+          redirect: '/achievement/student'
+        },
+        {
+          path: 'student',
+          component: () => import('@/views/achievement/AchievementOverview.vue')
+        },
+        {
+          path: 'teacher',
+          component: () => import('@/views/achievement/TeacherVerifyView.vue')
+        },
+        {
+          path: 'enterprise',
+          component: () => import('@/views/achievement/EnterpriseAchievementView.vue')
+        },
+        {
+          path: 'enterprise/:id',
+          component: () => import('@/views/achievement/EnterpriseAchievementDetailView.vue')
+        },
+        {
+          path: 'school',
+          component: () => import('@/views/achievement/SchoolAchievementManageView.vue')
+        }
+      ]
     },
-    // 其他成果展示相关路由暂时注释
-    // {
-    //   path: '/achievement/:id',
-    //   name: 'achievement-detail',
-    //   component: () => import('@/views/achievement/AchievementDetailView.vue'),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: '/achievement/manage',
-    //   name: 'achievement-manage',
-    //   component: () => import('@/views/achievement/AchievementManageView.vue'),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: '/achievement/awards/:id',
-    //   name: 'award-detail',
-    //   component: () => import('@/views/achievement/AwardDetailView.vue'),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: '/achievement/research',
-    //   name: 'research-list',
-    //   component: () => import('@/views/achievement/ResearchListView.vue'),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: '/achievement/research/:id',
-    //   name: 'research-detail',
-    //   component: () => import('@/views/achievement/ResearchDetailView.vue'),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: '/achievement/verify',
-    //   name: 'achievement-verify',
-    //   component: () => import('@/views/achievement/TeacherVerifyView.vue'),
-    //   meta: { requiresAuth: true, role: 'teacher' }
-    // },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -281,7 +284,7 @@ router.beforeEach(async (to, from, next) => {
   // 如果有token但没有用户信息，尝试获取用户信息
   if (token && !appStore.user) {
     try {
-      setToken(token)
+      // 不需要setToken，因为axios请求拦截器会自动添加token
       const userInfo = await getMe() as any
       if (userInfo && userInfo.data) {
         appStore.setUser(userInfo.data)

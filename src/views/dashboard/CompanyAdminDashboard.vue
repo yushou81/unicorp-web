@@ -50,6 +50,14 @@
           <span class="text-sm text-green-500">查看和管理企业岗位</span>
         </div>
         <div
+          class="group cursor-pointer bg-gradient-to-br from-amber-100 to-amber-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="router.push('/achievement/enterprise')"
+        >
+          <AcademicCapIcon class="w-12 h-12 text-amber-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-amber-800 mb-1">成果浏览</span>
+          <span class="text-sm text-amber-500">发现优秀学生成果与人才</span>
+        </div>
+        <div
           class="group cursor-pointer bg-gradient-to-br from-purple-100 to-purple-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
           @click="onEditProfileClick"
         >

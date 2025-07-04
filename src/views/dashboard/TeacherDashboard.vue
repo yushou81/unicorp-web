@@ -52,6 +52,42 @@
           </div>
         </div>
         
+        <!-- 快速审核成果 -->
+        <div class="mb-8">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">快速访问</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <router-link to="/classroom/manage" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <div>
+                <div class="font-medium">课程管理</div>
+                <div class="text-xs opacity-80">管理您的全部课程</div>
+              </div>
+            </router-link>
+            
+            <router-link to="/achievement/teacher" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <div class="font-medium">成果审核</div>
+                <div class="text-xs opacity-80">审核学生的成果展示</div>
+              </div>
+            </router-link>
+            
+            <router-link to="/teacher/projects" class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <div>
+                <div class="font-medium">项目管理</div>
+                <div class="text-xs opacity-80">管理您的项目</div>
+              </div>
+            </router-link>
+          </div>
+        </div>
+        
         <!-- 课程列表 -->
         <div v-if="courseList.length > 0" class="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 class="text-xl font-semibold mb-4">我的全部课程</h2>
@@ -398,7 +434,7 @@ const blocks = ref<BlockItem[]>([
       { id: 1, label: '全国大学生数学建模竞赛一等奖', extra: '张三' }
     ],
     empty: '暂无成果',
-    footer: { text: '查看全部成果', link: '/achievements' }
+    footer: { text: '查看全部成果', link: '/achievement/teacher' }
   },
   {
     title: '资源上传',
