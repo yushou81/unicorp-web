@@ -88,7 +88,7 @@ const tempSelectedValue = ref('');
 const jobTypes: JobType[] = [
   { value: 'full_time', label: '全职' },
   { value: 'part_time', label: '兼职' },
-  { value: 'intern', label: '实习' },
+  { value: 'internship', label: '实习' },
   { value: 'remote', label: '远程' }
 ];
 

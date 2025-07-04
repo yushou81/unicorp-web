@@ -1,270 +1,140 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-    <!-- 使用通用导航栏组件 -->
+  <div class="min-h-screen bg-gray-50">
     <Navbar />
-    
-    <!-- 大标题区 -->
-    <div class="w-full py-10 bg-gradient-to-r from-blue-400 to-indigo-400 mb-8 shadow-lg">
-      <div class="container mx-auto px-4 flex flex-col items-center">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow mb-2 tracking-wide">企业管理后台</h1>
-        <p class="text-lg md:text-xl text-blue-100 font-medium mb-2">欢迎来到企业管理平台</p>
-        <p class="text-base text-blue-200">高效管理企业导师与个人信息</p>
-      </div>
-    </div>
-    <!-- 个人信息板块 -->
-    <div class="flex flex-col items-center mb-8">
-      <img :src="userAvatar" class="w-20 h-20 rounded-full shadow-lg border-4 border-white mb-2" />
-      <div class="text-xl font-bold text-gray-800">{{ userInfo.nickname || userInfo.account || '企业管理员' }}</div>
-      <div class="mt-1 flex items-center space-x-2">
-        <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">企业管理员</span>
-        <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{{ company.organizationName || '加载中...' }}</span>
-        <span v-if="company.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
-      </div>
-    </div>
-    <!-- 数据统计区 -->
-    <div class="container mx-auto px-4">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        <div class="bg-white/80 rounded-2xl shadow flex flex-col items-center p-6">
-          <UserGroupIcon class="w-8 h-8 text-blue-500 mb-2" />
-          <span class="text-2xl font-bold text-blue-700">{{ mentorTotal }}</span>
-          <span class="text-gray-500 mt-1">企业导师数</span>
-        </div>
-        <!-- 可扩展更多统计卡片 -->
-      </div>
-      <!-- 功能入口卡片区 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-12">
-        <div
-          class="group cursor-pointer bg-gradient-to-br from-blue-100 to-blue-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
-          @click="showMentorDialog = true"
-        >
-          <UserGroupIcon class="w-12 h-12 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
-          <span class="text-lg font-bold text-blue-800 mb-1">企业导师管理</span>
-          <span class="text-sm text-blue-500">管理企业导师账号与权限</span>
-        </div>
-        <div
-          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
-          @click="showJobDialog = true"
-        >
-          <BriefcaseIcon class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" />
-          <span class="text-lg font-bold text-green-800 mb-1">岗位管理</span>
-          <span class="text-sm text-green-500">查看和管理企业岗位</span>
-        </div>
-        <div
-          class="group cursor-pointer bg-gradient-to-br from-purple-100 to-purple-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
-          @click="onEditProfileClick"
-        >
-          <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-200 mb-4"><span class="text-2xl text-purple-700 font-bold">我</span></span>
-          <span class="text-lg font-bold text-purple-800 mb-1">编辑个人资料</span>
-          <span class="text-sm text-purple-500">修改个人信息与密码</span>
-        </div>
-      </div>
-      <!-- 企业导师管理弹窗 -->
-      <div v-if="showMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl overflow-y-auto max-h-[80vh] relative">
-          <button @click="showMentorDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-bold text-blue-700">企业导师列表</h2>
-            <Button @click="showAddMentorDialog = true">添加企业导师账号</Button>
-          </div>
-          <!-- 复用原有导师表格和分页 -->
-          <div v-if="mentorLoading" class="text-center text-gray-400 py-8">加载中...</div>
-          <div v-else-if="mentorError" class="text-center text-red-500 py-8">{{ mentorError }}</div>
-          <div v-else>
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">邮箱</th>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">昵称</th>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">手机号</th>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
-                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-100">
-                <tr v-for="mentor in mentors" :key="mentor.id">
-                  <td class="px-4 py-2">{{ mentor.email }}</td>
-                  <td class="px-4 py-2">{{ mentor.nickname || '-' }}</td>
-                  <td class="px-4 py-2">{{ mentor.phone || '-' }}</td>
-                  <td class="px-4 py-2">{{ mentor.status || '-' }}</td>
-                  <td class="px-4 py-2 space-x-2">
-                    <Button size="sm" @click="onEditMentor(mentor)">编辑</Button>
-                    <Button 
-                      v-if="mentor.status === 'active'" 
-                      size="sm" 
-                      variant="destructive" 
-                      @click="onUpdateMentorStatus(mentor, 'inactive')"
-                    >
-                      禁用
-                    </Button>
-                    <Button 
-                      v-else 
-                      size="sm" 
-                      variant="default" 
-                      @click="onUpdateMentorStatus(mentor, 'active')"
-                    >
-                      启用
-                    </Button>
-                  </td>
-                </tr>
-                <tr v-if="mentors.length === 0">
-                  <td colspan="5" class="text-center text-gray-400 py-4">暂无导师</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="flex justify-end mt-4" v-if="mentorTotal > mentorSize">
-              <button @click="mentorPage > 0 && (mentorPage--, fetchMentors())" :disabled="mentorPage === 0" class="px-3 py-1 rounded bg-gray-200 text-gray-700 mr-2">上一页</button>
-              <span class="text-sm text-gray-500">第 {{ mentorPage + 1 }} 页 / 共 {{ Math.ceil(mentorTotal / mentorSize) }} 页</span>
-              <button @click="(mentorPage + 1) * mentorSize < mentorTotal && (mentorPage++, fetchMentors())" :disabled="(mentorPage + 1) * mentorSize >= mentorTotal" class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2">下一页</button>
+    <div class="container mx-auto px-4 py-8">
+      <!-- 个人信息卡片 -->
+      <UserProfileInfo
+        :avatar="userAvatar"
+        :name="userInfo.nickname || userInfo.account || '企业管理员'"
+        :role="'企业管理员'"
+        :organization="company.organizationName"
+        :phone="userInfo.phone"
+        :email="userInfo.email"
+        :editable="true"
+        :onEdit="onEditProfileClick"
+      />
+      <!-- Tab 导航栏 -->
+      <DashboardTabs :tabs="tabList" :activeTab="activeTab" @change="val => activeTab = val" />
+      <div class="mt-6">
+        <!-- 企业导师管理 -->
+        <div v-if="activeTab === 'mentor'">
+          <!-- 企业导师管理表格、分页、添加/编辑/禁用弹窗等内容 -->
+          <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-6xl mx-auto overflow-x-auto">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-2xl font-bold text-blue-700">企业导师列表</h2>
+              <Button @click="showAddMentorDialog = true">添加企业导师账号</Button>
             </div>
-          </div>
-          <!-- 复用原有添加/编辑/禁用导师弹窗 -->
-          <div v-if="showAddMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-            <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-              <h2 class="text-xl font-bold mb-4">添加企业导师账号</h2>
-              <form @submit.prevent="onAddMentor">
-                <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">邮箱</label>
-                  <input v-model="newMentor.email" required class="w-full px-3 py-2 border rounded" placeholder="请输入导师邮箱" />
-                </div>
-                <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">昵称</label>
-                  <input v-model="newMentor.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入导师昵称（可选）" />
-                </div>
-                <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">手机号</label>
-                  <input v-model="newMentor.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号（可选）" />
-                </div>
-                <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">初始密码</label>
-                  <input v-model="newMentor.password" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入初始密码" />
-                </div>
-                <div class="flex justify-end space-x-2 mt-4">
-                  <button type="button" @click="showAddMentorDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-                  <button type="submit" :disabled="addMentorLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ addMentorLoading ? '添加中...' : '添加' }}</button>
-                </div>
-              </form>
+            <div v-if="mentorLoading" class="text-center text-gray-400 py-8">加载中...</div>
+            <div v-else-if="mentorError" class="text-center text-red-500 py-8">{{ mentorError }}</div>
+            <div v-else>
+              <table class="min-w-full divide-y divide-gray-200 text-base">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600 uppercase">邮箱</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600 uppercase">昵称</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600 uppercase">手机号</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600 uppercase">状态</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600 uppercase">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                  <tr v-for="mentor in mentors" :key="mentor.id">
+                    <td class="px-6 py-4">{{ mentor.email }}</td>
+                    <td class="px-6 py-4">{{ mentor.nickname || '-' }}</td>
+                    <td class="px-6 py-4">{{ mentor.phone || '-' }}</td>
+                    <td class="px-6 py-4">{{ mentor.status || '-' }}</td>
+                    <td class="px-6 py-4 space-x-2">
+                      <Button size="sm" @click="onEditMentor(mentor)">编辑</Button>
+                      <Button 
+                        v-if="mentor.status === 'active'" 
+                        size="sm" 
+                        variant="destructive" 
+                        @click="onUpdateMentorStatus(mentor, 'inactive')"
+                      >禁用</Button>
+                      <Button 
+                        v-else 
+                        size="sm" 
+                        variant="default" 
+                        @click="onUpdateMentorStatus(mentor, 'active')"
+                      >启用</Button>
+                    </td>
+                  </tr>
+                  <tr v-if="mentors.length === 0">
+                    <td colspan="5" class="text-center text-gray-400 py-6 text-base">暂无导师</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="flex justify-end mt-4" v-if="mentorTotal > mentorSize">
+                <button @click="mentorPage > 0 && (mentorPage--, fetchMentors())" :disabled="mentorPage === 0" class="px-3 py-1 rounded bg-gray-200 text-gray-700 mr-2">上一页</button>
+                <span class="text-sm text-gray-500">第 {{ mentorPage + 1 }} 页 / 共 {{ Math.ceil(mentorTotal / mentorSize) }} 页</span>
+                <button @click="(mentorPage + 1) * mentorSize < mentorTotal && (mentorPage++, fetchMentors())" :disabled="(mentorPage + 1) * mentorSize >= mentorTotal" class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2">下一页</button>
+              </div>
             </div>
-          </div>
-          <div v-if="showEditMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-            <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-              <h2 class="text-xl font-bold mb-4">编辑导师信息</h2>
-              <form @submit.prevent="onUpdateMentor">
-                <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">邮箱</label>
-                  <input v-model="editMentor.email" required class="w-full px-3 py-2 border rounded" />
-                </div>
-                <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">昵称</label>
-                  <input v-model="editMentor.nickname" class="w-full px-3 py-2 border rounded" />
-                </div>
-                <div class="mb-3">
-                  <label class="block text-gray-700 mb-1">手机号</label>
-                  <input v-model="editMentor.phone" class="w-full px-3 py-2 border rounded" />
-                </div>
-                <div class="flex justify-end space-x-2 mt-4">
-                  <button type="button" @click="showEditMentorDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-                  <button type="submit" :disabled="editMentorLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ editMentorLoading ? '保存中...' : '保存' }}</button>
-                </div>
-              </form>
+            <!-- 添加/编辑/禁用导师弹窗 -->
+            <div v-if="showAddMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+              <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+                <h2 class="text-xl font-bold mb-4">添加企业导师账号</h2>
+                <form @submit.prevent="onAddMentor">
+                  <div class="mb-3">
+                    <label class="block text-gray-700 mb-1">邮箱</label>
+                    <input v-model="newMentor.email" required class="w-full px-3 py-2 border rounded" placeholder="请输入导师邮箱" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="block text-gray-700 mb-1">昵称</label>
+                    <input v-model="newMentor.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入导师昵称（可选）" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="block text-gray-700 mb-1">手机号</label>
+                    <input v-model="newMentor.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号（可选）" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="block text-gray-700 mb-1">初始密码</label>
+                    <input v-model="newMentor.password" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入初始密码" />
+                  </div>
+                  <div class="flex justify-end space-x-2 mt-4">
+                    <button type="button" @click="showAddMentorDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                    <button type="submit" :disabled="addMentorLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ addMentorLoading ? '添加中...' : '添加' }}</button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>
-          <div v-if="showDisableMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-            <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm text-center">
-              <h2 class="text-xl font-bold mb-4">确认{{ statusActionText }}该导师账号？</h2>
-              <div class="mb-6 text-gray-700">{{ statusActionDescription }}</div>
-              <div class="flex justify-center space-x-4">
-                <button @click="showDisableMentorDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-                <button @click="onConfirmUpdateStatus" :disabled="statusUpdateLoading" class="px-4 py-1 rounded bg-red-600 text-white">{{ statusUpdateLoading ? '处理中...' : '确认' }}</button>
+            <div v-if="showEditMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+              <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+                <h2 class="text-xl font-bold mb-4">编辑导师信息</h2>
+                <form @submit.prevent="onUpdateMentor">
+                  <div class="mb-3">
+                    <label class="block text-gray-700 mb-1">邮箱</label>
+                    <input v-model="editMentor.email" required class="w-full px-3 py-2 border rounded" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="block text-gray-700 mb-1">昵称</label>
+                    <input v-model="editMentor.nickname" class="w-full px-3 py-2 border rounded" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="block text-gray-700 mb-1">手机号</label>
+                    <input v-model="editMentor.phone" class="w-full px-3 py-2 border rounded" />
+                  </div>
+                  <div class="flex justify-end space-x-2 mt-4">
+                    <button type="button" @click="showEditMentorDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                    <button type="submit" :disabled="editMentorLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ editMentorLoading ? '保存中...' : '保存' }}</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div v-if="showDisableMentorDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+              <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm text-center">
+                <h2 class="text-xl font-bold mb-4">确认{{ statusActionText }}该导师账号？</h2>
+                <div class="mb-6 text-gray-700">{{ statusActionDescription }}</div>
+                <div class="flex justify-center space-x-4">
+                  <button @click="showDisableMentorDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                  <button @click="onConfirmUpdateStatus" :disabled="statusUpdateLoading" class="px-4 py-1 rounded bg-red-600 text-white">{{ statusUpdateLoading ? '处理中...' : '确认' }}</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <Button @click="showMentorDialog = false" class="mt-6">关闭</Button>
-      </div>
-      <!-- 编辑个人资料弹窗 -->
-      <div v-if="showProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md overflow-y-auto max-h-[80vh] relative">
-          <button @click="showProfileDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-purple-600 text-2xl font-bold focus:outline-none">×</button>
-          <h2 class="text-2xl font-bold mb-4 text-purple-700">编辑个人资料</h2>
-          <!-- 复用原有个人资料表单 -->
-          <form @submit.prevent="onUpdateProfile">
-            <!-- 头像上传 -->
-            <div class="mb-5 flex flex-col items-center">
-              <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
-              <div class="flex items-center mt-2">
-                <input
-                  ref="fileInput"
-                  type="file"
-                  accept="image/*"
-                  class="hidden"
-                  @change="handleAvatarChange"
-                />
-                <button 
-                  type="button" 
-                  @click="fileInput?.click()"
-                  class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
-                >
-                  选择头像
-                </button>
-                <button 
-                  v-if="avatarFile" 
-                  type="button" 
-                  @click="cancelAvatarUpload" 
-                  class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
-                >
-                  取消
-                </button>
-              </div>
-              <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
-                {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
-              </p>
-            </div>
-
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">昵称</label>
-              <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">邮箱</label>
-              <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">手机号</label>
-              <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
-            </div>
-            <div class="flex justify-end space-x-2 mt-4">
-              <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-              <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
-            </div>
-          </form>
-          <div class="mt-6 pt-4 border-t">
-            <h3 class="text-lg font-semibold mb-3">修改密码</h3>
-            <form @submit.prevent="onChangePassword">
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">原密码</label>
-                <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">新密码</label>
-                <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
-              </div>
-              <div class="mb-3">
-                <label class="block text-gray-700 mb-1">确认新密码</label>
-                <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
-              </div>
-              <div class="flex justify-end space-x-2 mt-4">
-                <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-                <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '修改中...' : '修改密码' }}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      <!-- 岗位管理弹窗 -->
-      <div v-if="showJobDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-5xl overflow-y-auto max-h-[90vh] relative">
-          <button @click="showJobDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-green-600 text-2xl font-bold focus:outline-none">×</button>
-          <h2 class="text-2xl font-bold mb-6 text-green-700">企业岗位管理</h2>
+        <!-- 岗位管理 -->
+        <div v-if="activeTab === 'job'">
           <GridJobList
             :jobs="jobs"
             :loading="jobsLoading"
@@ -277,8 +147,83 @@
         </div>
       </div>
     </div>
+    <!-- 编辑个人资料弹窗 -->
+    <div v-if="showProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md overflow-y-auto max-h-[80vh] relative">
+        <button @click="showProfileDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-purple-600 text-2xl font-bold focus:outline-none">×</button>
+        <h2 class="text-2xl font-bold mb-4 text-purple-700">编辑个人资料</h2>
+        <!-- 复用原有个人资料表单 -->
+        <form @submit.prevent="onUpdateProfile">
+          <!-- 头像上传 -->
+          <div class="mb-5 flex flex-col items-center">
+            <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
+            <div class="flex items-center mt-2">
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleAvatarChange"
+              />
+              <button 
+                type="button" 
+                @click="fileInput?.click()"
+                class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
+              >选择头像</button>
+              <button 
+                v-if="avatarFile" 
+                type="button" 
+                @click="cancelAvatarUpload" 
+                class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
+              >取消</button>
+            </div>
+            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
+              {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
+            </p>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">昵称</label>
+            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">邮箱</label>
+            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">手机号</label>
+            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
+          </div>
+          <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
+          </div>
+        </form>
+        <div class="mt-6 pt-4 border-t">
+          <h3 class="text-lg font-semibold mb-3">修改密码</h3>
+          <form @submit.prevent="onChangePassword">
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">原密码</label>
+              <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">新密码</label>
+              <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">确认新密码</label>
+              <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
+            </div>
+            <div class="flex justify-end space-x-2 mt-4">
+              <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+              <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '修改中...' : '修改密码' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { BriefcaseIcon, AcademicCapIcon, DocumentTextIcon, ShieldCheckIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
@@ -291,6 +236,9 @@ import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import { getJobs, Job } from '@/lib/api/job'
 import GridJobList from '@/components/job/GridJobList.vue'
+import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
+import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
+import JobManagement from '@/components/dashboard/JobManagement.vue'
 
 const company = ref({
   logo: 'https://randomuser.me/api/portraits/lego/1.jpg',
@@ -660,4 +608,15 @@ async function fetchJobs(page = 1) {
 onMounted(() => {
   fetchJobs()
 })
-</script> 
+
+// tab 配置
+const tabList = [
+  { label: '企业导师管理', value: 'mentor' },
+  { label: '岗位管理', value: 'job' }
+]
+const activeTab = ref('mentor')
+</script>
+
+<style scoped>
+/* 保留原有样式 */
+</style> 

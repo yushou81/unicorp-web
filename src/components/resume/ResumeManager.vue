@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- 简历管理对话框 -->
+    <!-- 弹窗模式 -->
     <div v-if="visible" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
       <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
@@ -9,74 +9,47 @@
             <XIcon class="w-6 h-6" />
           </button>
         </div>
-
-        <!-- 简历列表和加载状态 -->
+        <!-- 简历主内容（列表、表单等） -->
         <div v-if="loading" class="flex justify-center my-10">
           <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
         </div>
-        
         <div v-else class="mb-6">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold">我的简历</h3>
-            <button 
-              type="button" 
-              @click="createNewResume" 
-              class="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-            >
+            <button type="button" @click="createNewResume" class="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
               <PlusIcon class="w-4 h-4 mr-1" />
               <span>新建简历</span>
             </button>
           </div>
-
           <!-- 简历列表 -->
           <div v-if="resumeList.length > 0" class="space-y-2 mb-6">
-            <div
-              v-for="resume in resumeList"
-              :key="resume.id || 0"
-              @click="resume.id ? selectResume(resume.id) : null"
-              class="p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition"
-              :class="{ 'bg-blue-50 border-blue-300': activeResumeId === resume.id }"
-            >
+            <div v-for="resume in resumeList" :key="resume.id || 0" @click="resume.id ? selectResume(resume.id) : null" class="p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition" :class="{ 'bg-blue-50 border-blue-300': activeResumeId === resume.id }">
               <div class="flex justify-between items-center">
                 <div>
                   <div class="font-medium">{{ resume.major || '未设置专业' }} - {{ resume.educationLevel }}</div>
                   <div class="text-sm text-gray-500">更新时间: {{ formatDate(resume.updatedAt) }}</div>
                 </div>
                 <div class="flex space-x-2">
-                  <button 
-                    v-if="resume.resumeUrl" 
-                    @click.stop="previewResume(resume.resumeUrl)"
-                    class="text-blue-500 hover:text-blue-700"
-                  >
+                  <button v-if="resume.resumeUrl" @click.stop="previewResume(resume.resumeUrl)" class="text-blue-500 hover:text-blue-700">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                       <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
                     </svg>
                   </button>
-                  <button 
-                    @click.stop="deleteResume(resume.id)"
-                    class="text-red-500 hover:text-red-700"
-                  >
+                  <button @click.stop="deleteResume(resume.id)" class="text-red-500 hover:text-red-700">
                     <TrashIcon class="w-5 h-5" />
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          
           <!-- 没有简历时显示创建提示 -->
           <div v-else class="text-center p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 mb-6">
             <DocumentIcon class="w-12 h-12 mx-auto text-gray-400 mb-2" />
             <p class="text-gray-600">您还没有创建简历</p>
-            <button 
-              @click="createNewResume"
-              class="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-            >
-              开始创建简历
-            </button>
+            <button @click="createNewResume" class="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">开始创建简历</button>
           </div>
         </div>
-
         <!-- 简历编辑表单 -->
         <form v-if="!loading" @submit.prevent="onSaveResume">
           <!-- 基本信息 -->
@@ -98,22 +71,14 @@
               </div>
             </div>
           </div>
-
           <!-- 成就与荣誉 -->
           <div class="mb-6">
             <h3 class="text-lg font-semibold mb-3 pb-2 border-b">成就与荣誉</h3>
-            <textarea 
-              v-model="resumeData.achievements" 
-              rows="4"
-              class="w-full px-3 py-2 border rounded" 
-              placeholder="请输入您的成就与荣誉，多项成就请用换行分隔"
-            ></textarea>
+            <textarea v-model="resumeData.achievements" rows="4" class="w-full px-3 py-2 border rounded" placeholder="请输入您的成就与荣誉，多项成就请用换行分隔"></textarea>
           </div>
-
           <!-- 简历文件上传 -->
           <div class="mb-6">
             <h3 class="text-lg font-semibold mb-3 pb-2 border-b">简历文件</h3>
-            
             <div v-if="resumeData.resumeUrl" class="mb-4 p-4 border rounded bg-blue-50 flex items-center justify-between">
               <div class="flex items-center">
                 <DocumentIcon class="w-6 h-6 text-blue-500 mr-2" />
@@ -123,11 +88,7 @@
                 </div>
               </div>
               <div class="flex space-x-2">
-                <button 
-                  type="button"
-                  @click="previewResume(resumeData.resumeUrl)"
-                  class="text-blue-500 hover:text-blue-700"
-                >
+                <button type="button" @click="previewResume(resumeData.resumeUrl)" class="text-blue-500 hover:text-blue-700">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                     <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
@@ -135,18 +96,8 @@
                 </button>
               </div>
             </div>
-
-            <div 
-              class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer"
-              @click="triggerFileInput"
-            >
-              <input 
-                ref="fileInput" 
-                type="file" 
-                class="hidden" 
-                @change="handleFileChange" 
-                accept=".pdf,.doc,.docx"
-              />
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer" @click="triggerFileInput">
+              <input ref="fileInput" type="file" class="hidden" @change="handleFileChange" accept=".pdf,.doc,.docx" />
               <div v-if="!resumeFile">
                 <UploadIcon class="w-12 h-12 mx-auto text-gray-400" />
                 <p class="mt-2 text-sm text-gray-600">点击或拖拽文件至此处上传</p>
@@ -159,35 +110,134 @@
                     <p class="text-sm font-medium text-gray-800">{{ resumeFile.name }}</p>
                     <p class="text-xs text-gray-500">{{ formatFileSize(resumeFile.size) }}</p>
                   </div>
-                  <button 
-                    @click.stop="removeFile" 
-                    class="text-gray-400 hover:text-red-500"
-                  >
+                  <button @click.stop="removeFile" class="text-gray-400 hover:text-red-500">
                     <TrashIcon class="w-5 h-5" />
                   </button>
                 </div>
               </div>
             </div>
           </div>
-
           <div class="flex justify-end space-x-3 mt-6">
-            <button 
-              type="button" 
-              @click="closeDialog" 
-              class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-            >
-              取消
-            </button>
-            <button 
-              type="submit" 
-              :disabled="saving"
-              class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {{ saving ? '保存中...' : '保存简历' }}
-            </button>
+            <button type="button" @click="closeDialog" v-if="visible" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">取消</button>
+            <button type="submit" :disabled="saving" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">{{ saving ? '保存中...' : '保存简历' }}</button>
           </div>
         </form>
       </div>
+    </div>
+    <!-- 页面模式 -->
+    <div v-else>
+      <!-- 直接渲染简历主内容（去掉关闭按钮） -->
+      <div v-if="loading" class="flex justify-center my-10">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+      <div v-else class="mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">我的简历</h3>
+          <button type="button" @click="createNewResume" class="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+            <PlusIcon class="w-4 h-4 mr-1" />
+            <span>新建简历</span>
+          </button>
+        </div>
+        <!-- 简历列表 -->
+        <div v-if="resumeList.length > 0" class="space-y-2 mb-6">
+          <div v-for="resume in resumeList" :key="resume.id || 0" @click="resume.id ? selectResume(resume.id) : null" class="p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition" :class="{ 'bg-blue-50 border-blue-300': activeResumeId === resume.id }">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-medium">{{ resume.major || '未设置专业' }} - {{ resume.educationLevel }}</div>
+                <div class="text-sm text-gray-500">更新时间: {{ formatDate(resume.updatedAt) }}</div>
+              </div>
+              <div class="flex space-x-2">
+                <button v-if="resume.resumeUrl" @click.stop="previewResume(resume.resumeUrl)" class="text-blue-500 hover:text-blue-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <button @click.stop="deleteResume(resume.id)" class="text-red-500 hover:text-red-700">
+                  <TrashIcon class="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 没有简历时显示创建提示 -->
+        <div v-else class="text-center p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 mb-6">
+          <DocumentIcon class="w-12 h-12 mx-auto text-gray-400 mb-2" />
+          <p class="text-gray-600">您还没有创建简历</p>
+          <button @click="createNewResume" class="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">开始创建简历</button>
+        </div>
+      </div>
+      <!-- 简历编辑表单 -->
+      <form v-if="!loading" @submit.prevent="onSaveResume">
+        <!-- 基本信息 -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3 pb-2 border-b">基本信息</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-gray-700 mb-1">专业</label>
+              <input v-model="resumeData.major" class="w-full px-3 py-2 border rounded" placeholder="请输入专业" />
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-1">学历</label>
+              <select v-model="resumeData.educationLevel" class="w-full px-3 py-2 border rounded">
+                <option value="专科">专科</option>
+                <option value="本科">本科</option>
+                <option value="硕士">硕士</option>
+                <option value="博士">博士</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <!-- 成就与荣誉 -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3 pb-2 border-b">成就与荣誉</h3>
+          <textarea v-model="resumeData.achievements" rows="4" class="w-full px-3 py-2 border rounded" placeholder="请输入您的成就与荣誉，多项成就请用换行分隔"></textarea>
+        </div>
+        <!-- 简历文件上传 -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3 pb-2 border-b">简历文件</h3>
+          <div v-if="resumeData.resumeUrl" class="mb-4 p-4 border rounded bg-blue-50 flex items-center justify-between">
+            <div class="flex items-center">
+              <DocumentIcon class="w-6 h-6 text-blue-500 mr-2" />
+              <div>
+                <div class="font-medium">当前简历</div>
+                <div class="text-sm text-gray-500">{{ getFileNameFromUrl(resumeData.resumeUrl) }}</div>
+              </div>
+            </div>
+            <div class="flex space-x-2">
+              <button type="button" @click="previewResume(resumeData.resumeUrl)" class="text-blue-500 hover:text-blue-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                  <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer" @click="triggerFileInput">
+            <input ref="fileInput" type="file" class="hidden" @change="handleFileChange" accept=".pdf,.doc,.docx" />
+            <div v-if="!resumeFile">
+              <UploadIcon class="w-12 h-12 mx-auto text-gray-400" />
+              <p class="mt-2 text-sm text-gray-600">点击或拖拽文件至此处上传</p>
+              <p class="text-xs text-gray-500 mt-1">支持格式：PDF、Word（.doc/.docx）</p>
+            </div>
+            <div v-else class="text-left">
+              <div class="flex items-center">
+                <DocumentIcon class="w-10 h-10 text-blue-500 mr-3" />
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-800">{{ resumeFile.name }}</p>
+                  <p class="text-xs text-gray-500">{{ formatFileSize(resumeFile.size) }}</p>
+                </div>
+                <button @click.stop="removeFile" class="text-gray-400 hover:text-red-500">
+                  <TrashIcon class="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="submit" :disabled="saving" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">{{ saving ? '保存中...' : '保存简历' }}</button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
@@ -264,6 +314,23 @@ watch(
         }
       } else {
         fetchResumeList()
+      }
+    }
+  },
+  { immediate: true }
+)
+
+// 新增：页面模式下也能同步外部传入的resumes
+watch(
+  () => props.resumes,
+  (resumes) => {
+    if (Array.isArray(resumes) && resumes.length > 0) {
+      resumeList.value = resumes
+      // 默认选择第一份简历
+      const firstResumeId = resumeList.value[0].id
+      if (firstResumeId) {
+        activeResumeId.value = firstResumeId
+        resumeData.value = { ...resumeList.value[0] }
       }
     }
   },
@@ -517,5 +584,12 @@ function formatFileSize(bytes: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i]
+}
+
+if (!props.visible) {
+  console.log('[ResumeManager] 页面模式 resumes:', props.resumes)
+  console.log('[ResumeManager] 页面模式 resumeList:', resumeList.value)
+  console.log('[ResumeManager] 页面模式 activeResumeId:', activeResumeId.value)
+  console.log('[ResumeManager] 页面模式 resumeData:', resumeData.value)
 }
 </script> 
