@@ -19,6 +19,31 @@
           <button @click="onEditProfileClick" class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑资料</button>
         </div>
         
+        <!-- 项目合作管理入口区块 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 flex flex-wrap gap-4 mb-10">
+          <router-link to="/project/my">
+            <button class="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+              我的项目管理
+            </button>
+          </router-link>
+          <router-link to="/project/search">
+            <button class="px-6 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+              搜索项目
+            </button>
+          </router-link>
+          <router-link to="/project/publish">
+            <button class="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">
+              发布新项目
+            </button>
+          </router-link>
+          <router-link to="/project/fund-demo">
+            <button class="px-6 py-3 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">
+              经费统计分析
+            </button>
+          </router-link>
+          <!-- 如有其它页面可继续添加 -->
+        </div>
+        
         <!-- 添加创建课程按钮 -->
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-semibold text-gray-800">我的双师课堂</h2>

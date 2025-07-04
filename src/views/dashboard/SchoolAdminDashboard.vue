@@ -69,6 +69,14 @@
           <span class="text-lg font-bold text-purple-800 mb-1">编辑个人资料</span>
           <span class="text-sm text-purple-500">修改个人信息与密码</span>
         </div>
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="goToProjectAudit"
+        >
+          <svg class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h4M7 7h.01M7 11h.01M7 15h.01M17 7h.01M17 11h.01M17 15h.01" /></svg>
+          <span class="text-lg font-bold text-green-800 mb-1">项目审核</span>
+          <span class="text-sm text-green-500">管理和审核项目申请</span>
+        </div>
       </div>
       
       <!-- 双师课堂管理界面 -->
@@ -1234,5 +1242,9 @@ async function updateDashboardData() {
   } catch (e: any) {
     console.error('获取设备申请数量失败:', e)
   }
+}
+
+function goToProjectAudit() {
+  router.push('/project/audit')
 }
 </script> 
