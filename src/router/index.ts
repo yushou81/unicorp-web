@@ -150,11 +150,12 @@ const router = createRouter({
       name: 'learn',
       component: () => import('@/views/LearnView.vue')
     },
-    // {
-    //   path: '/project/list',
-    //   name: 'project-list',
-    //   component: () => import('@/views/project/ProjectListView.vue')
-    // },
+
+    {
+      path: '/resource',
+      name: 'resource',
+      component: () => import('@/views/ResourceView.vue')
+    },
     {
       path: '/project/publish',
       name: 'project-publish',
@@ -203,7 +204,7 @@ const router = createRouter({
     {
       path: '/resource',
       name: 'resource',
-      component: () => import('@/views/LearnView.vue')
+      component: () => import('@/views/ResourceView.vue')
     },
     {
       path: '/resource/upload',
