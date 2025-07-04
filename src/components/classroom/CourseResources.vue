@@ -88,11 +88,13 @@
         </div>
         
         <div class="flex space-x-2">
-          <a 
-            :href="getDownloadUrl(resource.id)" 
-            target="_blank" 
-            class="text-blue-600 hover:text-blue-800 p-1"
+          <!-- 直接超链接下载 -->
+          <a
+            :href="getDownloadUrl(resource.id)"
+            target="_blank"
+            class="text-blue-600 hover:text-blue-800 p-1 flex items-center"
             title="下载"
+            download
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -165,7 +167,7 @@
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">资源标题</label>
             <input 
-              v-model="uploadForm.title"
+              v-model="resourceForm.title"
               type="text"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
@@ -175,7 +177,7 @@
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">资源描述</label>
             <textarea 
-              v-model="uploadForm.description"
+              v-model="resourceForm.description"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows="3"
             ></textarea>
@@ -184,7 +186,7 @@
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">资源类型</label>
             <select 
-              v-model="uploadForm.resourceType"
+              v-model="resourceForm.resourceType"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
@@ -212,7 +214,7 @@
                 @change="onFileChange"
               />
               
-              <div v-if="!uploadForm.file">
+              <div v-if="!resourceFile">
                 <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
@@ -232,11 +234,11 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
                 <div class="flex-1 truncate text-left">
-                  {{ uploadForm.file.name }}
+                  {{ resourceFile ? resourceFile.name : '无' }}
                 </div>
                 <button 
                   type="button" 
-                  @click="uploadForm.file = null"
+                  @click="resourceFile = null"
                   class="ml-2 text-gray-500 hover:text-red-600"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -257,9 +259,9 @@
             </button>
             <button 
               type="submit"
-              :disabled="uploading || !uploadForm.file"
+              :disabled="uploading || !resourceFile || !resourceForm.title.trim()"
               class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors flex items-center"
-              :class="{'opacity-50 cursor-not-allowed': uploading || !uploadForm.file}"
+              :class="{'opacity-50 cursor-not-allowed': uploading || !resourceFile || !resourceForm.title.trim()}"
             >
               <svg v-if="uploading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -268,6 +270,9 @@
               {{ uploading ? '上传中...' : '上传' }}
             </button>
           </div>
+          <!-- 调试输出：实时显示file和title -->
+          <div class="mt-2 text-xs text-gray-500">file: {{ resourceFile ? resourceFile.name : '无' }} | title: {{ resourceForm.title }}</div>
+          <div class="mt-2 text-xs text-red-500">resourceForm: {{ JSON.stringify(resourceForm) }}</div>
         </form>
       </div>
     </div>
@@ -302,7 +307,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+console.log('CourseResources setup')
+import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { 
   getResourcesByCourseId, 
   uploadResource as uploadResourceApi, 
@@ -310,6 +316,7 @@ import {
   getResourceDownloadUrl,
   CourseResourceVO
 } from '@/lib/api/classroom'
+import { getToken } from '@/lib/api/apiClient'
 
 // 属性定义
 const props = defineProps({
@@ -347,13 +354,14 @@ const uploading = ref(false)
 const isDragging = ref(false)
 const deletingResource = ref<CourseResourceVO | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+const downloadingId = ref<number | null>(null)
 
-const uploadForm = ref({
+const resourceForm = reactive({
   title: '',
   description: '',
-  resourceType: 'document' as 'document' | 'video' | 'code' | 'other',
-  file: null as File | null
+  resourceType: 'document' as 'document' | 'video' | 'code' | 'other'
 })
+const resourceFile = ref<File | null>(null)
 
 // 计算属性
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
@@ -439,47 +447,56 @@ const changePage = (page: number) => {
 const onFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement
   if (input.files && input.files.length > 0) {
-    uploadForm.file = input.files[0]
+    resourceFile.value = input.files[0]
+    console.log('文件已选择:', resourceFile.value)
+  } else {
+    resourceFile.value = null
   }
 }
 
 const onFileDrop = (event: DragEvent) => {
   isDragging.value = false
   if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-    uploadForm.file = event.dataTransfer.files[0]
+    resourceFile.value = event.dataTransfer.files[0]
+    console.log('拖拽文件已选择:', resourceFile.value)
   }
 }
 
 const cancelUpload = () => {
   showUploadDialog.value = false
-  uploadForm.title = ''
-  uploadForm.description = ''
-  uploadForm.resourceType = 'document'
-  uploadForm.file = null
+  resourceForm.title = ''
+  resourceForm.description = ''
+  resourceForm.resourceType = 'document'
+  resourceFile.value = null
 }
 
 const uploadResource = async () => {
-  if (!uploadForm.file || !uploadForm.title.trim()) {
+  console.log('点击上传', resourceForm, resourceFile.value)
+  if (!resourceFile.value || !resourceForm.title.trim()) {
+    error.value = '请填写完整信息并选择文件';
     return
   }
-  
   uploading.value = true
   error.value = ''
-  
   try {
     const formData = new FormData()
-    formData.append('file', uploadForm.file)
+    formData.append('file', resourceFile.value)
     formData.append('courseId', props.courseId.toString())
-    formData.append('title', uploadForm.title.trim())
-    formData.append('description', uploadForm.description.trim())
-    formData.append('resourceType', uploadForm.resourceType)
-    
+    formData.append('title', resourceForm.title.trim())
+    formData.append('description', resourceForm.description.trim())
+    formData.append('resourceType', resourceForm.resourceType)
+    // 输出FormData所有内容
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`FormData: ${key}`, value, `name: ${value.name}, size: ${value.size}`)
+      } else {
+        console.log(`FormData: ${key}`, value)
+      }
+    }
     const res = await uploadResourceApi(formData)
-    
     if (res.code === 200) {
-      // 成功上传
       cancelUpload()
-      loadResources() // 重新加载资源列表
+      loadResources()
       emit('resource-uploaded', res.data)
     } else {
       error.value = res.message || '上传资源失败'

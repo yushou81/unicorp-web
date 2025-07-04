@@ -7,6 +7,7 @@ import App from './App.vue'
 import router from './router'
 import './assets/main.css'
 import clickOutside from './lib/directives/clickOutside'
+import { setToken } from './lib/api/apiClient'
 
 console.log('Registering clickOutside directive:', clickOutside);
 
@@ -34,5 +35,8 @@ app.use(Toast, {
 app.component('Toaster', Toaster)
 app.directive('click-outside', clickOutside)
 console.log('clickOutside directive registered');
+
+const token = localStorage.getItem('token')
+if (token) setToken(token)
 
 app.mount('#app') 

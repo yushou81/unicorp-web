@@ -38,7 +38,7 @@ export function createSchool(data: {
   adminPassword: string
   adminEmail: string
 }) {
-  return apiRequest('/v1/admin/organizations/schools', {
+  return apiRequest('/v1/admin/schools', {
     method: 'POST',
     body: JSON.stringify(data)
   })

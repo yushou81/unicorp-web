@@ -88,6 +88,18 @@ export interface CourseRatingVO {
   updatedAt: string
 }
 
+// 课程评价统计
+export interface CourseRatingStatistics {
+  averageRating: number
+  totalRatings: number
+  ratingDistribution: {
+    [key: string]: number
+  }
+  averageTeachingRating?: number
+  averageContentRating?: number
+  averageInteractionRating?: number
+}
+
 // 课程资源DTO
 export interface CourseResourceDTO {
   courseId: number
@@ -253,7 +265,7 @@ export async function getCourseStudents(courseId: number) {
 
 // 提交课程评价
 export async function submitRating(ratingData: CourseRatingDTO) {
-  return apiRequest<ApiResponse<CourseRatingVO>>('/v1/course-ratings', {
+  return apiRequest<ApiResponse<CourseRatingVO>>('/v1/course-rating', {
     method: 'POST',
     body: JSON.stringify(ratingData)
   })
@@ -261,12 +273,12 @@ export async function submitRating(ratingData: CourseRatingDTO) {
 
 // 获取课程评价详情
 export async function getRatingById(ratingId: number) {
-  return apiRequest<ApiResponse<CourseRatingVO>>(`/v1/course-ratings/${ratingId}`)
+  return apiRequest<ApiResponse<CourseRatingVO>>(`/v1/course-rating/${ratingId}`)
 }
 
 // 更新课程评价
 export async function updateRating(ratingId: number, ratingData: CourseRatingDTO) {
-  return apiRequest<ApiResponse<CourseRatingVO>>(`/v1/course-ratings/${ratingId}`, {
+  return apiRequest<ApiResponse<CourseRatingVO>>(`/v1/course-rating/${ratingId}`, {
     method: 'PUT',
     body: JSON.stringify(ratingData)
   })
@@ -274,34 +286,41 @@ export async function updateRating(ratingId: number, ratingData: CourseRatingDTO
 
 // 删除课程评价
 export async function deleteRating(ratingId: number) {
-  return apiRequest<ApiResponse<null>>(`/v1/course-ratings/${ratingId}`, {
+  return apiRequest<ApiResponse<boolean>>(`/v1/course-rating/${ratingId}`, {
     method: 'DELETE'
   })
 }
 
 // 获取课程评价列表
 export async function getRatingsByCourseId(courseId: number, page = 1, size = 10) {
-  return apiRequest<ApiResponse<PagedResponse<CourseRatingVO>>>(`/v1/course-ratings/course/${courseId}?page=${page}&size=${size}`)
+  return apiRequest<ApiResponse<PagedResponse<CourseRatingVO>>>(`/v1/course-rating/course/${courseId}?page=${page}&size=${size}`)
 }
 
 // 获取课程平均评分
 export async function getAverageRating(courseId: number) {
-  return apiRequest<ApiResponse<number>>(`/v1/course-ratings/average/${courseId}`)
+  return apiRequest<ApiResponse<number>>(`/v1/course-rating/course/${courseId}/average`)
 }
 
 // 检查学生是否已评价课程
-export async function hasRated(courseId: number) {
-  return apiRequest<ApiResponse<boolean>>(`/v1/course-ratings/check/${courseId}`)
+export async function hasStudentRated(courseId: number, studentId: number) {
+  return apiRequest<ApiResponse<boolean>>(`/v1/course-rating/course/${courseId}/student/${studentId}/has-rated`)
+}
+
+// 获取学生对课程的评价
+export async function getStudentRating(courseId: number, studentId: number) {
+  return apiRequest<ApiResponse<CourseRatingVO>>(`/v1/course-rating/course/${courseId}/student/${studentId}`)
+}
+
+// 获取课程评价统计
+export async function getRatingStatistics(courseId: number) {
+  return apiRequest<ApiResponse<CourseRatingStatistics>>(`/v1/course-rating/course/${courseId}/statistics`)
 }
 
 // 上传课程资源
 export async function uploadResource(formData: FormData) {
   return apiRequest<ApiResponse<CourseResourceVO>>('/v1/course-resources', {
     method: 'POST',
-    body: formData,
-    headers: {
-      // 不设置Content-Type，让浏览器自动设置multipart/form-data和boundary
-    }
+    body: formData
   })
 }
 
