@@ -80,19 +80,11 @@
         </div>
         <div
           class="group cursor-pointer bg-gradient-to-br from-purple-100 to-purple-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
-          @click="showUserDialog = true"
+          @click="router.push('/achievement/admin')"
         >
-          <UserGroupIcon class="w-12 h-12 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
-          <span class="text-lg font-bold text-purple-800 mb-1">用户列表</span>
-          <span class="text-sm text-purple-500">查看和管理平台所有用户</span>
-        </div>
-        <div
-          class="group cursor-pointer bg-gradient-to-br from-orange-100 to-orange-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
-          @click="onJobCategoryCardClick"
-        >
-          <TagIcon class="w-12 h-12 text-orange-600 mb-4 group-hover:scale-110 transition-transform" />
-          <span class="text-lg font-bold text-orange-800 mb-1">岗位分类管理</span>
-          <span class="text-sm text-orange-500">管理岗位分类，规范岗位发布</span>
+          <AcademicCapIcon class="w-12 h-12 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+          <span class="text-lg font-bold text-purple-800 mb-1">成果管理</span>
+          <span class="text-sm text-purple-500">管理学生成果展示与认证</span>
         </div>
       </div>
       <!-- 待审核企业弹窗 -->
@@ -468,6 +460,7 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getAllSchools, getAllEnterprises } from '@/lib/api/organization'
 import Navbar from '@/components/layout/Navbar.vue'
+import { AcademicCapIcon } from '@heroicons/vue/24/outline'
 
 const showAddSchoolDialog = ref(false)
 const newSchool = ref({

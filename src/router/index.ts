@@ -265,6 +265,11 @@ const router = createRouter({
         {
           path: 'school',
           component: () => import('@/views/achievement/SchoolAchievementManageView.vue')
+        },
+        {
+          path: 'admin',
+          component: () => import('@/views/achievement/AdminAchievementManageView.vue')
+          // meta: { requiresAuth: true, role: ['SYSADMIN', 'admin', 'ADMIN'] }
         }
       ]
     },
