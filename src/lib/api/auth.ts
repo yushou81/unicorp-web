@@ -83,6 +83,8 @@ export function registerEnterprise(data: {
   adminNickname?: string
   adminPassword: string
   adminPhone?: string
+  latitude?: number | null
+  longitude?: number | null
 }) {
   return apiRequest('/v1/auth/register/enterprise', {
     method: 'POST',
