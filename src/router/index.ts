@@ -18,11 +18,16 @@ import { getMe } from '@/lib/api/auth'
 import { useAppStore } from '@/stores/app'
 
 // 添加成果展示相关的组件导入
-import AchievementOverview from '@/views/achievement/AchievementOverview.vue'
+import AchievementOverview from '@/views/achievement/StudentAchievement.vue'
 import TeacherVerifyView from '@/views/achievement/TeacherVerifyView.vue'
 import EnterpriseAchievementView from '@/views/achievement/EnterpriseAchievementView.vue'
 import SchoolAchievementManageView from '@/views/achievement/SchoolAchievementManageView.vue'
 import SchoolAchievementDetailView from '@/views/achievement/SchoolAchievementDetailView.vue'
+
+// 成果详情页面
+const AwardDetailView = () => import('@/views/achievement/AwardDetailView.vue')
+const PortfolioDetailView = () => import('@/views/achievement/PortfolioDetailView.vue')
+const ResearchDetailView = () => import('@/views/achievement/ResearchDetailView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -248,7 +253,7 @@ const router = createRouter({
         },
         {
           path: 'student',
-          component: () => import('@/views/achievement/AchievementOverview.vue')
+          component: () => import('@/views/achievement/StudentAchievement.vue')
         },
         {
           path: 'teacher',
@@ -272,6 +277,24 @@ const router = createRouter({
           // meta: { requiresAuth: true, role: ['SYSADMIN', 'admin', 'ADMIN'] }
         }
       ]
+    },
+    {
+      path: '/achievement/award/:id',
+      name: 'award-detail',
+      component: AwardDetailView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/achievement/portfolio/:id',
+      name: 'portfolio-detail',
+      component: PortfolioDetailView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/achievement/research/:id',
+      name: 'research-detail',
+      component: ResearchDetailView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/:pathMatch(.*)*',

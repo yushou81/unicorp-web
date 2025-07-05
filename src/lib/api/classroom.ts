@@ -190,27 +190,37 @@ export async function deleteCourse(id: number) {
 
 // 更新课程状态
 export async function updateCourseStatus(id: number, status: CourseStatus) {
-  return apiRequest<ApiResponse<DualTeacherCourseVO>>(`/v1/dual-courses/${id}/status?status=${status}`, {
+  const queryParams = new URLSearchParams()
+  queryParams.append('status', status)
+  return apiRequest<ApiResponse<DualTeacherCourseVO>>(`/v1/dual-courses/${id}/status?${queryParams.toString()}`, {
     method: 'PATCH'
   })
 }
 
 // 获取教师创建的课程列表
 export async function getTeacherCourses(page = 1, size = 10) {
-  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(`/v1/dual-courses/teacher?page=${page}&size=${size}`)
+  const queryParams = new URLSearchParams()
+  queryParams.append('page', page.toString())
+  queryParams.append('size', size.toString())
+  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(`/v1/dual-courses/teacher?${queryParams.toString()}`)
 }
 
 // 获取企业导师参与的课程列表
 export async function getMentorCourses(page = 1, size = 10) {
-  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(`/v1/dual-courses/mentor?page=${page}&size=${size}`)
+  const queryParams = new URLSearchParams()
+  queryParams.append('page', page.toString())
+  queryParams.append('size', size.toString())
+  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(`/v1/dual-courses/mentor?${queryParams.toString()}`)
 }
 
 // 获取可报名的课程列表
 export async function getEnrollableCourses(page = 1, size = 10, keyword?: string, courseType?: string) {
-  let url = `/v1/dual-courses/enrollable?page=${page}&size=${size}`;
-  if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
-  if (courseType) url += `&courseType=${courseType}`;
-  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(url);
+  const queryParams = new URLSearchParams()
+  queryParams.append('page', page.toString())
+  queryParams.append('size', size.toString())
+  if (keyword) queryParams.append('keyword', encodeURIComponent(keyword))
+  if (courseType) queryParams.append('courseType', courseType)
+  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(`/v1/dual-courses/enrollable?${queryParams.toString()}`)
 }
 
 // 学生报名课程
@@ -231,12 +241,17 @@ export async function cancelEnrollment(courseId: number) {
 
 // 获取学生已报名的课程列表
 export async function getStudentEnrolledCourses(page = 1, size = 10) {
-  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(`/v1/dual-courses/enrolled?page=${page}&size=${size}`)
+  const queryParams = new URLSearchParams()
+  queryParams.append('page', page.toString())
+  queryParams.append('size', size.toString())
+  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(`/v1/dual-courses/enrolled?${queryParams.toString()}`)
 }
 
 // 更新学生选课状态
 export async function updateEnrollmentStatus(enrollmentId: number, status: 'enrolled' | 'cancelled' | 'completed') {
-  return apiRequest<ApiResponse<null>>(`/v1/dual-courses/enrollment/${enrollmentId}/status?status=${status}`, {
+  const queryParams = new URLSearchParams()
+  queryParams.append('status', status)
+  return apiRequest<ApiResponse<null>>(`/v1/dual-courses/enrollment/${enrollmentId}/status?${queryParams.toString()}`, {
     method: 'PATCH'
   })
 }
@@ -283,7 +298,10 @@ export async function deleteRating(ratingId: number) {
 
 // 获取课程评价列表
 export async function getRatingsByCourseId(courseId: number, page = 1, size = 10) {
-  return apiRequest<ApiResponse<PagedResponse<CourseRatingVO>>>(`/v1/course-ratings/course/${courseId}?page=${page}&size=${size}`)
+  const queryParams = new URLSearchParams()
+  queryParams.append('page', page.toString())
+  queryParams.append('size', size.toString())
+  return apiRequest<ApiResponse<PagedResponse<CourseRatingVO>>>(`/v1/course-ratings/course/${courseId}?${queryParams.toString()}`)
 }
 
 // 获取课程平均评分
@@ -321,9 +339,11 @@ export async function deleteResource(resourceId: number) {
 
 // 获取课程资源列表
 export async function getResourcesByCourseId(courseId: number, page = 1, size = 10, resourceType?: string) {
-  let url = `/v1/course-resources/course/${courseId}?page=${page}&size=${size}`;
-  if (resourceType) url += `&resourceType=${resourceType}`;
-  return apiRequest<ApiResponse<PagedResponse<CourseResourceVO>>>(url);
+  const queryParams = new URLSearchParams()
+  queryParams.append('page', page.toString())
+  queryParams.append('size', size.toString())
+  if (resourceType) queryParams.append('resourceType', resourceType)
+  return apiRequest<ApiResponse<PagedResponse<CourseResourceVO>>>(`/v1/course-resources/course/${courseId}?${queryParams.toString()}`)
 }
 
 // 获取资源下载URL
@@ -366,14 +386,18 @@ export async function getChaptersByCourseId(courseId: number) {
 
 // 更新章节发布状态
 export async function updateChapterPublishStatus(id: number, isPublished: boolean) {
-  return apiRequest<ApiResponse<null>>(`/v1/course-chapters/${id}/publish?isPublished=${isPublished}`, {
+  const queryParams = new URLSearchParams()
+  queryParams.append('isPublished', isPublished.toString())
+  return apiRequest<ApiResponse<null>>(`/v1/course-chapters/${id}/publish?${queryParams.toString()}`, {
     method: 'PUT'
   });
 }
 
 // 更新章节顺序
 export async function updateChapterSequence(id: number, sequence: number) {
-  return apiRequest<ApiResponse<null>>(`/v1/course-chapters/${id}/sequence?sequence=${sequence}`, {
+  const queryParams = new URLSearchParams()
+  queryParams.append('sequence', sequence.toString())
+  return apiRequest<ApiResponse<null>>(`/v1/course-chapters/${id}/sequence?${queryParams.toString()}`, {
     method: 'PUT'
   });
 }
@@ -452,12 +476,14 @@ export async function getCoursesList(params: {
   courseType?: string
 }) {
   const { page = 1, size = 10, keyword, status, courseType } = params;
-  let url = `/v1/dual-courses?page=${page}&size=${size}`;
-  if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
-  if (status) url += `&status=${status}`;
-  if (courseType) url += `&courseType=${courseType}`;
+  const queryParams = new URLSearchParams()
+  queryParams.append('page', page.toString())
+  queryParams.append('size', size.toString())
+  if (keyword) queryParams.append('keyword', encodeURIComponent(keyword))
+  if (status) queryParams.append('status', status)
+  if (courseType) queryParams.append('courseType', courseType)
   
-  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(url);
+  return apiRequest<ApiResponse<PagedResponse<DualTeacherCourseVO>>>(`/v1/dual-courses?${queryParams.toString()}`)
 }
 
 // 检查学生是否已报名课程

@@ -121,12 +121,12 @@
                   <div class="mt-2 flex items-center space-x-4">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                       :class="{
-                        'bg-green-100 text-green-800': achievement.status === 'verified',
-                        'bg-yellow-100 text-yellow-800': achievement.status === 'pending',
-                        'bg-red-100 text-red-800': achievement.status === 'rejected'
+                        'bg-green-100 text-green-800': achievement.verifyStatus === 'verified',
+                        'bg-yellow-100 text-yellow-800': achievement.verifyStatus === 'pending',
+                        'bg-red-100 text-red-800': achievement.verifyStatus === 'rejected'
                       }"
                     >
-                      {{ achievement.status === 'verified' ? '已认证' : achievement.status === 'pending' ? '待认证' : '已拒绝' }}
+                      {{ achievement.verifyStatus === 'verified' ? '已认证' : achievement.verifyStatus === 'pending' ? '待认证' : '已拒绝' }}
                     </span>
                     <span class="text-sm text-gray-500">{{ achievement.type === 'award' ? '竞赛获奖' : achievement.type === 'research' ? '科研成果' : '作品集' }}</span>
                     <span class="text-sm text-gray-500">{{ achievement.createdAt }}</span>
@@ -134,7 +134,7 @@
                 </div>
                 <div class="flex space-x-2">
                   <Button
-                    v-if="achievement.status === 'pending'"
+                    v-if="achievement.verifyStatus === 'pending'"
                     @click="verifyAchievement(achievement.id, true)"
                     variant="success"
                     size="sm"
@@ -142,7 +142,7 @@
                     通过
                   </Button>
                   <Button
-                    v-if="achievement.status === 'pending'"
+                    v-if="achievement.verifyStatus === 'pending'"
                     @click="verifyAchievement(achievement.id, false)"
                     variant="danger"
                     size="sm"
@@ -206,7 +206,7 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">状态</label>
-              <p class="mt-1">{{ selectedAchievement?.status === 'verified' ? '已认证' : selectedAchievement?.status === 'pending' ? '待认证' : '已拒绝' }}</p>
+              <p class="mt-1">{{ selectedAchievement?.verifyStatus === 'verified' ? '已认证' : selectedAchievement?.verifyStatus === 'pending' ? '待认证' : '已拒绝' }}</p>
             </div>
           </div>
         </div>
@@ -228,13 +228,15 @@ import Button from '@/components/ui/Button.vue'
 import SearchInput from '@/components/ui/SearchInput.vue'
 import Loading from '@/components/ui/Loading.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import { achievementApi } from '@/lib/api/achievement'
+import type { Achievement, SchoolStatisticsVO, ApiResponse, PagedResponse } from '@/lib/api/achievement'
 
 // 统计数据
-const stats = ref({
+const stats = ref<SchoolStatisticsVO>({
   totalAchievements: 0,
-  verifiedAchievements: 0,
-  pendingAchievements: 0,
-  totalViews: 0
+  portfolioCount: 0,
+  awardCount: 0,
+  researchCount: 0
 })
 
 // 标签页配置
@@ -262,7 +264,7 @@ const totalItems = ref(0)
 const loading = ref(false)
 
 // 成果列表
-const achievements = ref([])
+const achievements = ref<Achievement[]>([])
 
 // 计算筛选后的成果列表
 const filteredAchievements = computed(() => {
@@ -270,7 +272,7 @@ const filteredAchievements = computed(() => {
 
   // 标签页筛选
   if (currentTab.value !== 'all') {
-    result = result.filter(item => item.status === currentTab.value)
+    result = result.filter(item => item.verifyStatus === currentTab.value)
   }
 
   // 类型筛选
@@ -280,15 +282,14 @@ const filteredAchievements = computed(() => {
 
   // 状态筛选
   if (filters.value.status) {
-    result = result.filter(item => item.status === filters.value.status)
+    result = result.filter(item => item.verifyStatus === filters.value.status)
   }
 
   // 搜索
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(item =>
-      item.title.toLowerCase().includes(query) ||
-      item.description.toLowerCase().includes(query)
+      item.title.toLowerCase().includes(query)
     )
   }
 
@@ -297,44 +298,31 @@ const filteredAchievements = computed(() => {
 
 // 详情弹窗
 const showDetailsDialog = ref(false)
-const selectedAchievement = ref(null)
+const selectedAchievement = ref<Achievement | null>(null)
 
 // 刷新数据
 async function refreshData() {
   loading.value = true
   try {
-    // TODO: 调用API获取数据
-    // const res = await getAchievements()
-    // achievements.value = res.data
-    // 模拟数据
-    achievements.value = [
-      {
-        id: 1,
-        title: '全国大学生创新创业大赛一等奖',
-        description: '带领团队开发智能家居系统，获得全国一等奖',
-        type: 'award',
-        status: 'verified',
-        createdAt: '2024-03-15'
-      },
-      {
-        id: 2,
-        title: '基于深度学习的图像识别研究',
-        description: '发表于计算机科学与技术核心期刊',
-        type: 'research',
-        status: 'pending',
-        createdAt: '2024-03-14'
-      }
-    ]
-    
-    // 更新统计数据
-    stats.value = {
-      totalAchievements: achievements.value.length,
-      verifiedAchievements: achievements.value.filter(item => item.status === 'verified').length,
-      pendingAchievements: achievements.value.filter(item => item.status === 'pending').length,
-      totalViews: 1234
+    // 获取统计数据
+    const statsRes = await achievementApi.getSchoolStatistics()
+    if (statsRes.code === 0) {
+      stats.value = statsRes.data
     }
     
-    totalItems.value = achievements.value.length
+    // 获取成果列表
+    const achievementsRes = await achievementApi.getSchoolAchievements({
+      page: currentPage.value,
+      size: pageSize.value,
+      type: filters.value.type || undefined,
+      verifyStatus: filters.value.status || undefined,
+      keyword: searchQuery.value || undefined
+    })
+    
+    if (achievementsRes.code === 0) {
+      achievements.value = achievementsRes.data.records
+      totalItems.value = achievementsRes.data.total
+    }
   } catch (error) {
     console.error('获取数据失败:', error)
   } finally {
@@ -345,21 +333,21 @@ async function refreshData() {
 // 认证成果
 async function verifyAchievement(id: number, isApproved: boolean) {
   try {
-    // TODO: 调用API进行认证
-    // await verifyAchievement(id, isApproved)
-    const achievement = achievements.value.find(item => item.id === id)
-    if (achievement) {
-      achievement.status = isApproved ? 'verified' : 'rejected'
+    const res = await achievementApi.verifyAchievement(id, {
+      status: isApproved ? 'verified' : 'rejected',
+      comment: ''
+    })
+    if (res.code === 0) {
+      // 更新成功后刷新数据
+      refreshData()
     }
-    // 更新统计数据
-    refreshData()
   } catch (error) {
     console.error('认证失败:', error)
   }
 }
 
 // 查看详情
-function viewDetails(achievement: any) {
+function viewDetails(achievement: Achievement) {
   selectedAchievement.value = achievement
   showDetailsDialog.value = true
 }
