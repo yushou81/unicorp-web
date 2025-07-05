@@ -245,12 +245,12 @@ const router = createRouter({
       name: 'equipment-bookings',
       component: () => import('@/views/resource/EquipmentBookingManageView.vue')
     },
-    {
-      path: '/teacher/projects',
-      name: 'TeacherProjectManage',
-      component: () => import('@/views/project/TeacherProjectManageView.vue'),
-      meta: { requiresAuth: true, role: 'teacher' }
-    },
+    // {
+    //   path: '/teacher/projects',
+    //   name: 'TeacherProjectManage',
+    //   component: () => import('@/views/project/TeacherProjectManageView.vue'),
+    //   meta: { requiresAuth: true, role: 'teacher' }
+    // },
     {
       path: '/project/audit',
       name: 'project-audit',

@@ -129,6 +129,22 @@
                 <div v-else class="text-gray-500 italic">暂无详细福利待遇描述</div>
               </div>
             </div>
+            
+            <!-- 公司位置地图 -->
+            <div class="bg-white rounded-lg shadow-sm p-5 mb-5" v-if="hasCompanyLocation">
+              <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <MapPinIcon class="w-5 h-5 mr-2 text-blue-600" />
+                公司位置
+              </h2>
+              <div class="w-full">
+                <LocationMap 
+                  :position="companyPosition"
+                  :location-name="job.organizationName"
+                  :zoom="15"
+                  height="400px"
+                />
+              </div>
+            </div>
           </div>
           
           <!-- 右侧：公司信息和联系方式 -->
@@ -232,6 +248,8 @@
                 </div>
               </div>
             </div>
+            
+
           </div>
         </div>
       </template>
@@ -265,6 +283,7 @@ import { getMyResumes } from '@/lib/api/resume'
 import Navbar from '@/components/layout/Navbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import JobApplicationModal from '@/components/job/JobApplicationModal.vue'
+import LocationMap from '@/components/map/LocationMap.vue'
 import { 
   MapPin as MapPinIcon,
   GraduationCap as GraduationCapIcon,
@@ -297,6 +316,8 @@ interface Organization {
   website?: string;
   logoUrl?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 // 简历接口
@@ -331,6 +352,23 @@ const organizationLogo = ref<string | null>(null)
 const userResumes = ref<Resume[]>([])
 const selectedResumeId = ref<number | null>(null)
 const applyLoading = ref(false)
+
+// 公司位置相关
+const companyPosition = computed(() => {
+  if (job.value?.organization?.latitude && job.value?.organization?.longitude) {
+    return {
+      latitude: job.value.organization.latitude,
+      longitude: job.value.organization.longitude
+    }
+  }
+  // 默认位置（可以根据需要调整）
+  return { latitude: 30.67, longitude: 104.06 }
+})
+
+// 判断是否有公司位置信息
+const hasCompanyLocation = computed(() => {
+  return !!(job.value?.organization?.latitude && job.value?.organization?.longitude)
+})
 
 // 获取岗位详情
 const fetchJobDetail = async () => {
