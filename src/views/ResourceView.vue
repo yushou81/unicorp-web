@@ -9,7 +9,7 @@
         <div class="flex justify-between items-center mb-4">
           <h1 class="text-3xl font-bold">资源共享中心</h1>
           <router-link 
-            v-if="isTeacherOrMentor"
+            v-if="isTeacherOrAdmin"
             to="/resource/upload" 
             class="px-4 py-2 bg-white text-blue-700 font-semibold rounded-md hover:bg-blue-50 transition-colors"
           >
@@ -28,6 +28,30 @@
 
     <!-- 主要内容区 -->
     <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <!-- 添加查看选项卡，仅针对教师和管理员角色显示 -->
+      <div v-if="isTeacherOrAdmin" class="mb-6">
+        <div class="inline-flex rounded-md shadow-sm" role="group">
+          <button 
+            @click="viewMode = 'all'" 
+            :class="[
+              'px-4 py-2 text-sm font-medium rounded-l-lg',
+              viewMode === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-blue-700 border border-blue-600'
+            ]"
+          >
+            所有资源
+          </button>
+          <button 
+            @click="viewMode = 'my'" 
+            :class="[
+              'px-4 py-2 text-sm font-medium rounded-r-lg',
+              viewMode === 'my' ? 'bg-blue-600 text-white' : 'bg-white text-blue-700 border border-blue-600 border-l-0'
+            ]"
+          >
+            我的资源
+          </button>
+        </div>
+      </div>
+
       <div class="flex flex-col lg:flex-row gap-8">
         <!-- 左侧筛选栏 -->
         <div class="lg:w-64 flex-shrink-0">
@@ -63,12 +87,28 @@ import ResourceList from '@/components/resource/ResourceList.vue'
 import { getResources, collectResource as apiCollectResource } from '@/lib/api/resource'
 import { useAppStore } from '@/stores/app'
 
+// 定义API响应类型接口
+interface ApiResponse<T = any> {
+  code: number
+  message: string
+  data: T
+}
+
+interface PageResponse<T = any> {
+  records: T[]
+  total: number
+  size: number
+  current: number
+  pages: number
+}
+
 // 应用状态
 const appStore = useAppStore()
 
 // 检查用户角色
 const userRole = computed(() => (appStore.user as any)?.role || '')
 const isTeacherOrMentor = computed(() => ['TEACHER', 'MENTOR'].includes(userRole.value))
+const isTeacherOrAdmin = computed(() => ['TEACHER', 'ADMIN'].includes(userRole.value))
 
 // 搜索和筛选状态
 const searchKeyword = ref('')
@@ -79,6 +119,7 @@ const sortOption = ref('latest')
 const filters = ref({
   resourceTypes: [] as string[]
 })
+const viewMode = ref('all')
 
 // 资源类型列表
 const allResourceTypes = ['实验设备', '技术文档', '数据集', '教学案例', '课件', '精品课程', '著作权', '专利']
@@ -164,6 +205,11 @@ const fetchResources = async () => {
       keyword: searchKeyword.value
     }
     
+    // 如果是"我的资源"模式，添加用户ID筛选
+    if (viewMode.value === 'my' && appStore.user) {
+      queryParams.authorId = (appStore.user as any).id
+    }
+    
     // 添加资源类型筛选 - 下拉菜单
     if (selectedResourceType.value) {
       queryParams.type = selectedResourceType.value
@@ -175,7 +221,7 @@ const fetchResources = async () => {
     }
     
     console.log('查询参数:', queryParams)
-    const response = await getResources(queryParams)
+    const response = await getResources(queryParams) as ApiResponse<PageResponse>
     
     console.log('API响应:', response)
     
@@ -196,11 +242,11 @@ const fetchResources = async () => {
         provider: item.authorName || item.nickname || item.organizationName
       }))
       
-      total.value = response.data.total
-      totalPages.value = response.data.pages
+      total.value = response.data.total || 0
+      totalPages.value = response.data.pages || 1
       
       // 更新资源统计数据
-      resourceStats.value.total = response.data.total
+      resourceStats.value.total = response.data.total || 0
       resourceStats.value.available = resources.value.filter(r => r.status === '可用').length
       
       // 计算本月新增
@@ -240,7 +286,7 @@ const getCategoryFromResourceType = (type: string) => {
 }
 
 // 监听筛选条件变化，重新加载数据
-watch([currentPage, searchKeyword, selectedResourceType, filters, sortOption], () => {
+watch([currentPage, searchKeyword, selectedResourceType, filters, sortOption, viewMode], () => {
   fetchResources()
 })
 

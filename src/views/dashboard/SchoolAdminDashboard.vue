@@ -43,7 +43,13 @@
         >
           双师课堂
         </button>
-
+        <button 
+          @click="activeTab = 'resources'" 
+          :class="['px-4 py-2 font-medium transition-colors', 
+                  activeTab === 'resources' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-blue-500']"
+        >
+          资源管理
+        </button>
       </div>
     </div>
     
@@ -217,9 +223,112 @@
         </div>
       </div>
       
-
-      
-
+      <!-- 资源管理界面 -->
+      <div v-if="activeTab === 'resources'" class="my-6">
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-blue-700">资源管理</h2>
+            <div class="space-x-2">
+              <router-link to="/resource/upload" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                上传资源
+              </router-link>
+              <router-link to="/resource" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                资源列表
+              </router-link>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 资源上传卡片 -->
+            <div class="bg-blue-50 p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-800">上传资源</h3>
+              </div>
+              <p class="text-gray-600 mb-4">上传课程资料、实验设备信息、技术文档等资源，支持多种格式。</p>
+              <router-link to="/resource/upload" class="text-blue-600 hover:text-blue-800 flex items-center">
+                前往上传
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </router-link>
+            </div>
+            
+            <!-- 设备预约审核卡片 -->
+            <div class="bg-green-50 p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-800">设备预约审核</h3>
+              </div>
+              <p class="text-gray-600 mb-4">查看并处理学生和教师的设备使用申请，管理实验设备资源。</p>
+              <router-link to="/equipment/bookings" class="text-green-600 hover:text-green-800 flex items-center">
+                查看申请
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </router-link>
+            </div>
+            
+            <!-- 资源统计卡片 -->
+            <div class="bg-purple-50 p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-800">资源概览</h3>
+              </div>
+              <p class="text-gray-600 mb-4">浏览校内资源使用情况、热门资源和最新上传的资源。</p>
+              <router-link to="/resource" class="text-purple-600 hover:text-purple-800 flex items-center">
+                查看资源
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </router-link>
+            </div>
+          </div>
+          
+          <!-- 最近的设备预约申请 -->
+          <div class="mt-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">最近的设备预约申请</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">申请人</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">设备名称</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">申请时间</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <!-- 这里可以使用v-for循环展示最近的预约记录 -->
+                  <tr v-for="i in 3" :key="i" class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">示例用户{{ i }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">示例设备{{ i }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">2023-12-{{ 10 + i }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">待审核</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <router-link to="/equipment/bookings" class="text-blue-600 hover:text-blue-900">查看详情</router-link>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-4 text-right">
+              <router-link to="/equipment/bookings" class="text-blue-600 hover:text-blue-800">
+                查看全部预约 →
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     
     <!-- 课程创建/编辑对话框 -->

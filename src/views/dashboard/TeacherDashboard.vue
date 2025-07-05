@@ -14,7 +14,10 @@
           :onEdit="onEditProfileClick"
       />
       <DashboardTabs
-          :tabs="[{ label: '我的课堂', value: 'my-courses' }]"
+          :tabs="[
+            { label: '我的课堂', value: 'my-courses' },
+            { label: '资源管理', value: 'resources' }
+          ]"
           :activeTab="activeTab"
           @change="activeTab = $event"
       />
@@ -67,6 +70,205 @@
               <button :disabled="page === 1" @click="changePage(page-1)" class="px-3 py-1 rounded bg-gray-200 text-gray-700">上一页</button>
               <span class="px-2">第 {{ page }} 页 / 共 {{ totalPages }} 页</span>
               <button :disabled="page === totalPages" @click="changePage(page+1)" class="px-3 py-1 rounded bg-gray-200 text-gray-700">下一页</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="activeTab === 'resources'">
+        <div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-blue-700">资源管理</h2>
+            <div class="flex space-x-2">
+              <router-link to="/resource/upload" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                上传资源
+              </router-link>
+              <router-link to="/resource" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                浏览资源
+              </router-link>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="border rounded-lg p-5 bg-blue-50 hover:shadow-md transition-shadow">
+              <div class="flex items-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <h3 class="text-lg font-medium text-gray-800">上传教学资源</h3>
+              </div>
+              <p class="text-gray-600 mb-4">
+                分享您的教学资料、课件、实验指导等资源，支持多种文件格式。上传的资源可以设置为公开或仅组织内可见。
+              </p>
+              <router-link to="/resource/upload" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+                立即上传
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </router-link>
+            </div>
+            
+            <div class="border rounded-lg p-5 bg-green-50 hover:shadow-md transition-shadow">
+              <div class="flex items-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 class="text-lg font-medium text-gray-800">可用资源</h3>
+              </div>
+              <p class="text-gray-600 mb-4">
+                查看系统中所有可用资源。
+              </p>
+              <router-link to="/resource" class="inline-flex items-center text-green-600 hover:text-green-800">
+                查看可用资源
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </router-link>
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-5 mb-6">
+            <h3 class="font-medium text-gray-700 mb-3">可上传的资源类型</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                <span class="text-sm">课件</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                <span class="text-sm">技术文档</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+                <span class="text-sm">数据集</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                <span class="text-sm">教学视频</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                <span class="text-sm">实验指导</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>
+                <span class="text-sm">专利文献</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-pink-500 rounded-full mr-2"></span>
+                <span class="text-sm">案例分析</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>
+                <span class="text-sm">其他资源</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg border shadow-sm">
+            <div class="p-4 border-b flex justify-between items-center">
+              <h3 class="font-semibold text-gray-800">我上传的资源</h3>
+              <div class="flex space-x-2">
+                <input 
+                  type="text" 
+                  v-model="resourceKeyword" 
+                  placeholder="搜索资源" 
+                  class="px-3 py-1 text-sm border rounded-md"
+                />
+                <button 
+                  @click="loadMyResources" 
+                  class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-sm hover:bg-blue-200"
+                >
+                  搜索
+                </button>
+              </div>
+            </div>
+            
+            <div v-if="loadingResources" class="p-8 text-center text-gray-500">
+              <svg class="animate-spin h-8 w-8 mx-auto mb-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              加载中...
+            </div>
+            
+            <div v-else-if="myResources.length === 0" class="p-8 text-center text-gray-500">
+              暂无上传的资源
+            </div>
+            
+            <div v-else>
+              <div class="overflow-x-auto">
+                <table class="min-w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">资源名称</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">上传时间</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">可见性</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    <tr v-for="resource in myResources" :key="resource.id" class="hover:bg-gray-50">
+                      <td class="px-4 py-3">
+                        <router-link :to="`/resource/${resource.id}`" class="text-blue-600 hover:text-blue-800 font-medium">
+                          {{ resource.title }}
+                        </router-link>
+                      </td>
+                      <td class="px-4 py-3 text-gray-600">{{ resource.resourceType }}</td>
+                      <td class="px-4 py-3 text-gray-600">{{ new Date(resource.createdAt).toLocaleDateString() }}</td>
+                      <td class="px-4 py-3">
+                        <span 
+                          :class="{
+                            'bg-green-100 text-green-800': resource.visibility === 'public',
+                            'bg-blue-100 text-blue-800': resource.visibility === 'organization_only',
+                            'bg-gray-100 text-gray-800': resource.visibility === 'private'
+                          }" 
+                          class="px-2 py-1 text-xs rounded-full"
+                        >
+                          {{ getVisibilityText(resource.visibility) }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 space-x-2">
+                        <router-link :to="`/resource/${resource.id}`" class="text-blue-600 hover:text-blue-800">
+                          查看
+                        </router-link>
+                        <button @click="confirmDelete(resource)" class="text-red-600 hover:text-red-800">
+                          删除
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="flex justify-between items-center p-4 border-t">
+                <div class="text-sm text-gray-500">
+                  共 {{ resourceTotal }} 条记录
+                </div>
+                <div class="flex space-x-2">
+                  <button 
+                    :disabled="resourcePage === 1" 
+                    @click="resourcePage > 1 && (resourcePage--, loadMyResources())"
+                    :class="[
+                      'px-3 py-1 rounded text-sm',
+                      resourcePage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ]"
+                  >
+                    上一页
+                  </button>
+                  <span class="px-3 py-1 text-sm">{{ resourcePage }} / {{ Math.ceil(resourceTotal / resourceSize) || 1 }}</span>
+                  <button 
+                    :disabled="resourcePage >= Math.ceil(resourceTotal / resourceSize)" 
+                    @click="resourcePage < Math.ceil(resourceTotal / resourceSize) && (resourcePage++, loadMyResources())"
+                    :class="[
+                      'px-3 py-1 rounded text-sm',
+                      resourcePage >= Math.ceil(resourceTotal / resourceSize) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ]"
+                  >
+                    下一页
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -160,6 +362,34 @@ import Navbar from '@/components/layout/Navbar.vue'
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 import { createCourse, getTeacherCourses, updateCourse, deleteCourse, getCourseById, updateCourseStatus } from '@/lib/api/classroom'
+import { getMyUploadedResources, deleteResource } from '@/lib/api/resource'
+
+// 资源相关类型定义
+interface ResourceVO {
+  id: number
+  title: string
+  resourceType: string
+  description: string
+  createdAt: string
+  updatedAt: string
+  visibility: 'public' | 'private' | 'organization_only'
+  authorId: number
+  [key: string]: any
+}
+
+interface PageResponse<T = any> {
+  records: T[]
+  total: number
+  size: number
+  current: number
+  pages: number
+}
+
+interface ApiResponse<T = any> {
+  code: number
+  message: string
+  data: T
+}
 
 const teacher = ref({
   avatar: 'https://randomuser.me/api/portraits/men/33.jpg',
@@ -248,6 +478,7 @@ function statusText(status: string) {
 onMounted(() => {
   fetchTeacherInfo()
   fetchCourses()
+  loadMyResources()
 })
 
 function onEditProfileClick() {
@@ -412,5 +643,63 @@ function selectMentor(user) {
 function clearSelectedMentor() {
   selectedMentor.value = null
   form.value.mentorId = ''
+}
+
+// 资源管理相关
+const resourceKeyword = ref('')
+const resourcePage = ref(1)
+const resourceSize = ref(10)
+const resourceTotal = ref(0)
+const loadingResources = ref(false)
+const myResources = ref<ResourceVO[]>([])
+
+async function loadMyResources() {
+  loadingResources.value = true
+  try {
+    const res = await getMyUploadedResources({
+      page: resourcePage.value,
+      size: resourceSize.value,
+      keyword: resourceKeyword.value || undefined
+    }) as ApiResponse<PageResponse<ResourceVO>>
+    
+    if (res && res.code === 200 && res.data) {
+      myResources.value = res.data.records || []
+      resourceTotal.value = res.data.total || 0
+    } else {
+      myResources.value = []
+      resourceTotal.value = 0
+    }
+  } catch (e) {
+    console.error('加载资源失败:', e)
+    myResources.value = []
+    resourceTotal.value = 0
+  } finally {
+    loadingResources.value = false
+  }
+}
+
+function getVisibilityText(visibility: string) {
+  const map: Record<string, string> = {
+    public: '公开',
+    organization_only: '仅组织内可见',
+    private: '仅自己可见'
+  }
+  return map[visibility] || visibility
+}
+
+async function confirmDelete(resource: ResourceVO) {
+  if (!confirm('确定要删除此资源吗？此操作不可恢复。')) return
+  
+  try {
+    const res = await deleteResource(resource.id) as ApiResponse
+    if (res && res.code === 200) {
+      loadMyResources()
+      alert('资源已删除')
+    } else {
+      alert('删除失败：' + (res?.message || '未知错误'))
+    }
+  } catch (e: any) {
+    alert('删除失败：' + (e.message || '未知错误'))
+  }
 }
 </script>

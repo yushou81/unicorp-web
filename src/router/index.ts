@@ -229,9 +229,10 @@ const router = createRouter({
       component: () => import('@/views/ResourceDetailView.vue')
     },
     {
-      path: '/bookings',
+      path: '/dashboard/my-bookings',
       name: 'my-bookings',
-      component: () => import('@/views/dashboard/MyBookingsView.vue')
+      component: () => import('@/views/dashboard/MyBookingsView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/equipment/bookings',
@@ -259,6 +260,16 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFound.vue')
+    },
+    {
+      path: '/nearby-map',
+      name: 'nearby-map',
+      component: () => import('@/views/NearbyLocationMapView.vue')
+    },
+    {
+      path: '/location-picker-test',
+      name: 'location-picker-test',
+      component: () => import('@/views/LocationPickerTest.vue')
     }
   ]
 })

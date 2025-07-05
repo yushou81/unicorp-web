@@ -305,7 +305,7 @@ export async function getResourceBookings(resourceId: string | number) {
  * 获取用户的所有设备预约申请
  */
 export async function getMyEquipmentBookings() {
-  return apiRequest('/v1/resources/equipment/bookings/my')
+  return apiRequest('/v1/resources/equipment/my-bookings')
 }
 
 /**
@@ -327,4 +327,23 @@ export function downloadResource(id: string | number) {
   // document.body.appendChild(a)
   // a.click()
   // document.body.removeChild(a)
+}
+
+/**
+ * 获取我上传的资源列表
+ * @param params 分页和搜索参数
+ */
+export async function getMyUploadedResources(params: {
+  page?: number
+  size?: number
+  keyword?: string
+  resourceType?: string
+} = {}) {
+  const queryParams = new URLSearchParams()
+  if (params.page !== undefined) queryParams.append('page', params.page.toString())
+  if (params.size !== undefined) queryParams.append('size', params.size.toString())
+  if (params.keyword) queryParams.append('keyword', params.keyword)
+  if (params.resourceType) queryParams.append('resourceType', params.resourceType)
+  
+  return apiRequest(`/v1/resources/my-uploads?${queryParams.toString()}`)
 } 
