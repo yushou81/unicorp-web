@@ -41,6 +41,14 @@
             <label class="block text-gray-700 mb-1">手机号</label>
             <input v-model="phone" type="tel" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入手机号" />
           </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">密码</label>
+            <input v-model="password" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入密码" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">确认密码</label>
+            <input v-model="confirmPassword" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请再次输入密码" />
+          </div>
         </div>
         <div v-if="role === 'companyAdmin'">
           <div class="mb-4">
@@ -54,6 +62,22 @@
           <div class="mb-4">
             <label class="block text-gray-700 mb-1">企业地址</label>
             <input v-model="address" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业地址" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">在地图上选择位置</label>
+            <div class="h-96 border rounded overflow-hidden">
+              <MapLocationPicker 
+                ref="locationPickerRef"
+                @location-selected="handleLocationSelected"
+              />
+            </div>
+            <div v-if="locationSelected" class="mt-2 text-sm text-green-600">
+              已选择位置：{{ locationSelected.address.formatted_address }}
+              <div class="text-xs text-gray-500">
+                经度: {{ locationSelected.position.longitude.toFixed(6) }}, 
+                纬度: {{ locationSelected.position.latitude.toFixed(6) }}
+              </div>
+            </div>
           </div>
           <div class="mb-4">
             <label class="block text-gray-700 mb-1">企业官网</label>
@@ -83,21 +107,17 @@
             <input v-model="email" type="email" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员邮箱" />
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">管理员密码</label>
-            <input v-model="password" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员密码" />
-          </div>
-          <div class="mb-4">
             <label class="block text-gray-700 mb-1">管理员手机号（选填）</label>
             <input v-model="phone" type="tel" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员手机号" />
           </div>
-        </div>
-        <div class="mb-4">
-          <label class="block text-gray-700 mb-1">密码</label>
-          <input v-model="password" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入密码" />
-        </div>
-        <div class="mb-6">
-          <label class="block text-gray-700 mb-1">确认密码</label>
-          <input v-model="confirmPassword" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请再次输入密码" />
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">管理员密码</label>
+            <input v-model="password" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入密码" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">确认密码</label>
+            <input v-model="confirmPassword" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请再次输入密码" />
+          </div>
         </div>
         <div class="flex items-center justify-between mb-6">
           <router-link to="/login" class="text-blue-600 hover:underline text-sm">已有账号？登录</router-link>
@@ -116,6 +136,19 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { registerStudent, registerEnterprise } from '@/lib/api/auth'
 import { getAllSchools } from '@/lib/api/organization'
+import MapLocationPicker from '@/components/map/MapLocationPicker.vue'
+
+// 定义位置信息接口
+interface LocationInfo {
+  position: {
+    longitude: number;
+    latitude: number;
+  };
+  address: {
+    formatted_address: string;
+    [key: string]: any;
+  };
+}
 
 const role = ref<'student' | 'companyAdmin'>('student')
 const username = ref('')
@@ -141,12 +174,39 @@ const contactName = ref('')
 const router = useRouter()
 const businessLicenseUrl = ref('')
 
+// 地图位置选择相关
+const locationPickerRef = ref<InstanceType<typeof MapLocationPicker> | null>(null)
+const locationSelected = ref<LocationInfo | null>(null)
+const latitude = ref(0)
+const longitude = ref(0)
+
+// 处理位置选择
+const handleLocationSelected = (location: LocationInfo) => {
+  locationSelected.value = location
+  
+  // 更新经纬度
+  if (location && location.position) {
+    latitude.value = location.position.latitude
+    longitude.value = location.position.longitude
+    
+    // 如果地址栏为空，自动填入地址
+    if (!address.value && location.address && location.address.formatted_address) {
+      address.value = location.address.formatted_address
+    }
+  }
+  
+  // 选择位置后关闭搜索结果
+  if (locationPickerRef.value) {
+    locationPickerRef.value.clearSearchResults()
+  }
+}
+
 // 获取学校列表
 async function fetchSchoolList() {
   schoolListLoading.value = true
   schoolListError.value = ''
   try {
-    const res = await getAllSchools('simple')
+    const res: any = await getAllSchools('simple')
     console.log('[注册] 获取学校列表成功:', res)
     schoolList.value = res.data || []
   } catch (e: any) {
@@ -193,9 +253,9 @@ async function onRegister() {
       password: password.value,
       email: email.value,
       phone: phone.value,
-      organizationId: Number(organizationId.value),
-      realName: realName.value,
-      idCard: idCard.value
+      organization_id: Number(organizationId.value),
+      real_name: realName.value,
+      id_card: idCard.value
     }
     console.log('[注册] 学生注册参数:', studentPayload)
     try {
@@ -228,7 +288,10 @@ async function onRegister() {
         adminNickname: contactName.value,
         adminEmail: email.value,
         adminPassword: password.value,
-        adminPhone: phone.value
+        adminPhone: phone.value,
+        latitude: latitude.value || null,
+        longitude: longitude.value || null,
+        companyCode: "AUTO" // 添加缺失字段，设置为自动生成
       }
       console.log('[注册] 企业注册参数:', enterprisePayload)
       const res = await registerEnterprise(enterprisePayload)
@@ -242,3 +305,23 @@ async function onRegister() {
   }
 }
 </script>
+
+<style scoped>
+/* 确保地图定位组件在表单中显示正常 */
+:deep(.map-location-picker) {
+  height: 100%;
+  width: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+:deep(.map-container) {
+  height: 100%;
+}
+:deep(.search-container) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+</style>

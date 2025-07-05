@@ -34,25 +34,6 @@
     
     <div class="map-container" ref="mapContainer"></div>
     
-    <div class="address-info" v-if="currentAddress">
-      <div class="selected-address">
-        <h4>当前选择的位置：</h4>
-        <p>{{ currentAddress.formatted_address }}</p>
-        <div class="address-details">
-          <p><span>省份：</span>{{ currentAddress.addressComponent.province }}</p>
-          <p><span>城市：</span>{{ currentAddress.addressComponent.city }}</p>
-          <p><span>区县：</span>{{ currentAddress.addressComponent.district }}</p>
-          <p v-if="currentAddress.addressComponent.streetNumber">
-            <span>街道：</span>{{ currentAddress.addressComponent.street }}
-            {{ currentAddress.addressComponent.streetNumber }}
-          </p>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="confirm-btn" @click="confirmLocation">确认选择</button>
-      </div>
-    </div>
-    
     <div class="location-btn" @click="getUserLocation">
       <div class="location-icon"></div>
     </div>
@@ -248,61 +229,56 @@ const loadMapScript = (jsUrl) => {
 
 // 处理标记拖拽结束事件
 const handleMarkerDragEnd = (e) => {
-  if (!marker.value) return
+  if (!mapInitialized.value) return
   
-  const position = e.target.getPosition()
-  currentPosition.value = {
-    longitude: position.getLng(),
-    latitude: position.getLat()
-  }
-  fetchAddressFromCoordinates(currentPosition.value.longitude, currentPosition.value.latitude)
+  const { lng: longitude, lat: latitude } = e.target.getPosition()
+  
+  currentPosition.value = { longitude, latitude }
+  fetchAddressFromCoordinates(longitude, latitude)
 }
 
 // 处理地图点击事件
 const handleMapClick = (e) => {
-  if (!map.value || !marker.value) return
+  if (!mapInitialized.value || !marker.value) return
   
-  const position = e.lnglat
-  currentPosition.value = {
-    longitude: position.getLng(),
-    latitude: position.getLat()
-  }
+  const { lng: longitude, lat: latitude } = e.lnglat
   
-  marker.value.setPosition([currentPosition.value.longitude, currentPosition.value.latitude])
-  fetchAddressFromCoordinates(currentPosition.value.longitude, currentPosition.value.latitude)
+  currentPosition.value = { longitude, latitude }
+  marker.value.setPosition([longitude, latitude])
+  
+  fetchAddressFromCoordinates(longitude, latitude)
 }
 
-// 处理搜索
+// 搜索地点
 const handleSearch = async () => {
-  if (!searchKeyword.value || !mapInitialized.value) {
+  if (!searchKeyword.value.trim() || !mapInitialized.value) {
     return
   }
   
   loading.value = true
-  loadingMessage.value = '正在搜索位置...'
+  loadingMessage.value = '搜索中...'
   
   try {
-    // 调用后端搜索地点API
     const response = await axios.get('/api/v1/map/search', {
-      params: { keyword: searchKeyword.value }
+      params: {
+        keyword: searchKeyword.value,
+        city: '全国'
+      }
     })
     
-    if (response.data.code !== 200) {
-      throw new Error(response.data.message || '搜索失败')
-    }
-    
-    // 检查并处理搜索结果
-    if (response.data.data && response.data.data.pois && response.data.data.pois.length > 0) {
-      searchResults.value = response.data.data.pois
+    if (response.data.code === 200 && 
+        response.data.data && 
+        response.data.data.pois && 
+        response.data.data.pois.length > 0) {
       
-      // 向父组件发送搜索结果
+      searchResults.value = response.data.data.pois
       emit('search-results', searchResults.value)
       
       console.log(`找到 ${searchResults.value.length} 个地点`)
       
-      // 默认选择第一个结果
-      selectedSearchIndex.value = 0
-      selectSearchResult(searchResults.value[0], 0)
+      // 不再自动选择第一个结果
+      // selectedSearchIndex.value = 0
+      // selectSearchResult(searchResults.value[0], 0)
     } else {
       searchResults.value = []
       alert('未找到相关位置')
@@ -340,7 +316,16 @@ const selectSearchResult = (item, index) => {
     marker.value.setPosition([longitude, latitude])
     
     // 获取详细地址
-    fetchAddressFromCoordinates(longitude, latitude)
+    fetchAddressFromCoordinates(longitude, latitude).then(() => {
+      // 选择结果后自动确认位置并清除搜索结果
+      if (currentAddress.value) {
+        emit('location-selected', {
+          position: currentPosition.value,
+          address: currentAddress.value
+        })
+        clearSearchResults()
+      }
+    })
   }
 }
 
@@ -377,6 +362,12 @@ const fetchAddressFromCoordinates = async (longitude, latitude) => {
       
       // 发出位置变更事件
       emit('location-change', {
+        position: currentPosition.value,
+        address: currentAddress.value
+      })
+
+      // 自动确认位置选择
+      emit('location-selected', {
         position: currentPosition.value,
         address: currentAddress.value
       })
@@ -437,16 +428,6 @@ const adjustToNearestPOI = async (longitude, latitude) => {
     }
   } catch (error) {
     console.warn('获取POI点错误:', error)
-  }
-}
-
-// 确认选择位置
-const confirmLocation = () => {
-  if (currentAddress.value) {
-    emit('location-selected', {
-      position: currentPosition.value,
-      address: currentAddress.value
-    })
   }
 }
 
@@ -613,64 +594,6 @@ defineExpose({
   width: 100%;
   height: 100%;
   min-height: 400px;
-}
-
-.address-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 12px 16px;
-  border-top: 1px solid #eee;
-  z-index: 10;
-}
-
-.selected-address h4 {
-  font-size: 16px;
-  margin: 0 0 8px;
-  color: #333;
-}
-
-.selected-address p {
-  margin: 0 0 4px;
-  color: #555;
-}
-
-.address-details {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 8px;
-  font-size: 13px;
-}
-
-.address-details p {
-  margin-right: 12px;
-  margin-bottom: 4px;
-}
-
-.address-details span {
-  color: #888;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
-}
-
-.confirm-btn {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.confirm-btn:hover {
-  background: #2563eb;
 }
 
 .location-btn {
