@@ -167,13 +167,6 @@ const router = createRouter({
       name: 'ProjectEdit',
       component: () => import('@/views/project/ProjectEditView.vue')
     },
-    // 项目合作管理路由
-    // {
-    //   path: '/project/list',
-    //   name: 'project-list',
-    //   component: () => import('@/views/project/ProjectListView.vue'),
-    //   meta: { requiresAuth: true }
-    // },
     {
       path: '/project/publish',
       name: 'project-publish',
@@ -187,16 +180,15 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/project/application',
-      name: 'project-application',
-      component: () => import('@/views/project/ProjectApplicationView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/project/:id/fund',
       name: 'project-fund',
       component: () => import('@/views/project/ProjectFundView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/project/:id/fund-readonly',
+      name: 'project-fund-readonly',
+      component: () => import('@/views/project/ProjectFundReadonlyView.vue')
     },
     {
       path: '/project/my',
@@ -205,13 +197,11 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-
       path: '/project/search',
       name: 'project-search',
       component: () => import('@/views/project/ProjectSearchView.vue'),
       meta: { requiresAuth: true }
     },
-
     {
       path: '/resource',
       name: 'resource',
@@ -238,12 +228,6 @@ const router = createRouter({
       component: () => import('@/views/resource/EquipmentBookingManageView.vue')
     },
     {
-      path: '/teacher/projects',
-      name: 'TeacherProjectManage',
-      component: () => import('@/views/project/TeacherProjectManageView.vue'),
-      meta: { requiresAuth: true, role: 'teacher' }
-    },
-    {
       path: '/project/audit',
       name: 'project-audit',
       component: () => import('@/views/project/ProjectAuditView.vue'),
@@ -255,37 +239,6 @@ const router = createRouter({
       component: () => import('@/views/project/MyProjectApplicationView.vue'),
       meta: { requiresAuth: true }
     },
-    // 保留原有路由以兼容现有功能
-    // {
-    //   path: "/project/:id/members",
-    //   name: "ProjectMemberManage",
-    //   component: () => import("@/views/project/ProjectMemberManageView.vue"),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: "/student/projects",
-    //   name: "StudentProjectSearch",
-    //   component: () => import("@/views/project/StudentProjectSearchView.vue"),
-    //   meta: { requiresAuth: true, role: "student" }
-    // },
-    // {
-    //   path: "/project/edit/:id",
-    //   name: "ProjectEdit",
-    //   component: () => import("@/views/project/ProjectEditView.vue"),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: "/company/projects",
-    //   name: "CompanyProjectManage",
-    //   component: () => import("@/views/project/CompanyProjectManageView.vue"),
-    //   meta: { requiresAuth: true, role: "companyAdmin" }
-    // },
-    // {
-    //   path: "/teacher/projects",
-    //   name: "TeacherProjectManage",
-    //   component: () => import("@/views/project/TeacherProjectManageView.vue"),
-    //   meta: { requiresAuth: true, role: "teacher" }
-    // },
     {
       path: '/logs',
       name: 'logs',
@@ -296,7 +249,6 @@ const router = createRouter({
       name: 'accounts',
       component: () => import('@/views/dashboard/Accounts.vue')
     },
-    
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',

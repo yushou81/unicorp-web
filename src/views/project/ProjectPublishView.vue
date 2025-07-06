@@ -211,10 +211,10 @@ function getFileName(file: File) {
 
 async function saveDraft() {
   if (isSubmitting.value) return
-  
+
   try {
     isSubmitting.value = true
-    
+
     // 先上传所有附件
     let attachmentUrls: string[] = []
     for (const file of form.value.attachments) {
@@ -225,12 +225,12 @@ async function saveDraft() {
         throw new Error('文件上传失败: ' + file.name)
       }
     }
-    
+
     // 构建草稿数据
     const submitData = {
       title: form.value.title,
       description: form.value.description,
-      initiatorType: appStore.user?.role ,
+      initiatorType: getInitiatorType(appStore.user?.role),
       initiatorId: appStore.user?.id,
       field: form.value.field,
       budget: form.value.budget ? Number(form.value.budget) : undefined,
@@ -239,18 +239,18 @@ async function saveDraft() {
       status: 'draft',
       projectId: undefined
     }
-    
+
     // 调用实际的创建项目接口
     const res = await createProject(submitData)
     if (res?.data?.projectId) {
-      // 保存成功，跳转到编辑页
-      router.push(`/project/publish`)
+      alert('草稿保存成功')
+      router.back()
     } else {
       throw new Error('草稿保存失败')
     }
   } catch (error) {
-    console.error('保存草稿失败:', error)
-    // 可以显示错误提示
+    alert('草稿保存失败: ' + (error as any).message)
+    // 停留在当前页面
   } finally {
     isSubmitting.value = false
   }
@@ -286,7 +286,7 @@ async function submitForm() {
 
   try {
     isSubmitting.value = true
-    
+
     // 先上传所有附件
     let attachmentUrls: string[] = []
     for (const file of form.value.attachments) {
@@ -297,12 +297,12 @@ async function submitForm() {
         throw new Error('文件上传失败: ' + file.name)
       }
     }
-    
+
     // 构建提交数据
     const submitData = {
       title: form.value.title,
       description: form.value.description,
-      initiatorType: appStore.user?.role,
+      initiatorType: getInitiatorType(appStore.user?.role),
       initiatorId: appStore.user?.id,
       field: form.value.field,
       budget: form.value.budget ? Number(form.value.budget) : undefined,
@@ -311,20 +311,35 @@ async function submitForm() {
       status: 'pending',
       projectId: undefined
     }
-    
+
     // 调用实际的创建项目接口
     const res = await createProject(submitData)
     if (res?.data?.projectId) {
-      // 发布成功，跳转到项目列表
-      router.push('/project/list')
+      alert('项目发布成功')
+      router.back()
     } else {
       throw new Error('项目发布失败')
     }
   } catch (error) {
-    console.error('发布项目失败:', error)
-    // 可以显示错误提示
+    alert('项目发布失败: ' + (error as any).message)
+    // 停留在当前页面
   } finally {
     isSubmitting.value = false
   }
+}
+
+// 添加一个辅助函数来根据用户角色获取正确的initiatorType
+function getInitiatorType(role?: string): 'school' | 'enterprise' {
+  if (!role) return 'school' // 默认值
+  
+  const upperRole = role.toUpperCase()
+  if (upperRole === 'TEACHER') {
+    return 'school'
+  } else if (upperRole === 'EN_TEACHER') {
+    return 'enterprise'
+  }
+  
+  // 其他角色的默认处理
+  return 'school'
 }
 </script>

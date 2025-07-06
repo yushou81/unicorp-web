@@ -13,6 +13,15 @@
           :verified="teacher.verified"
           :onEdit="onEditProfileClick"
       />
+      
+      <!-- 项目相关入口 -->
+      <div class="flex flex-wrap gap-4 mb-8 mt-6">
+        <button @click="router.push('/project/search')" class="px-6 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">项目搜索与对接</button>
+        <button @click="logAndGoPublish" class="px-6 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">发布新项目</button>
+        <button @click="router.push('/project/my')" class="px-6 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition">我的项目管理</button>
+        <button @click="router.push('/my-project-applications')" class="px-6 py-2 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600 transition">我的项目申请</button>
+      </div>
+      
       <DashboardTabs
           :tabs="[{ label: '我的课堂', value: 'my-courses' }]"
           :activeTab="activeTab"
@@ -154,12 +163,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getMe, searchUser } from '@/lib/api/auth'
 import Navbar from '@/components/layout/Navbar.vue'
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 import { createCourse, getTeacherCourses, updateCourse, deleteCourse, getCourseById, updateCourseStatus } from '@/lib/api/classroom'
+
+const router = useRouter()
 
 const teacher = ref({
   avatar: 'https://randomuser.me/api/portraits/men/33.jpg',
@@ -174,26 +186,6 @@ const teacher = ref({
 const appStore = useAppStore()
 const userInfo = computed(() => appStore.user as any || {})
 const userAvatar = computed(() => (userInfo.value?.avatar as string) || 'https://randomuser.me/api/portraits/men/33.jpg')
-
-async function fetchTeacherInfo() {
-  try {
-    const res = await getMe() as any
-    const userData = res.data
-    if (userData) {
-      teacher.value = {
-        avatar: userData.avatarUrl || 'https://randomuser.me/api/portraits/men/33.jpg',
-        name: userData.nickname || userData.account || '未知教师',
-        email: userData.email || '',
-        phone: userData.phone || '',
-        verified: userData.verified || false,
-        school: userData.organizationName || '未绑定学校',
-        company: ''
-      }
-    }
-  } catch (e: any) {
-    console.error('获取教师信息失败:', e)
-  }
-}
 
 const activeTab = ref('my-courses')
 
@@ -246,7 +238,6 @@ function statusText(status: string) {
 }
 
 onMounted(() => {
-  fetchTeacherInfo()
   fetchCourses()
 })
 
@@ -412,5 +403,10 @@ function selectMentor(user) {
 function clearSelectedMentor() {
   selectedMentor.value = null
   form.value.mentorId = ''
+}
+
+function logAndGoPublish() {
+  console.log('router:', router, 'appStore.user:', appStore.user)
+  router.push('/project/publish')
 }
 </script>

@@ -14,10 +14,7 @@
           </button>
         </div>
   
-        <!-- Tab导航 -->
-        <div class="tabs flex mb-6">
-          <button v-for="tab in tabs" :key="tab" :class="['tab', {active: currentTab === tab}]" @click="currentTab = tab">{{ tab }}</button>
-        </div>
+
   
         <!-- 项目基本信息 -->
         <div v-if="currentTab === '基本信息'" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
@@ -30,16 +27,7 @@
                 <span>状态：<span :class="getStatusClass(project.status)">{{ getStatusText(project.status) }}</span></span>
               </div>
             </div>
-            <div class="flex space-x-3">
-              <button 
-                v-if="canApply"
-                @click="showApplyModal = true"
-                class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
-              >
-                申请合作
-              </button>
-              
-            </div>
+            
           </div>
   
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -65,6 +53,7 @@
               </div>
             </div>
           </div>
+        </div>
   
           <!-- 附件 -->
           <div v-if="project.attachments && project.attachments.length > 0" class="mt-6">
@@ -86,208 +75,10 @@
           </div>
         </div>
   
-        <!-- 项目进度 -->
-        <div v-else-if="currentTab === '进度管理'" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">项目进度</h2>
-          <div v-if="progressList.length > 0" class="space-y-4">
-            <div v-for="progress in progressList" :key="progress.progressId" class="border-l-4 border-blue-500 pl-4">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-semibold text-gray-900">{{ progress.stage }}</h4>
-                  <p class="text-gray-700 mt-1">{{ progress.content }}</p>
-                  <p class="text-sm text-gray-500 mt-2">{{ formatDate(progress.createdAt) }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div v-else class="text-gray-500 text-center py-8">
-            暂无进度记录
-          </div>
-          
-          <!-- 添加进度按钮 -->
-          <div v-if="isProjectMember" class="mt-6">
-            <button @click="showProgressModal = true" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-              添加进度
-            </button>
-          </div>
-        </div>
-  
-        <!-- 合作申请 -->
-        <div v-else-if="currentTab === '合作申请'" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">合作申请</h2>
-          <div v-if="applications.length > 0" class="space-y-4">
-            <div v-for="application in applications" :key="application.applicationId" class="border rounded-lg p-4">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-medium text-gray-900">{{ application.applicantType === 'school' ? '学校' : '企业' }}</p>
-                  <p class="text-gray-700 mt-1">{{ application.message }}</p>
-                  <p class="text-sm text-gray-500 mt-2">{{ formatDate(application.createdAt) }}</p>
-                </div>
-                <div v-if="application.status === 'pending'" class="flex space-x-2">
-                  <button @click="reviewApplication(application.applicationId, 'approved')" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
-                    通过
-                  </button>
-                  <button @click="reviewApplication(application.applicationId, 'rejected')" class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">
-                    拒绝
-                  </button>
-                </div>
-                <span v-else :class="getStatusClass(application.status)">
-                  {{ getStatusText(application.status) }}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div v-else class="text-gray-500 text-center py-8">
-            暂无合作申请
-          </div>
-        </div>
-  
-        <!-- 经费管理 -->
-        <div v-else-if="currentTab === '经费管理'" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">经费管理</h2>
-          <div class="flex justify-between items-center mb-4">
-            <div class="text-sm text-gray-600">
-              总预算：¥{{ project.budget || 0 }} | 已使用：¥{{ usedBudget }} | 剩余：¥{{ remainingBudget }}
-            </div>
-            <button @click="showFundModal = true" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-              申请经费
-            </button>
-          </div>
-          
-          <div v-if="fundRecords.length > 0" class="space-y-2">
-            <div v-for="record in fundRecords" :key="record.fundId" class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <div>
-                <p class="font-medium">{{ record.purpose }}</p>
-                <p class="text-sm text-gray-600">¥{{ record.amount }}</p>
-              </div>
-              <span :class="getStatusClass(record.status)">
-                {{ getStatusText(record.status) }}
-              </span>
-            </div>
-          </div>
-          <div v-else class="text-gray-500 text-center py-8">
-            暂无经费记录
-          </div>
-        </div>
-  
-        <!-- 资料管理 -->
-        <div v-else-if="currentTab === '资料管理'" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <!-- 资料上传、列表、下载 -->
-          <!-- <DocumentManager :projectId="project.value.projectId" /> -->
-          <div class="text-gray-400">资料管理功能开发中...</div>
-        </div>
-  
-        <!-- 操作日志 -->
-        <div v-else-if="currentTab === '操作日志'" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <!-- 日志列表 -->
-          <!-- <LogManager :projectId="project.value.projectId" /> -->
-          <div class="text-gray-400">操作日志功能开发中...</div>
-        </div>
-  
-        <!-- 权限分配 -->
-        <div v-else-if="currentTab === '权限分配'" class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <!-- 权限分配、回收、日志 -->
-          <!-- <PermissionManager :projectId="project.value.projectId" /> -->
-          <div class="text-gray-400">权限分配功能开发中...</div>
-        </div>
-      </div>
-  
-      <!-- 申请合作弹窗 -->
-      <div v-if="showApplyModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 min-w-[400px] max-w-[90vw]">
-          <h3 class="text-lg font-bold mb-4">申请合作</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">申请说明</label>
-              <textarea
-                v-model="applyMessage"
-                rows="4"
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="请简要说明申请合作的原因和优势..."
-              ></textarea>
-            </div>
-          </div>
-          <div class="flex justify-end space-x-3 mt-6">
-            <button @click="showApplyModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-              取消
-            </button>
-            <button @click="submitApply" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              提交申请
-            </button>
-          </div>
-        </div>
-      </div>
-  
-      <!-- 添加进度弹窗 -->
-      <div v-if="showProgressModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 min-w-[500px] max-w-[90vw]">
-          <h3 class="text-lg font-bold mb-4">添加项目进度</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">阶段名称</label>
-              <input
-                v-model="progressForm.stage"
-                type="text"
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="如：需求分析、方案设计等"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">进展描述</label>
-              <textarea
-                v-model="progressForm.content"
-                rows="4"
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="请详细描述项目进展..."
-              ></textarea>
-            </div>
-          </div>
-          <div class="flex justify-end space-x-3 mt-6">
-            <button @click="showProgressModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-              取消
-            </button>
-            <button @click="submitProgress" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              提交
-            </button>
-          </div>
-        </div>
-      </div>
-  
-      <!-- 申请经费弹窗 -->
-      <div v-if="showFundModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 min-w-[500px] max-w-[90vw]">
-          <h3 class="text-lg font-bold mb-4">申请经费</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">申请金额</label>
-              <input
-                v-model="fundForm.amount"
-                type="number"
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="请输入申请金额"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">用途说明</label>
-              <textarea
-                v-model="fundForm.purpose"
-                rows="3"
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="请详细说明经费用途..."
-              ></textarea>
-            </div>
-          </div>
-          <div class="flex justify-end space-x-3 mt-6">
-            <button @click="showFundModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-              取消
-            </button>
-            <button @click="submitFund" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              提交申请
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+
+
+  </div>
+
   </template>
   
   <script setup lang="ts">
@@ -366,10 +157,6 @@
   
   async function fetchProgress() {
     try {
-      // 这里需要调用实际的API
-      // const response = await getProjectProgress(projectId)
-      // progressList.value = response.data
-      
       // 模拟数据
       progressList.value = [
         {
@@ -392,9 +179,6 @@
   
   async function fetchApplications() {
     try {
-      // 这里需要调用实际的API
-      // const response = await getProjectApplications(projectId)
-      // applications.value = response.data
       
       // 模拟数据
       applications.value = [
@@ -413,25 +197,8 @@
   
   async function fetchFundRecords() {
     try {
-      // 这里需要调用实际的API
-      // const response = await getProjectFundRecords(projectId)
-      // fundRecords.value = response.data
       
-      // 模拟数据
-      fundRecords.value = [
-        {
-          fundId: 1,
-          amount: 5000,
-          purpose: '购买实验材料',
-          status: 'approved'
-        },
-        {
-          fundId: 2,
-          amount: 3000,
-          purpose: '设备租赁',
-          status: 'pending'
-        }
-      ]
+      
     } catch (error) {
       console.error('获取经费记录失败:', error)
     }

@@ -43,7 +43,13 @@
         >
           双师课堂
         </button>
-
+        <button 
+          @click="activeTab = 'project'" 
+          :class="['px-4 py-2 font-medium transition-colors', 
+                  activeTab === 'project' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-blue-500']"
+        >
+          项目审核
+        </button>
       </div>
     </div>
     
@@ -225,9 +231,35 @@
         </div>
       </div>
       
-
-      
-
+      <!-- 项目审核管理区 -->
+      <div v-if="activeTab === 'project'" class="my-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">项目审核管理</h2>
+          <div class="flex space-x-2">
+            <button 
+              @click="router.push('/project/audit')" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+              项目审核
+            </button>
+          </div>
+        </div>
+        
+        <div v-if="pendingProjectsCount > 0" class="bg-gray-50 p-8 rounded-lg text-center">
+          <p class="text-gray-500">待审核项目：{{ pendingProjectsCount }}个</p>
+        </div>
+        
+        <div v-if="approvedProjectsCount > 0" class="bg-gray-50 p-8 rounded-lg text-center">
+          <p class="text-gray-500">已通过项目：{{ approvedProjectsCount }}个</p>
+        </div>
+        
+        <div v-if="rejectedProjectsCount > 0" class="bg-gray-50 p-8 rounded-lg text-center">
+          <p class="text-gray-500">已拒绝项目：{{ rejectedProjectsCount }}个</p>
+        </div>
+      </div>
     </div>
     
     <!-- 课程创建/编辑对话框 -->
@@ -1256,4 +1288,8 @@ async function updateDashboardData() {
 function goToProjectAudit() {
   router.push('/project/audit')
 }
+
+const pendingProjectsCount = 0 // 这里可以通过接口获取真实数量
+const approvedProjectsCount = 0
+const rejectedProjectsCount = 0
 </script> 

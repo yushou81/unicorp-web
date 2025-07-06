@@ -13,12 +13,13 @@ export default defineConfig({
     },
   },
   server: {
-    port: 8081,
+    port: 3031,
     open: true,
-    host: '0.0.0.0',
+    //host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://192.168.58.17:8081',
+        //target: 'http://192.168.58.17:8081',
+        target:'http://localhost:8081',
         changeOrigin: true,
         ws: true,
       },

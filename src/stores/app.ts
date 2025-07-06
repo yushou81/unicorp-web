@@ -47,13 +47,13 @@ export const useAppStore = defineStore('app', () => {
     
     switch (permission) {
       case 'publish_project':
-        return ['ADMIN', 'TEACHER', 'SCH_ADMIN', 'COMPANYADMIN'].includes(userRole || '')
+        return ['ADMIN', 'TEACHER', 'SCH_ADMIN', 'EN_ADMIN', 'EN_TEACHER'].includes(userRole || '')
       case 'apply_project':
         return ['SCHOOL', 'ENTERPRISE'].includes(userType || '')
       case 'review_application':
-        return ['ADMIN', 'TEACHER', 'SCH_ADMIN', 'COMPANYADMIN'].includes(userRole || '')
+        return ['ADMIN', 'TEACHER', 'SCH_ADMIN', 'EN_ADMIN'].includes(userRole || '')
       case 'manage_fund':
-        return ['ADMIN', 'FINANCE', 'SCH_ADMIN', 'COMPANYADMIN'].includes(userRole || '')
+        return ['ADMIN', 'FINANCE', 'SCH_ADMIN', 'EN_ADMIN'].includes(userRole || '')
       default:
         return false
     }
