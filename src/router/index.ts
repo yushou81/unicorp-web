@@ -162,11 +162,25 @@ const router = createRouter({
       name: 'learn',
       component: () => import('@/views/LearnView.vue')
     },
+
+    {
+      path: '/resource',
+      name: 'resource',
+      component: () => import('@/views/ResourceView.vue')
+    },
     {
       path: '/project/edit/:projectId',
       name: 'ProjectEdit',
       component: () => import('@/views/project/ProjectEditView.vue')
     },
+    // 项目合作管理路由
+    // {
+    //   path: '/project/list',
+    //   name: 'project-list',
+    //   component: () => import('@/views/project/ProjectListView.vue'),
+    //   meta: { requiresAuth: true }
+    // },
+
     {
       path: '/project/publish',
       name: 'project-publish',
@@ -205,7 +219,7 @@ const router = createRouter({
     {
       path: '/resource',
       name: 'resource',
-      component: () => import('@/views/LearnView.vue')
+      component: () => import('@/views/ResourceView.vue')
     },
     {
       path: '/resource/upload',
@@ -218,15 +232,22 @@ const router = createRouter({
       component: () => import('@/views/ResourceDetailView.vue')
     },
     {
-      path: '/bookings',
+      path: '/dashboard/my-bookings',
       name: 'my-bookings',
-      component: () => import('@/views/dashboard/MyBookingsView.vue')
+      component: () => import('@/views/dashboard/MyBookingsView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/equipment/bookings',
       name: 'equipment-bookings',
       component: () => import('@/views/resource/EquipmentBookingManageView.vue')
     },
+    // {
+    //   path: '/teacher/projects',
+    //   name: 'TeacherProjectManage',
+    //   component: () => import('@/views/project/TeacherProjectManageView.vue'),
+    //   meta: { requiresAuth: true, role: 'teacher' }
+    // },
     {
       path: '/project/audit',
       name: 'project-audit',
@@ -253,6 +274,16 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFound.vue')
+    },
+    {
+      path: '/nearby-map',
+      name: 'nearby-map',
+      component: () => import('@/views/NearbyLocationMapView.vue')
+    },
+    {
+      path: '/location-picker-test',
+      name: 'location-picker-test',
+      component: () => import('@/views/LocationPickerTest.vue')
     }
   ]
 })

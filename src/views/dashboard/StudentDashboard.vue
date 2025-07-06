@@ -216,6 +216,19 @@
         <div v-else-if="activeTab === 'chat'">
           <ChatPanel :myUserId="myUserId" :myAvatar="userAvatar" />
         </div>
+        <div v-else-if="activeTab === 'bookings'">
+          <!-- 我的预约tab内容 -->
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <h2 class="text-xl font-bold mb-6">我的设备预约</h2>
+            <p class="text-gray-600 mb-6">查看您的所有设备预约申请记录和状态</p>
+            <router-link 
+              to="/dashboard/my-bookings" 
+              class="inline-block px-6 py-3 rounded bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
+            >
+              查看我的预约
+            </router-link>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -1082,7 +1095,8 @@ const tabList = [
   { label: '学习记录', value: 'study' },
   { label: '课程管理', value: 'course' },
   { label: '我的简历', value: 'resume' },
-  { label: '聊天', value: 'chat' }
+  { label: '聊天', value: 'chat' },
+  { label: '我的预约', value: 'bookings' }
 ]
 
 const enrolledCourses = ref<any[]>([])

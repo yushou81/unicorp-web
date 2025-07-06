@@ -21,6 +21,8 @@ export interface Job {
     description: string
     website: string
     address: string
+    latitude?: number
+    longitude?: number
   }
   enterpriseDetail?: {
     organizationId: number
