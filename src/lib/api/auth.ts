@@ -8,6 +8,11 @@ export function login(data: { loginType: 'account'|'email'|'phone'; principal: s
   })
 }
 
+// 获取GitHub登录URL
+export function getGithubLoginUrl() {
+  return apiRequest<string>('/v1/auth/github/login-url')
+}
+
 // 上传用户头像
 export function uploadAvatar(file: File) {
   const formData = new FormData()

@@ -15,6 +15,7 @@ import TeacherDashboard from '@/views/dashboard/TeacherDashboard.vue'
 import AdminDashboard from '@/views/dashboard/AdminDashboard.vue'
 import MentorDashboard from '@/views/dashboard/MentorDashboard.vue'
 import SchoolAdminDashboard from '@/views/dashboard/SchoolAdminDashboard.vue'
+import LoginSuccessView from '@/views/LoginSuccessView.vue'
 import { getMe } from '@/lib/api/auth'
 import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
@@ -36,6 +37,11 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: RegisterView
+    },
+    {
+      path: '/login-success',
+      name: 'login-success',
+      component: LoginSuccessView
     },
     {
       path: '/job',
@@ -98,6 +104,7 @@ const router = createRouter({
             return { name: 'student-dashboard' }
           case 'EN_ADMIN':
           case 'COMPANYADMIN':
+          case 'EN_ADMIN':
             return { name: 'company-dashboard' }
           case 'TEACHER':
             return { name: 'teacher-dashboard' }
@@ -107,8 +114,8 @@ const router = createRouter({
           case 'MENTOR':
           case 'EN_TEACHER':
             return { name: 'mentor-dashboard' } // 添加企业导师路由
+          case 'SCHOOL_ADMIN':
           case 'SCH_ADMIN':
-          case 'SCHOOLADMIN':
             return { name: 'school-dashboard' } // 添加学校管理员路由
           default:
             console.log('未匹配到角色，回到首页:', role)
