@@ -45,10 +45,18 @@
       <div class="my-4 flex items-center justify-center">
         <span class="text-gray-400 text-xs">或</span>
       </div>
-      <button @click="onUnifiedLogin" class="w-full py-2 rounded bg-white border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition flex items-center justify-center">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 17l-4 4m0 0l-4-4m4 4V3"/></svg>
-        使用学校/企业统一认证登录
-      </button>
+      <div class="flex flex-col gap-3">
+        <button @click="onGithubLogin" class="w-full py-2 rounded bg-gray-800 text-white font-semibold hover:bg-gray-900 transition flex items-center justify-center">
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.167 6.839 9.49.5.09.682-.217.682-.48 0-.237-.01-1.017-.014-1.845-2.782.603-3.369-1.188-3.369-1.188-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.09-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.268 2.75 1.026A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.026 2.747-1.026.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.917.678 1.852 0 1.335-.012 2.415-.012 2.741 0 .267.18.577.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z" />
+          </svg>
+          GitHub登录
+        </button>
+        <button @click="onUnifiedLogin" class="w-full py-2 rounded bg-white border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition flex items-center justify-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 17l-4 4m0 0l-4-4m4 4V3"/></svg>
+          使用学校/企业统一认证登录
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -56,7 +64,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { login, getMe } from '@/lib/api/auth'
+import { login, getMe, getGithubLoginUrl } from '@/lib/api/auth'
 import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
 
@@ -158,6 +166,21 @@ async function onLogin() {
   } catch (e: any) {
     console.error('[登录] 登录失败:', e)
     errorMsg.value = e && e.message ? e.message : '登录失败，请检查账号、邮箱、手机号或密码是否正确'
+  }
+}
+
+async function onGithubLogin() {
+  try {
+    const res = await getGithubLoginUrl() as unknown as ApiResponse<string>
+    console.log('[GitHub登录] 获取登录URL成功:', res)
+    // 获取到GitHub登录URL后，跳转到该URL进行OAuth认证
+    const baseUrl = 'http://localhost:8081/api'  // 后端API基础URL
+    const githubUrl = baseUrl + res.data
+    console.log('[GitHub登录] 跳转到GitHub登录URL:', githubUrl)
+    window.location.href = githubUrl
+  } catch (e: any) {
+    console.error('[GitHub登录] 获取登录URL失败:', e)
+    errorMsg.value = e && e.message ? e.message : 'GitHub登录失败，请稍后再试'
   }
 }
 
