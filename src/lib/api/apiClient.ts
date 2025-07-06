@@ -1,10 +1,16 @@
 
+
 const API_BASE_URL =  'http://192.168.1.2:8081/api'
+
 
 
 let token = ''
 export function setToken(t: string) {
   token = t
+}
+
+export function getToken() {
+  return token
 }
 
 export async function apiRequest<T>(endpoint: string, options: RequestInit = {}) {

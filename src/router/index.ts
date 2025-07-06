@@ -8,6 +8,7 @@ import ClassroomListView from '@/views/classroom/ClassroomListView.vue'
 import ClassroomDetailView from '@/views/classroom/ClassroomDetailView.vue'
 import TeacherCourseManager from '@/views/classroom/TeacherCourseManager.vue'
 import CourseChapterView from '@/views/classroom/CourseChapterView.vue'
+import CourseRatingManagement from '@/views/classroom/CourseRatingManagement.vue'
 import StudentDashboard from '@/views/dashboard/StudentDashboard.vue'
 import CompanyAdminDashboard from '@/views/dashboard/CompanyAdminDashboard.vue'
 import TeacherDashboard from '@/views/dashboard/TeacherDashboard.vue'
@@ -74,6 +75,17 @@ const router = createRouter({
       component: CourseChapterView
     },
     {
+      path: '/classroom/:courseId/ratings',
+      name: 'course-rating-management',
+      component: CourseRatingManagement,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/classroom/course/:id',
+      name: 'CourseDetail',
+      component: () => import('@/views/classroom/CourseDetailView.vue')
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       redirect: to => {
@@ -90,7 +102,7 @@ const router = createRouter({
         switch (role) {
           case 'STUDENT':
             return { name: 'student-dashboard' }
-          case 'ENTERPRISE_ADMIN':
+          case 'EN_ADMIN':
           case 'COMPANYADMIN':
           case 'EN_ADMIN':
             return { name: 'company-dashboard' }
@@ -157,40 +169,128 @@ const router = createRouter({
       name: 'learn',
       component: () => import('@/views/LearnView.vue')
     },
+
     {
-      path: '/project/list',
-      name: 'project-list',
-      component: () => import('@/views/project/ProjectListView.vue')
+      path: '/resource',
+      name: 'resource',
+      component: () => import('@/views/ResourceView.vue')
     },
+    {
+      path: '/project/edit/:projectId',
+      name: 'ProjectEdit',
+      component: () => import('@/views/project/ProjectEditView.vue')
+    },
+    // 项目合作管理路由
+    // {
+    //   path: '/project/list',
+    //   name: 'project-list',
+    //   component: () => import('@/views/project/ProjectListView.vue'),
+    //   meta: { requiresAuth: true }
+    // },
+
     {
       path: '/project/publish',
       name: 'project-publish',
-      component: () => import('@/views/project/ProjectPublishView.vue')
+      component: () => import('@/views/project/ProjectPublishView.vue'),
+      meta: { requiresAuth: true }
     },
     {
-      path: '/project/:id',
+      path: '/project/detail/:projectId',
       name: 'project-detail',
-      component: () => import('@/views/project/ProjectDetailView.vue')
+      component: () => import('@/views/project/ProjectDetailView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/project/:id/fund',
       name: 'project-fund',
-      component: () => import('@/views/project/ProjectFundView.vue')
+      component: () => import('@/views/project/ProjectFundView.vue'),
+      meta: { requiresAuth: true }
     },
     {
-        path: '/logs',
-        name: 'logs',
-        component: () => import('@/views/dashboard/OperationLogs.vue')
-      },
-      {
-        path: '/accounts',
-        name: 'accounts',
-        component: () => import('@/views/dashboard/Accounts.vue')
-      },
+      path: '/project/:id/fund-readonly',
+      name: 'project-fund-readonly',
+      component: () => import('@/views/project/ProjectFundReadonlyView.vue')
+    },
+    {
+      path: '/project/my',
+      name: 'my-project-list',
+      component: () => import('@/views/project/MyProjectListView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/project/search',
+      name: 'project-search',
+      component: () => import('@/views/project/ProjectSearchView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/resource',
+      name: 'resource',
+      component: () => import('@/views/ResourceView.vue')
+    },
+    {
+      path: '/resource/upload',
+      name: 'resource-upload',
+      component: () => import('@/views/resource/ResourceUploadView.vue')
+    },
+    {
+      path: '/resource/:id',
+      name: 'resource-detail',
+      component: () => import('@/views/ResourceDetailView.vue')
+    },
+    {
+      path: '/dashboard/my-bookings',
+      name: 'my-bookings',
+      component: () => import('@/views/dashboard/MyBookingsView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/equipment/bookings',
+      name: 'equipment-bookings',
+      component: () => import('@/views/resource/EquipmentBookingManageView.vue')
+    },
+    // {
+    //   path: '/teacher/projects',
+    //   name: 'TeacherProjectManage',
+    //   component: () => import('@/views/project/TeacherProjectManageView.vue'),
+    //   meta: { requiresAuth: true, role: 'teacher' }
+    // },
+    {
+      path: '/project/audit',
+      name: 'project-audit',
+      component: () => import('@/views/project/ProjectAuditView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/my-project-applications',
+      name: 'MyProjectApplications',
+      component: () => import('@/views/project/MyProjectApplicationView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/logs',
+      name: 'logs',
+      component: () => import('@/views/dashboard/OperationLogs.vue')
+    },
+    {
+      path: '/accounts',
+      name: 'accounts',
+      component: () => import('@/views/dashboard/Accounts.vue')
+    },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFound.vue')
+    },
+    {
+      path: '/nearby-map',
+      name: 'nearby-map',
+      component: () => import('@/views/NearbyLocationMapView.vue')
+    },
+    {
+      path: '/location-picker-test',
+      name: 'location-picker-test',
+      component: () => import('@/views/LocationPickerTest.vue')
     }
   ]
 })
@@ -228,6 +328,26 @@ router.beforeEach(async (to, from, next) => {
     if (!allowedRoles.includes(user.role)) {
       console.warn(`用户角色 ${user.role} 尝试访问管理员面板`)
       next('/')
+      return
+    }
+  }
+  
+  // 检查项目合作管理相关路由的权限
+  if (to.path.startsWith('/project/')) {
+    const user = appStore.user as any
+    if (!user) {
+      next('/login')
+      return
+    }
+    
+    // 根据具体路由检查权限
+    if (to.path === '/project/publish' && !appStore.hasProjectPermission('publish_project')) {
+      next('/dashboard')
+      return
+    }
+    
+    if (to.path === '/project/application' && !appStore.hasProjectPermission('review_application')) {
+      next('/dashboard')
       return
     }
   }

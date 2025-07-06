@@ -2,50 +2,27 @@
   <div class="min-h-screen bg-gray-50">
     <Navbar />
     <div class="container mx-auto px-4 py-8">
+      <!-- 项目相关入口 -->
+      <div class="flex flex-wrap gap-4 mb-8">
+        <button @click="router.push('/project/search')" class="px-6 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">项目搜索与对接</button>
+        <button @click="logAndGoPublish" class="px-6 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">发布新项目</button>
+        <button @click="router.push('/project/my')" class="px-6 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition">我的项目管理</button>
+        <button @click="router.push('/my-project-applications')" class="px-6 py-2 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600 transition">我的项目申请</button>
+      </div>
       <!-- 头部区域 -->
-      <div class="bg-white rounded-xl shadow-sm mb-8 hover-card">
-        <div class="relative">
-          <div class="h-40 w-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-xl"></div>
-          <div class="flex flex-col md:flex-row px-6 py-4">
-            <div class="flex flex-col items-center md:items-start -mt-16 md:-mt-12">
-              <div class="relative group avatar-hover">
-                <img :src="mentor.avatar" class="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover" alt="导师头像" />
-                <div @click="onEditProfileClick" class="absolute inset-0 rounded-full bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-200">
-                  <span class="text-white text-sm">更换头像</span>
-                </div>
-              </div>
-              <div class="mt-4 md:mt-6 flex flex-col items-center md:items-start">
-                <div class="flex items-center flex-wrap justify-center md:justify-start">
-                  <h1 class="text-2xl font-bold text-gray-900">{{ mentor.name }}</h1>
-                  <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">企业导师</span>
-                  <span v-if="mentor.verified" class="ml-2 mt-1 md:mt-0 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">已认证</span>
-                </div>
-                <p class="text-gray-500 mt-1">所属企业：{{ mentor.company || '未绑定' }}</p>
-              </div>
-            </div>
-            <div class="ml-0 md:ml-auto mt-6 md:mt-0 flex flex-col md:flex-row items-center gap-3">
-              <div class="flex flex-col items-center md:items-end">
-                <div class="text-gray-600 text-sm">{{ mentor.email }}</div>
-                <div class="text-gray-600 text-sm">{{ mentor.phone }}</div>
-              </div>
-              <div class="flex gap-2 mt-3 md:mt-0">
-                <button @click="onEditProfileClick" class="px-4 py-2 rounded-full bg-blue-50 text-blue-600 font-medium hover:bg-blue-100 transition flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-                  编辑资料
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <UserProfileInfo
+        :avatar="mentor.avatar"
+        :name="mentor.name"
+        :role="'企业导师'"
+        :organization="mentor.company"
+        :phone="mentor.phone"
+        :email="mentor.email"
+        :editable="true"
+        :onEdit="onEditProfileClick"
+      />
       <!-- Tab 导航栏 -->
-      <div class="flex gap-4 mb-8 mt-4">
-        <button :class="['px-6 py-2 rounded-t-lg font-semibold', activeTab === 'job' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700']" @click="activeTab = 'job'">岗位管理</button>
-        <button :class="['px-6 py-2 rounded-t-lg font-semibold', activeTab === 'apply' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700']" @click="activeTab = 'apply'">查看申请</button>
-        <button :class="['px-6 py-2 rounded-t-lg font-semibold', activeTab === 'chat' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700']" @click="activeTab = 'chat'">聊天</button>
-      </div>
-      <!-- Tab 内容 -->
-      <div>
+      <DashboardTabs :tabs="mentorTabs" :activeTab="activeTab" @change="activeTab = $event" />
+      <div class="mt-6">
         <JobManagement
           v-if="activeTab === 'job'"
           :jobs="jobs"
@@ -67,6 +44,41 @@
           @update-status="app => onUpdateStatus(app, true)"
         />
         <ChatPanel v-if="activeTab === 'chat'" :myUserId="myUserId" :myAvatar="userAvatar" />
+        <div v-if="activeTab === 'classroom'">
+          <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-xl font-bold mb-4">我的课堂</h2>
+            <div v-if="loading" class="text-center py-8 text-gray-400">加载中...</div>
+            <div v-else-if="courses.length === 0" class="text-center py-8 text-gray-400">暂无课程</div>
+            <div v-else class="overflow-x-auto rounded-lg shadow">
+              <table class="min-w-full bg-white rounded-lg">
+                <thead>
+                  <tr class="bg-indigo-50">
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">课程名称</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">授课教师</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="course in courses" :key="course.id" class="hover:bg-indigo-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap font-medium">{{ course.title }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ course.teacherName }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ new Date(course.scheduledTime).toLocaleString() }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span :class="statusTagClass(course.status)">{{ statusText(course.status) }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <button @click="showCourseDetail(course.id)" class="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs">详情</button>
+                      <button @click="openEditDialog(course)" class="ml-2 px-3 py-1 rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 text-xs">编辑</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- 可选：详情弹窗/跳转 -->
+        </div>
       </div>
     </div>
     
@@ -169,14 +181,329 @@
         </form>
       </div>
     </div>
+
+    <!-- 编辑个人资料弹窗 -->
+    <div v-if="showEditProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md overflow-y-auto max-h-[80vh] relative">
+        <button @click="showEditProfileDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
+        <h2 class="text-2xl font-bold mb-4 text-blue-700">编辑个人资料</h2>
+        <form @submit.prevent="onUpdateProfile">
+          <!-- 头像上传 -->
+          <div class="mb-5 flex flex-col items-center">
+            <div class="relative group">
+              <img :src="previewAvatar || mentor.avatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2 object-cover" alt="avatar" />
+              <div 
+                @click="fileInput?.click()"
+                class="absolute inset-0 rounded-full bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-200"
+              >
+                <span class="text-white text-sm">更换头像</span>
+              </div>
+            </div>
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleAvatarChange"
+            />
+            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
+              {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
+              <button 
+                type="button" 
+                @click="cancelAvatarUpload" 
+                class="ml-2 text-red-500 hover:text-red-700"
+              >
+                取消
+              </button>
+            </p>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">昵称</label>
+            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">邮箱</label>
+            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">手机号</label>
+            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
+          </div>
+          <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" @click="showEditProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
+          </div>
+        </form>
+        <div class="mt-6 pt-4 border-t">
+          <h3 class="text-lg font-semibold mb-3">修改密码</h3>
+          <form @submit.prevent="onChangePassword">
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">原密码</label>
+              <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">新密码</label>
+              <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">确认新密码</label>
+              <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
+            </div>
+            <div class="flex justify-end space-x-2">
+              <button type="submit" :disabled="changePasswordLoading" class="px-4 py-1 rounded bg-green-600 text-white">{{ changePasswordLoading ? '修改中...' : '修改密码' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 岗位创建弹窗（完全复用StudentDashboard.vue风格） -->
+    <div v-if="showCreateJobDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+      <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md overflow-y-auto max-h-[90vh] relative">
+        <button @click="showCreateJobDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
+        <h2 class="text-2xl font-bold mb-6 text-blue-700">创建新岗位</h2>
+        <form @submit.prevent="onCreateJob">
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">岗位名称</label>
+            <input v-model="newJob.title" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入岗位名称" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">岗位描述</label>
+            <textarea v-model="newJob.description" rows="3" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入岗位描述"></textarea>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">工作地点</label>
+            <input v-model="newJob.location" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入工作地点" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">岗位类型</label>
+            <select v-model="newJob.jobType" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <option value="">请选择岗位类型</option>
+              <option value="full_time">全职</option>
+              <option value="part_time">兼职</option>
+              <option value="internship">实习</option>
+              <option value="remote">远程</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">学历要求</label>
+            <select v-model="newJob.educationRequirement" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <option value="">请选择学历要求</option>
+              <option value="any">不限</option>
+              <option value="bachelor">本科及以上</option>
+              <option value="master">硕士及以上</option>
+              <option value="doctorate">博士及以上</option>
+            </select>
+          </div>
+          <div class="mb-4 flex space-x-2">
+            <div class="flex-1">
+              <label class="block text-gray-700 mb-1 font-medium">最低薪资</label>
+              <input v-model.number="newJob.salaryMin" type="number" min="0" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="最低" />
+            </div>
+            <div class="flex-1">
+              <label class="block text-gray-700 mb-1 font-medium">最高薪资</label>
+              <input v-model.number="newJob.salaryMax" type="number" min="0" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="最高" />
+            </div>
+            <div class="flex-1">
+              <label class="block text-gray-700 mb-1 font-medium">单位</label>
+              <select v-model="newJob.salaryUnit" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <option value="">请选择单位</option>
+                <option value="per_month">元/月</option>
+                <option value="per_year">元/年</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">招聘人数</label>
+            <input v-model.number="newJob.headcount" type="number" min="1" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入人数" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">经验要求</label>
+            <select v-model="newJob.experienceRequirement" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <option value="">请选择经验要求</option>
+              <option value="any">不限</option>
+              <option value="fresh_graduate">应届生</option>
+              <option value="less_than_1_year">1年以下</option>
+              <option value="1_to_3_years">1-3年</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">截止日期</label>
+            <input v-model="newJob.applicationDeadline" type="date" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">技能标签</label>
+            <input v-model="newJob.skillTags" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="多个标签用逗号分隔" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">岗位分类</label>
+            <select v-model="newJob.categoryId" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <option value="0">请选择分类</option>
+              <option v-for="cat in jobCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+          <div class="flex justify-end space-x-2 mt-6">
+            <button type="button" @click="showCreateJobDialog = false" class="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">取消</button>
+            <button type="submit" :disabled="createJobLoading" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition flex items-center">
+              <svg v-if="createJobLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ createJobLoading ? '创建中...' : '创建' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 岗位编辑弹窗 -->
+    <div v-if="showEditJobDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+      <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md overflow-y-auto max-h-[90vh] relative">
+        <button @click="showEditJobDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
+        <h2 class="text-2xl font-bold mb-6 text-blue-700">编辑岗位</h2>
+        <form @submit.prevent="onUpdateJob">
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">岗位名称</label>
+            <input v-model="editJobData.title" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入岗位名称" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">岗位描述</label>
+            <textarea v-model="editJobData.description" rows="3" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入岗位描述"></textarea>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">工作地点</label>
+            <input v-model="editJobData.location" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入工作地点" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">岗位类型</label>
+            <select v-model="editJobData.jobType" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <option value="">请选择岗位类型</option>
+              <option value="full_time">全职</option>
+              <option value="part_time">兼职</option>
+              <option value="internship">实习</option>
+              <option value="remote">远程</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">学历要求</label>
+            <select v-model="editJobData.educationRequirement" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <option value="">请选择学历要求</option>
+              <option value="any">不限</option>
+              <option value="bachelor">本科及以上</option>
+              <option value="master">硕士及以上</option>
+              <option value="doctorate">博士及以上</option>
+            </select>
+          </div>
+          <div class="mb-4 flex space-x-2">
+            <div class="flex-1">
+              <label class="block text-gray-700 mb-1 font-medium">最低薪资</label>
+              <input v-model.number="editJobData.salaryMin" type="number" min="0" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="最低" />
+            </div>
+            <div class="flex-1">
+              <label class="block text-gray-700 mb-1 font-medium">最高薪资</label>
+              <input v-model.number="editJobData.salaryMax" type="number" min="0" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="最高" />
+            </div>
+            <div class="flex-1">
+              <label class="block text-gray-700 mb-1 font-medium">单位</label>
+              <select v-model="editJobData.salaryUnit" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <option value="">请选择单位</option>
+                <option value="per_month">元/月</option>
+                <option value="per_year">元/年</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">招聘人数</label>
+            <input v-model.number="editJobData.headcount" type="number" min="1" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入人数" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">经验要求</label>
+            <select v-model="editJobData.experienceRequirement" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <option value="">请选择经验要求</option>
+              <option value="any">不限</option>
+              <option value="fresh_graduate">应届生</option>
+              <option value="less_than_1_year">1年以下</option>
+              <option value="1_to_3_years">1-3年</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">截止日期</label>
+            <input v-model="editJobData.applicationDeadline" type="date" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">技能标签</label>
+            <input v-model="editJobData.skillTags" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="多个标签用逗号分隔" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1 font-medium">岗位分类</label>
+            <select v-model="editJobData.categoryId" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+              <option value="0">请选择分类</option>
+              <option v-for="cat in jobCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+          <div class="flex justify-end space-x-2 mt-6">
+            <button type="button" @click="showEditJobDialog = false" class="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">取消</button>
+            <button type="submit" :disabled="editJobLoading" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition flex items-center">
+              <svg v-if="editJobLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ editJobLoading ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 编辑课程弹窗 -->
+    <div v-if="showEditDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg relative">
+        <button class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl" @click="closeEditDialog">×</button>
+        <h2 class="text-xl font-bold mb-4">编辑课程</h2>
+        <form @submit.prevent="onUpdateCourse">
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">课程标题</label>
+            <input v-model="editingCourse.title" required class="w-full px-3 py-2 border rounded" placeholder="请输入课程标题" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">课程描述</label>
+            <textarea v-model="editingCourse.description" rows="2" class="w-full px-3 py-2 border rounded" placeholder="请输入课程描述"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">课程时间</label>
+            <input v-model="editingCourse.scheduledTime" type="datetime-local" required class="w-full px-3 py-2 border rounded" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">最大学生数</label>
+            <input v-model.number="editingCourse.maxStudents" type="number" min="1" max="100" required class="w-full px-3 py-2 border rounded" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">课程地点</label>
+            <input v-model="editingCourse.location" class="w-full px-3 py-2 border rounded" placeholder="请输入课程地点" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">课程类型</label>
+            <select v-model="editingCourse.courseType" class="w-full px-3 py-2 border rounded">
+              <option value="online">线上课程</option>
+              <option value="offline">线下课程</option>
+              <option value="hybrid">混合课程</option>
+            </select>
+          </div>
+          <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" @click="closeEditDialog" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button type="submit" class="px-4 py-1 rounded bg-blue-600 text-white">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { UserGroupIcon, BriefcaseIcon, AcademicCapIcon, ArrowUpTrayIcon, BuildingOffice2Icon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { getMe, updatePassword, updateUserInfo } from '@/lib/api/auth'
+import { getMe, updatePassword, updateUserInfo, uploadAvatar } from '@/lib/api/auth'
 import Navbar from '@/components/layout/Navbar.vue'
 
 // 导入双师课堂相关API
@@ -199,7 +526,17 @@ import { getResumeById } from '@/lib/api/resume'
 import JobManagement from '@/components/dashboard/JobManagement.vue'
 import ApplicationSummary from '@/components/dashboard/ApplicationSummary.vue'
 import ChatPanel from '@/components/chat/ChatPanel.vue'
+import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
+import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 
+// Tab栏相关声明，恢复岗位管理tab
+const mentorTabs = [
+  { label: '我的课堂', value: 'classroom' },
+  { label: '岗位管理', value: 'job' },
+  { label: '查看申请', value: 'apply' },
+  { label: '聊天', value: 'chat' }
+]
+const activeTab = ref('classroom')
 
 const mentor = ref({
   avatar: 'https://randomuser.me/api/portraits/men/34.jpg',
@@ -211,17 +548,6 @@ const mentor = ref({
   school: ''
 })
 
-const students = [
-  { id: 1, name: '李四', major: '计算机' },
-  { id: 2, name: '王五', major: '人工智能' }
-]
-const projects = [
-  { id: 1, title: 'AI创新项目', date: '2024-06-01' },
-  { id: 2, title: '大数据分析', date: '2024-05-15' }
-]
-const resources = [
-  { id: 1, title: '企业导师手册', date: '2024-06-20' }
-]
 
 // 定义更具体的类型
 interface BlockDataItem {
@@ -275,7 +601,7 @@ const blocks = ref<BlockItem[]>([
     color: 'text-purple-500',
     data: [],
     empty: '暂无上传资源',
-    footer: { text: '上传资源', link: '/resources' }
+    footer: { text: '上传资源', link: '/resource/upload' }
   },
   {
     title: '学校信息浏览',
@@ -339,6 +665,27 @@ const resourceFile = ref<File | null>(null)
 const resourceFileInput = ref<HTMLInputElement | null>(null)
 const uploadingResource = ref(false)
 
+const fileInput = ref<HTMLInputElement | null>(null)
+const avatarFile = ref<File | null>(null)
+const previewAvatar = ref<string | null>(null)
+const avatarUploading = ref(false)
+
+function handleAvatarChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    avatarFile.value = target.files[0]
+    previewAvatar.value = URL.createObjectURL(avatarFile.value)
+  }
+}
+
+function cancelAvatarUpload() {
+  avatarFile.value = null
+  previewAvatar.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
 // 添加 fetchMentorInfo 函数
 async function fetchMentorInfo() {
   try {
@@ -354,6 +701,8 @@ async function fetchMentorInfo() {
         company: userData.organizationName || '未绑定企业',
         school: ''
       }
+      // 关键：同步更新 appStore.user，保证 userInfo.value.id 有值
+      appStore.setUser(userData)
     }
   } catch (e: any) {
     console.error('获取导师信息失败:', e)
@@ -388,10 +737,7 @@ async function fetchMentorCourses() {
 }
 
 // 查看课程详情
-function viewCourseDetails(course: DualTeacherCourseVO) {
-  currentCourse.value = course
-  showCourseDetailsDialog.value = true
-}
+
 
 // 资源上传相关方法
 function openResourceUploadDialog(courseId: number) {
@@ -467,18 +813,25 @@ function getCourseTypeText(type: CourseType) {
   return typeMap[type] || '未知类型'
 }
 
-onMounted(() => {
-  fetchMentorInfo()
+onMounted(async () => {
+  await fetchMentorInfo()
   fetchMentorCourses()
-  fetchJobs()
-  fetchAllApplications()
-
+  // 如果初始tab是岗位，自动查一次岗位
+  if (activeTab.value === 'job') {
+    fetchJobs()
+  } else if (activeTab.value === 'apply') {
+    fetchAllApplications()
+  }
+  fetchCourses()
 })
 
-function onLogout() {
-  appStore.logout()
-  router.push('/login')
-}
+watch(activeTab, (tab) => {
+  if (tab === 'job') {
+    fetchJobs()
+  } else if (tab === 'apply') {
+    fetchAllApplications()
+  }
+})
 
 const showEditProfileDialog = ref(false)
 const editProfile = ref({
@@ -502,7 +855,27 @@ async function onUpdateProfile() {
       email: editProfile.value.email,
       phone: editProfile.value.phone
     })
+    // 如果选择了新头像，则上传头像
+    if (avatarFile.value) {
+      avatarUploading.value = true
+      try {
+        await uploadAvatar(avatarFile.value)
+        console.log('头像上传成功')
+      } catch (avatarError) {
+        console.error('头像上传失败:', avatarError)
+        alert('头像上传失败: ' + (avatarError.message || '未知错误'))
+        // 继续执行，不影响其他信息的保存
+      } finally {
+        avatarUploading.value = false
+      }
+    }
     showEditProfileDialog.value = false
+    // 重置头像上传状态
+    avatarFile.value = null
+    previewAvatar.value = null
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
     await fetchMentorInfo() // 重新获取导师信息
     // 更新store中的用户信息
     const res = await getMe() as any
@@ -540,18 +913,28 @@ async function onChangePassword() {
 }
 
 // 当打开编辑对话框时，初始化表单数据
-function openEditDialog() {
-  editProfile.value = {
-    nickname: userInfo.value?.nickname || userInfo.value?.account || '',
-    email: userInfo.value?.email || '',
-    phone: userInfo.value?.phone || ''
-  }
-  showEditProfileDialog.value = true
+function openEditDialog(course) {
+  editingCourse.value = { ...course }
+  showEditDialog.value = true
 }
 
-// 修改按钮点击事件
-function onEditProfileClick() {
-  openEditDialog()
+function closeEditDialog() {
+  showEditDialog.value = false
+  editingCourse.value = null
+}
+
+async function onUpdateCourse() {
+  if (!editingCourse.value) return
+  try {
+    // 调用 updateCourse API，传递 editingCourse.value
+    await updateCourse(editingCourse.value.id, editingCourse.value)
+    showEditDialog.value = false
+    editingCourse.value = null
+    fetchCourses()
+    alert('课程更新成功')
+  } catch (e) {
+    alert('更新失败：' + (e.message || '未知错误'))
+  }
 }
 
 const jobs = ref<Job[]>([])
@@ -559,6 +942,7 @@ const totalJobs = ref(0)
 const totalPages = ref(1)
 const jobsLoading = ref(false)
 const sortBy = ref('latest')
+const pageSize = ref(10)
 
 function onSortByChange(newSort) {
   sortBy.value = newSort
@@ -817,6 +1201,57 @@ async function fetchAllApplications() {
   }
 }
 
-const activeTab = ref('job') // 'job' or 'apply' or 'chat'
 const myUserId = computed(() => userInfo.value.id)
+
+const currentPage = ref(1)
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i]
+}
+
+const courses = ref([])
+const loading = ref(false)
+async function fetchCourses() {
+  loading.value = true
+  try {
+    // 调用企业导师课程列表接口
+    const res = await getMentorCourses(1, 10)
+    // 兼容接口返回结构
+    courses.value = res.data?.records || res.data || []
+  } finally {
+    loading.value = false
+  }
+}
+
+function statusText(status) {
+  const map = { planning: '筹备中', open: '开放报名', in_progress: '进行中', completed: '已结束', cancelled: '已取消' }
+  return map[status] || status
+}
+
+function showCourseDetail(id) {
+  // 跳转或弹窗显示课程详情
+}
+
+function statusTagClass(status) {
+  const map = {
+    planning: 'px-2 py-1 rounded text-xs bg-gray-100 text-gray-800',
+    open: 'px-2 py-1 rounded text-xs bg-green-100 text-green-800',
+    in_progress: 'px-2 py-1 rounded text-xs bg-blue-100 text-blue-800',
+    completed: 'px-2 py-1 rounded text-xs bg-purple-100 text-purple-800',
+    cancelled: 'px-2 py-1 rounded text-xs bg-red-100 text-red-800'
+  }
+  return map[status] || 'px-2 py-1 rounded text-xs bg-gray-100 text-gray-800'
+}
+
+const showEditDialog = ref(false)
+const editingCourse = ref(null)
+
+function logAndGoPublish() {
+  console.log('router:', router, 'appStore.user:', appStore.user)
+  router.push('/project/publish')
+}
 </script> 
