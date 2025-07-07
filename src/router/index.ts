@@ -8,13 +8,14 @@ import ClassroomListView from '@/views/classroom/ClassroomListView.vue'
 import ClassroomDetailView from '@/views/classroom/ClassroomDetailView.vue'
 import TeacherCourseManager from '@/views/classroom/TeacherCourseManager.vue'
 import CourseChapterView from '@/views/classroom/CourseChapterView.vue'
-import CourseRatingManagement from '@/views/classroom/CourseRatingManagement.vue'
+
 import StudentDashboard from '@/views/dashboard/StudentDashboard.vue'
 import CompanyAdminDashboard from '@/views/dashboard/CompanyAdminDashboard.vue'
 import TeacherDashboard from '@/views/dashboard/TeacherDashboard.vue'
 import AdminDashboard from '@/views/dashboard/AdminDashboard.vue'
 import MentorDashboard from '@/views/dashboard/MentorDashboard.vue'
 import SchoolAdminDashboard from '@/views/dashboard/SchoolAdminDashboard.vue'
+import LoginSuccessView from '@/views/LoginSuccessView.vue'
 import { getMe } from '@/lib/api/auth'
 import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
@@ -36,6 +37,11 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: RegisterView
+    },
+    {
+      path: '/login-success',
+      name: 'login-success',
+      component: LoginSuccessView
     },
     {
       path: '/job',
@@ -65,15 +71,21 @@ const router = createRouter({
     },
     {
       path: '/classroom/:courseId/chapter/:chapterId',
-      name: 'course-chapter',
+      name: 'course-chapters',
       component: CourseChapterView
     },
     {
-      path: '/classroom/:courseId/ratings',
-      name: 'course-rating-management',
-      component: CourseRatingManagement,
+      path: '/classroom/:courseId/chapter/:chapterId/edit',
+      name: 'chapter-edit',
+      component: () => import('@/views/classroom/ChapterEditView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/classroom/test',
+      name: 'chapter-test',
+      component: () => import('@/views/classroom/ChapterTestView.vue')
+    },
+
     {
       path: '/classroom/course/:id',
       name: 'CourseDetail',
@@ -103,6 +115,7 @@ const router = createRouter({
             return { name: 'student-dashboard' }
           case 'EN_ADMIN':
           case 'COMPANYADMIN':
+          case 'EN_ADMIN':
             return { name: 'company-dashboard' }
           case 'TEACHER':
             return { name: 'teacher-dashboard' }
@@ -112,8 +125,8 @@ const router = createRouter({
           case 'MENTOR':
           case 'EN_TEACHER':
             return { name: 'mentor-dashboard' } // 添加企业导师路由
+          case 'SCHOOL_ADMIN':
           case 'SCH_ADMIN':
-          case 'SCHOOLADMIN':
             return { name: 'school-dashboard' } // 添加学校管理员路由
           default:
             console.log('未匹配到角色，回到首页:', role)
@@ -199,16 +212,15 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/project/application',
-      name: 'project-application',
-      component: () => import('@/views/project/ProjectApplicationView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/project/:id/fund',
       name: 'project-fund',
       component: () => import('@/views/project/ProjectFundView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/project/:id/fund-readonly',
+      name: 'project-fund-readonly',
+      component: () => import('@/views/project/ProjectFundReadonlyView.vue')
     },
     {
       path: '/project/my',
@@ -217,13 +229,11 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-
       path: '/project/search',
       name: 'project-search',
       component: () => import('@/views/project/ProjectSearchView.vue'),
       meta: { requiresAuth: true }
     },
-
     {
       path: '/resource',
       name: 'resource',
@@ -268,37 +278,6 @@ const router = createRouter({
       component: () => import('@/views/project/MyProjectApplicationView.vue'),
       meta: { requiresAuth: true }
     },
-    // 保留原有路由以兼容现有功能
-    // {
-    //   path: "/project/:id/members",
-    //   name: "ProjectMemberManage",
-    //   component: () => import("@/views/project/ProjectMemberManageView.vue"),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: "/student/projects",
-    //   name: "StudentProjectSearch",
-    //   component: () => import("@/views/project/StudentProjectSearchView.vue"),
-    //   meta: { requiresAuth: true, role: "student" }
-    // },
-    // {
-    //   path: "/project/edit/:id",
-    //   name: "ProjectEdit",
-    //   component: () => import("@/views/project/ProjectEditView.vue"),
-    //   meta: { requiresAuth: true }
-    // },
-    // {
-    //   path: "/company/projects",
-    //   name: "CompanyProjectManage",
-    //   component: () => import("@/views/project/CompanyProjectManageView.vue"),
-    //   meta: { requiresAuth: true, role: "companyAdmin" }
-    // },
-    // {
-    //   path: "/teacher/projects",
-    //   name: "TeacherProjectManage",
-    //   component: () => import("@/views/project/TeacherProjectManageView.vue"),
-    //   meta: { requiresAuth: true, role: "teacher" }
-    // },
     {
       path: '/logs',
       name: 'logs',
@@ -309,7 +288,6 @@ const router = createRouter({
       name: 'accounts',
       component: () => import('@/views/dashboard/Accounts.vue')
     },
-    
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',

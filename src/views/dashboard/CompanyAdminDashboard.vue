@@ -15,6 +15,11 @@
       />
       <!-- Tab 导航栏 -->
       <DashboardTabs :tabs="tabList" :activeTab="activeTab" @change="val => activeTab = val" />
+      <div class="mt-4" v-if="activeTab === 'project-audit'">
+        <button @click="router.push('/project/audit')" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow">
+          进入项目审核
+        </button>
+      </div>
       <div class="mt-6">
         <!-- 企业导师管理 -->
         <div v-if="activeTab === 'mentor'">
@@ -612,7 +617,8 @@ onMounted(() => {
 // tab 配置
 const tabList = [
   { label: '企业导师管理', value: 'mentor' },
-  { label: '岗位管理', value: 'job' }
+  { label: '岗位管理', value: 'job' },
+  { label: '项目审核', value: 'project-audit' }
 ]
 const activeTab = ref('mentor')
 </script>

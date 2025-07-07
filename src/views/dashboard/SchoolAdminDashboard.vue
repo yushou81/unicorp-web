@@ -1361,4 +1361,8 @@ async function fetchRecentEquipmentBookings() {
 function goToProjectAudit() {
   router.push('/project/audit')
 }
+
+const pendingProjectsCount = 0 // 这里可以通过接口获取真实数量
+const approvedProjectsCount = 0
+const rejectedProjectsCount = 0
 </script> 

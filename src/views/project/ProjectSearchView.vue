@@ -54,7 +54,6 @@
               <th class="px-4 py-2">项目名称</th>
               <th class="px-4 py-2">发起方</th>
               <th class="px-4 py-2">项目领域</th>
-              <th class="px-4 py-2">预算</th>
               <th class="px-4 py-2">状态</th>
               <th class="px-4 py-2">操作</th>
             </tr>
@@ -68,7 +67,6 @@
                 <span class="text-blue-600">{{ project.organizationName || '-' }}</span>
               </td>
               <td class="px-4 py-2 text-center">{{ project.field || '-' }}</td>
-              <td class="px-4 py-2 text-center">{{ project.budget ? `¥${project.budget}` : '-' }}</td>
               <td class="px-4 py-2 text-center">
                 <span class="text-green-600 bg-green-100 px-2 py-1 rounded text-xs">进行中</span>
               </td>
@@ -93,7 +91,7 @@
               </td>
             </tr>
             <tr v-if="projects.length === 0">
-              <td colspan="6" class="text-center text-gray-400 py-6">暂无项目</td>
+              <td colspan="5" class="text-center text-gray-400 py-6">暂无项目</td>
             </tr>
           </tbody>
         </table>

@@ -5,7 +5,7 @@
       <!-- 项目相关入口 -->
       <div class="flex flex-wrap gap-4 mb-8">
         <button @click="router.push('/project/search')" class="px-6 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">项目搜索与对接</button>
-        <button @click="router.push('/project/publish')" class="px-6 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">发布新项目</button>
+        <button @click="logAndGoPublish" class="px-6 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">发布新项目</button>
         <button @click="router.push('/project/my')" class="px-6 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition">我的项目管理</button>
         <button @click="router.push('/my-project-applications')" class="px-6 py-2 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600 transition">我的项目申请</button>
       </div>
@@ -1233,7 +1233,8 @@ function statusText(status) {
 }
 
 function showCourseDetail(id) {
-  // 跳转或弹窗显示课程详情
+  // 跳转到课程详情页面
+  router.push(`/classroom/${id}`)
 }
 
 function statusTagClass(status) {
@@ -1249,4 +1250,9 @@ function statusTagClass(status) {
 
 const showEditDialog = ref(false)
 const editingCourse = ref(null)
+
+function logAndGoPublish() {
+  console.log('router:', router, 'appStore.user:', appStore.user)
+  router.push('/project/publish')
+}
 </script> 

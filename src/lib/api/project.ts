@@ -16,6 +16,7 @@ export interface Project {
   status: 'pending' | 'active' | 'closed' | 'rejected'
   createdAt?: string
   updatedAt?: string
+  projectName?: string
 }
 
 export interface ProjectListResponse {
@@ -137,6 +138,43 @@ export function getMyProjectApplications() {
 
 
 
+// 发起合同
+export function createContract(projectId: number, data: {
+  contractName: string,
+  contractUrl: string,
+  receiverId: number,
+  remark?: string
+}) {
+  return apiRequest(`/v1/projects/${projectId}/contracts`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+}
+
+
+// 获取合同详情
+export function getContractDetail(projectId: number, contractId: number) {
+  return apiRequest(`/v1/projects/${projectId}/contracts/${contractId}`)
+}
+
+// 更新合同状态
+export function updateContractStatus(projectId: number, contractId: number, data: {
+  status: string,
+  remark?: string
+}) {
+  return apiRequest(`/v1/projects/${projectId}/contracts/${contractId}/status`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  })
+}
+
+// 获取项目下所有合同
+export function getContracts(projectId: number) {
+  return apiRequest(`/v1/projects/${projectId}/contracts`)
+}
+
+
+
 
 
 
@@ -155,6 +193,24 @@ export function closeProject(projectId: number, data: any): Promise<{ data: { st
   })
 }
 
+
+// 2.1.1 获取项目进度列表
+export function getProjectProgressList(projectId: number): Promise<{ data: ProjectProgress[] }> {
+  return apiRequest(`/v1/projects/${projectId}/progress`)
+}
+
+export function getClosure(projectId: number) {
+  return apiRequest(`/v1/projects/${projectId}/closure`)
+}
+
+
+
+
+
+
+
+
+
 // 3. 合同与资料管理
 export function uploadProjectDocument(projectId: number, data: any): Promise<{ data: { documentId: number } }> {
   return apiRequest(`/v1/projects/${projectId}/documents`, {
@@ -166,6 +222,10 @@ export function uploadProjectDocument(projectId: number, data: any): Promise<{ d
 export function getProjectDocuments(projectId: number): Promise<{ data: ProjectDocument[] }> {
   return apiRequest(`/v1/projects/${projectId}/documents`)
 }
+
+
+
+
 
 // 4. 经费管理
 export function applyForFund(projectId: number, data: any): Promise<{ data: { fundId: number; status: string } }> {
@@ -185,6 +245,17 @@ export function reviewFund(projectId: number, fundId: number, data: any): Promis
 export function getProjectFundRecords(projectId: number): Promise<{ data: FundRecord[] }> {
   return apiRequest(`/v1/projects/${projectId}/funds/records`)
 }
+
+export function getProjectFundList(projectId: number): Promise<{ data: FundRecord[] }> {
+  return apiRequest(`/v1/projects/${projectId}/funds`)
+}
+
+
+
+
+
+
+
 
 // 5. 日志与操作记录
 export function getProjectLogs(projectId: number): Promise<{ data: any[] }> {
