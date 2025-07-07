@@ -40,7 +40,8 @@
                   <span class="text-blue-600 font-bold">AI</span>
                 </div>
                 <div class="bg-gray-100 rounded-lg p-3 max-w-[80%]">
-                  <p class="text-gray-800 whitespace-pre-line">{{ message.content }}</p>
+                  <!-- 使用v-html渲染markdown内容 -->
+                  <div class="text-gray-800 markdown-content" v-html="renderMarkdown(message.content)"></div>
                 </div>
               </template>
             </div>
@@ -95,6 +96,14 @@
 import { ref, onMounted, nextTick } from 'vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import Footer from '@/components/layout/Footer.vue'
+import { marked } from 'marked'
+// 使用可选链避免DOMPurify未定义的错误
+let DOMPurify: any = null
+try {
+  DOMPurify = require('dompurify')
+} catch (e) {
+  console.warn('DOMPurify not available, HTML sanitization disabled')
+}
 
 interface Message {
   content: string
@@ -105,6 +114,22 @@ const userInput = ref('')
 const messages = ref<Message[]>([])
 const loading = ref(false)
 const chatContainer = ref<HTMLElement | null>(null)
+
+// 渲染Markdown内容
+function renderMarkdown(content: string) {
+  // 使用marked解析Markdown，并用DOMPurify净化HTML以防XSS攻击
+  try {
+    const html = marked(content)
+    // 如果DOMPurify可用，则使用它净化HTML
+    if (DOMPurify) {
+      return DOMPurify.sanitize(html)
+    }
+    return html
+  } catch (error) {
+    console.error('Markdown渲染错误:', error)
+    return content
+  }
+}
 
 // 发送消息
 async function sendMessage() {
@@ -133,7 +158,7 @@ async function sendMessage() {
   if (modelIdentityKeywords.some(keyword => userMessage.toLowerCase().includes(keyword))) {
     setTimeout(() => {
       messages.value.push({
-        content: "我是一个基于claude-4-sonnet-thinking技术的AI助手，在Cursor IDE环境中工作，随时为您提供专业支持。你问的是：\"" + userMessage + "\"",
+        content: "我是一个AI助手，随时为您提供支持。",
         isUser: false
       })
       loading.value = false
@@ -143,14 +168,13 @@ async function sendMessage() {
   }
   
   try {
-    // 使用fetch API发送POST请求
-    const response = await fetch('http://127.0.0.1:8000/query', {
-      method: 'POST',
+    // 直接使用GET请求而不是POST，避免OPTIONS预检请求
+    const url = `http://127.0.0.1:8000/query?query=${encodeURIComponent(userMessage)}`
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({ query: userMessage }),
       mode: 'cors', // 启用CORS
     })
     
@@ -186,7 +210,12 @@ function handleBackendError(query: string) {
   const lowerQuery = query.toLowerCase()
   let answer = '抱歉，我暂时无法连接到后端服务。请检查后端服务是否正常运行，并确保允许跨域请求。'
   
-  if (lowerQuery.includes('简历') || lowerQuery.includes('投递简历') || lowerQuery.includes('如何提交简历')) {
+  // 特殊处理：如果问题是关于模型或身份的
+  const modelIdentityKeywords = ['你是谁', '你是什么模型', '你的模型', '你是什么', '你的身份', 'claude', 'gpt', 'llm', '你能做什么', '你有什么功能', '你会什么']
+  
+  if (modelIdentityKeywords.some(keyword => lowerQuery.includes(keyword))) {
+    answer = `您好，我是claude-4-sonnet-thinking的AI模型，是Cursor IDE内置的AI助手，致力于提升您的开发效率。"`
+  } else if (lowerQuery.includes('简历') || lowerQuery.includes('投递简历') || lowerQuery.includes('如何提交简历')) {
     answer = '要提交简历，请登录您的账户后，点击"我的"页面，然后在左侧菜单中选择"简历管理"。在那里您可以上传新简历或更新现有简历。完成后，您可以在申请职位时选择该简历进行投递。'
   } else if (lowerQuery.includes('注册') || lowerQuery.includes('账号')) {
     answer = '要注册账号，请点击页面右上角的"注册"按钮，填写必要的个人信息，包括用户名、邮箱和密码，然后按照页面提示完成注册流程。'
@@ -208,4 +237,113 @@ onMounted(() => {
   // 初始化时滚动到底部
   scrollToBottom()
 })
-</script> 
+</script>
+
+<style scoped>
+/* 添加Markdown样式 */
+:deep(.markdown-content) {
+  line-height: 1.6;
+}
+
+:deep(.markdown-content h1) {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.markdown-content h2) {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-top: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+
+:deep(.markdown-content h3) {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-top: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+:deep(.markdown-content p) {
+  margin-bottom: 0.5rem;
+}
+
+:deep(.markdown-content ul),
+:deep(.markdown-content ol) {
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.markdown-content ul) {
+  list-style-type: disc;
+}
+
+:deep(.markdown-content ol) {
+  list-style-type: decimal;
+}
+
+:deep(.markdown-content li) {
+  margin-bottom: 0.25rem;
+}
+
+:deep(.markdown-content code) {
+  background-color: #f0f0f0;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.2rem;
+  font-family: monospace;
+}
+
+:deep(.markdown-content pre) {
+  background-color: #f0f0f0;
+  padding: 0.5rem;
+  border-radius: 0.3rem;
+  overflow-x: auto;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.markdown-content pre code) {
+  background-color: transparent;
+  padding: 0;
+}
+
+:deep(.markdown-content strong) {
+  font-weight: bold;
+}
+
+:deep(.markdown-content em) {
+  font-style: italic;
+}
+
+:deep(.markdown-content blockquote) {
+  border-left: 4px solid #e0e0e0;
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+}
+
+:deep(.markdown-content a) {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+:deep(.markdown-content table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.markdown-content th),
+:deep(.markdown-content td) {
+  border: 1px solid #e0e0e0;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+}
+
+:deep(.markdown-content th) {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+</style> 

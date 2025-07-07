@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 8081,
+    port: 8082,
     open: true,
     host: '0.0.0.0',
     proxy: {
