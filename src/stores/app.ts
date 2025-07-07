@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { getUserTypeByRole } from '@/utils/userType' // 路径按实际情况调整
 
 interface User {
   id: number
@@ -7,6 +8,8 @@ interface User {
   organizationName?: string
   username?: string
   nickname?: string
+  // userType?: 'school' | 'enterprise' | 'student' | 'teacher' | 'admin' | 'mentor' // 可以去掉
+  role?: string
   // 其他字段...
 }
 
@@ -20,7 +23,9 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const setUser = (userData: User) => {
-    user.value = userData
+    user.value = {
+      ...userData
+    }
   }
 
   const setTheme = (newTheme: string) => {
@@ -33,6 +38,27 @@ export const useAppStore = defineStore('app', () => {
     // 如有其它本地存储项可一并清理
   }
 
+  // 新增：判断用户是否有项目合作管理权限
+  const hasProjectPermission = (permission: string) => {
+    if (!user.value) return false
+    
+    const userRole = user.value.role?.toUpperCase()
+    const userType = user.value.userType
+    
+    switch (permission) {
+      case 'publish_project':
+        return ['ADMIN', 'TEACHER', 'SCH_ADMIN', 'EN_ADMIN', 'EN_TEACHER'].includes(userRole || '')
+      case 'apply_project':
+        return ['SCHOOL', 'ENTERPRISE'].includes(userType || '')
+      case 'review_application':
+        return ['ADMIN', 'TEACHER', 'SCH_ADMIN', 'EN_ADMIN'].includes(userRole || '')
+      case 'manage_fund':
+        return ['ADMIN', 'FINANCE', 'SCH_ADMIN', 'EN_ADMIN'].includes(userRole || '')
+      default:
+        return false
+    }
+  }
+
   return {
     isLoading,
     user,
@@ -40,6 +66,7 @@ export const useAppStore = defineStore('app', () => {
     setLoading,
     setUser,
     setTheme,
-    logout
+    logout,
+    hasProjectPermission
   }
 }) 

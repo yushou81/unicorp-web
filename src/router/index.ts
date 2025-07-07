@@ -15,6 +15,7 @@ import TeacherDashboard from '@/views/dashboard/TeacherDashboard.vue'
 import AdminDashboard from '@/views/dashboard/AdminDashboard.vue'
 import MentorDashboard from '@/views/dashboard/MentorDashboard.vue'
 import SchoolAdminDashboard from '@/views/dashboard/SchoolAdminDashboard.vue'
+import LoginSuccessView from '@/views/LoginSuccessView.vue'
 import { getMe } from '@/lib/api/auth'
 import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
@@ -36,6 +37,11 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: RegisterView
+    },
+    {
+      path: '/login-success',
+      name: 'login-success',
+      component: LoginSuccessView
     },
     {
       path: '/job',
@@ -104,6 +110,7 @@ const router = createRouter({
             return { name: 'student-dashboard' }
           case 'EN_ADMIN':
           case 'COMPANYADMIN':
+          case 'EN_ADMIN':
             return { name: 'company-dashboard' }
           case 'TEACHER':
             return { name: 'teacher-dashboard' }
@@ -113,8 +120,8 @@ const router = createRouter({
           case 'MENTOR':
           case 'EN_TEACHER':
             return { name: 'mentor-dashboard' } // 添加企业导师路由
+          case 'SCHOOL_ADMIN':
           case 'SCH_ADMIN':
-          case 'SCHOOLADMIN':
             return { name: 'school-dashboard' } // 添加学校管理员路由
           default:
             console.log('未匹配到角色，回到首页:', role)
@@ -168,60 +175,64 @@ const router = createRouter({
       name: 'learn',
       component: () => import('@/views/LearnView.vue')
     },
+
+    {
+      path: '/resource',
+      name: 'resource',
+      component: () => import('@/views/ResourceView.vue')
+    },
+    {
+      path: '/project/edit/:projectId',
+      name: 'ProjectEdit',
+      component: () => import('@/views/project/ProjectEditView.vue')
+    },
+    // 项目合作管理路由
     // {
     //   path: '/project/list',
     //   name: 'project-list',
-    //   component: () => import('@/views/project/ProjectListView.vue')
+    //   component: () => import('@/views/project/ProjectListView.vue'),
+    //   meta: { requiresAuth: true }
     // },
+
     {
       path: '/project/publish',
       name: 'project-publish',
-      component: () => import('@/views/project/ProjectPublishView.vue')
+      component: () => import('@/views/project/ProjectPublishView.vue'),
+      meta: { requiresAuth: true }
     },
     {
-      path: '/project/:id/apply',
-      name: 'ProjectApply',
-      component: () => import('@/views/project/ProjectApplyView.vue')
-    },
-    {
-      path: '/project/:id/members',
-      name: 'ProjectMemberManage',
-      component: () => import('@/views/project/ProjectMemberManageView.vue'),
+      path: '/project/detail/:projectId',
+      name: 'project-detail',
+      component: () => import('@/views/project/ProjectDetailView.vue'),
       meta: { requiresAuth: true }
     },
     {
       path: '/project/:id/fund',
       name: 'project-fund',
-      component: () => import('@/views/project/ProjectFundView.vue')
-    },
-    // {
-    //   path: '/project/:id',
-    //   name: 'project-detail',
-    //   component: () => import('@/views/project/ProjectDetailView.vue')
-    // },
-    {
-      path: '/student/projects',
-      name: 'StudentProjectSearch',
-      component: () => import('@/views/project/StudentProjectSearchView.vue'),
-      meta: { requiresAuth: true, role: 'student' }
-    },
-    // 在现有路由配置中添加
-    {
-      path: '/project/edit/:id',
-      name: 'ProjectEdit',
-      component: () => import('@/views/project/ProjectEditView.vue'),
+      component: () => import('@/views/project/ProjectFundView.vue'),
       meta: { requiresAuth: true }
     },
     {
-      path: '/company/projects',
-      name: 'CompanyProjectManage',
-      component: () => import('@/views/project/CompanyProjectManageView.vue'),
-      meta: { requiresAuth: true, role: 'companyAdmin' }
+      path: '/project/:id/fund-readonly',
+      name: 'project-fund-readonly',
+      component: () => import('@/views/project/ProjectFundReadonlyView.vue')
+    },
+    {
+      path: '/project/my',
+      name: 'my-project-list',
+      component: () => import('@/views/project/MyProjectListView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/project/search',
+      name: 'project-search',
+      component: () => import('@/views/project/ProjectSearchView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/resource',
       name: 'resource',
-      component: () => import('@/views/LearnView.vue')
+      component: () => import('@/views/ResourceView.vue')
     },
     {
       path: '/resource/upload',
@@ -234,36 +245,58 @@ const router = createRouter({
       component: () => import('@/views/ResourceDetailView.vue')
     },
     {
-      path: '/bookings',
+      path: '/dashboard/my-bookings',
       name: 'my-bookings',
-      component: () => import('@/views/dashboard/MyBookingsView.vue')
+      component: () => import('@/views/dashboard/MyBookingsView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/equipment/bookings',
       name: 'equipment-bookings',
       component: () => import('@/views/resource/EquipmentBookingManageView.vue')
     },
+    // {
+    //   path: '/teacher/projects',
+    //   name: 'TeacherProjectManage',
+    //   component: () => import('@/views/project/TeacherProjectManageView.vue'),
+    //   meta: { requiresAuth: true, role: 'teacher' }
+    // },
     {
-      path: '/teacher/projects',
-      name: 'TeacherProjectManage',
-      component: () => import('@/views/project/TeacherProjectManageView.vue'),
-      meta: { requiresAuth: true, role: 'teacher' }
+      path: '/project/audit',
+      name: 'project-audit',
+      component: () => import('@/views/project/ProjectAuditView.vue'),
+      meta: { requiresAuth: true }
     },
     {
-        path: '/logs',
-        name: 'logs',
-        component: () => import('@/views/dashboard/OperationLogs.vue')
-      },
-      {
-        path: '/accounts',
-        name: 'accounts',
-        component: () => import('@/views/dashboard/Accounts.vue')
-      },
-    
+      path: '/my-project-applications',
+      name: 'MyProjectApplications',
+      component: () => import('@/views/project/MyProjectApplicationView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/logs',
+      name: 'logs',
+      component: () => import('@/views/dashboard/OperationLogs.vue')
+    },
+    {
+      path: '/accounts',
+      name: 'accounts',
+      component: () => import('@/views/dashboard/Accounts.vue')
+    },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFound.vue')
+    },
+    {
+      path: '/nearby-map',
+      name: 'nearby-map',
+      component: () => import('@/views/NearbyLocationMapView.vue')
+    },
+    {
+      path: '/location-picker-test',
+      name: 'location-picker-test',
+      component: () => import('@/views/LocationPickerTest.vue')
     }
   ]
 })
@@ -301,6 +334,26 @@ router.beforeEach(async (to, from, next) => {
     if (!allowedRoles.includes(user.role)) {
       console.warn(`用户角色 ${user.role} 尝试访问管理员面板`)
       next('/')
+      return
+    }
+  }
+  
+  // 检查项目合作管理相关路由的权限
+  if (to.path.startsWith('/project/')) {
+    const user = appStore.user as any
+    if (!user) {
+      next('/login')
+      return
+    }
+    
+    // 根据具体路由检查权限
+    if (to.path === '/project/publish' && !appStore.hasProjectPermission('publish_project')) {
+      next('/dashboard')
+      return
+    }
+    
+    if (to.path === '/project/application' && !appStore.hasProjectPermission('review_application')) {
+      next('/dashboard')
       return
     }
   }
