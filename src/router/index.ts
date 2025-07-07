@@ -92,6 +92,11 @@ const router = createRouter({
       component: () => import('@/views/classroom/CourseDetailView.vue')
     },
     {
+      path: '/ai-assistant',
+      name: 'ai-assistant',
+      component: () => import('@/views/AIAssistantView.vue')
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       redirect: to => {
