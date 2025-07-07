@@ -1,4 +1,4 @@
-const API_BASE_URL =  'http://192.168.58.17:8081/api'
+const API_BASE_URL =  'http://192.168.1.2:8081/api'
 
 
 let token = ''
@@ -20,14 +20,15 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   if (options.headers !== undefined) {
     headers = Object.assign({}, options.headers) as Record<string, string>
   } else {
-    // 否则设置默认的Content-Type，但如果是FormData则不设置
-    if (!(options.body instanceof FormData)) {
+    // 只有有body时才加Content-Type
+    if (!(options.body instanceof FormData) && options.body !== undefined) {
       headers['Content-Type'] = 'application/json'
     }
   }
   
-  // 添加认证token
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  // 自动获取token：优先用setToken设置的token，没有则用localStorage的token
+  let realToken = token || localStorage.getItem('token') || ''
+  if (realToken) headers['Authorization'] = `Bearer ${realToken}`
 
   // 调试输出
   console.log('[apiRequest] 请求:', {

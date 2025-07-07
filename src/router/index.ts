@@ -8,7 +8,7 @@ import ClassroomListView from '@/views/classroom/ClassroomListView.vue'
 import ClassroomDetailView from '@/views/classroom/ClassroomDetailView.vue'
 import TeacherCourseManager from '@/views/classroom/TeacherCourseManager.vue'
 import CourseChapterView from '@/views/classroom/CourseChapterView.vue'
-import CourseRatingManagement from '@/views/classroom/CourseRatingManagement.vue'
+
 import StudentDashboard from '@/views/dashboard/StudentDashboard.vue'
 import CompanyAdminDashboard from '@/views/dashboard/CompanyAdminDashboard.vue'
 import TeacherDashboard from '@/views/dashboard/TeacherDashboard.vue'
@@ -65,15 +65,21 @@ const router = createRouter({
     },
     {
       path: '/classroom/:courseId/chapter/:chapterId',
-      name: 'course-chapter',
+      name: 'course-chapters',
       component: CourseChapterView
     },
     {
-      path: '/classroom/:courseId/ratings',
-      name: 'course-rating-management',
-      component: CourseRatingManagement,
+      path: '/classroom/:courseId/chapter/:chapterId/edit',
+      name: 'chapter-edit',
+      component: () => import('@/views/classroom/ChapterEditView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/classroom/test',
+      name: 'chapter-test',
+      component: () => import('@/views/classroom/ChapterTestView.vue')
+    },
+
     {
       path: '/classroom/course/:id',
       name: 'CourseDetail',

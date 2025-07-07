@@ -108,6 +108,24 @@ const exportOptions = ref({
   includeTimestamp: true
 })
 
+// 将 updateExportStats 的定义提前到 watch 之前
+const updateExportStats = () => {
+  const count = filteredRatings.value.length
+  let dateRange = ''
+  
+  if (exportOptions.value.dateRange !== 'all') {
+    const rangeTexts = {
+      week: '最近一周',
+      month: '最近一月',
+      quarter: '最近一季度',
+      year: '最近一年'
+    }
+    dateRange = rangeTexts[exportOptions.value.dateRange] || ''
+  }
+  
+  exportStats.value = { count, dateRange }
+}
+
 // 根据选项过滤评价数据
 const filteredRatings = computed(() => {
   let filtered = [...props.ratings]
@@ -162,24 +180,6 @@ const filteredRatings = computed(() => {
 watch([exportOptions, filteredRatings], () => {
   updateExportStats()
 }, { immediate: true })
-
-// 更新导出统计
-const updateExportStats = () => {
-  const count = filteredRatings.value.length
-  let dateRange = ''
-  
-  if (exportOptions.value.dateRange !== 'all') {
-    const rangeTexts = {
-      week: '最近一周',
-      month: '最近一月',
-      quarter: '最近一季度',
-      year: '最近一年'
-    }
-    dateRange = rangeTexts[exportOptions.value.dateRange] || ''
-  }
-  
-  exportStats.value = { count, dateRange }
-}
 
 // 导出为CSV
 const exportToCSV = async () => {

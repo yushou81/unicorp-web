@@ -1226,7 +1226,8 @@ function statusText(status) {
 }
 
 function showCourseDetail(id) {
-  // 跳转或弹窗显示课程详情
+  // 跳转到课程详情页面
+  router.push(`/classroom/${id}`)
 }
 
 function statusTagClass(status) {
