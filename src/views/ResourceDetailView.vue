@@ -276,50 +276,11 @@
             
             <div class="flex gap-4">
               <Button type="submit">提交申请</Button>
-              <Button variant="outline" type="button" @click="collectResource">收藏资源</Button>
             </div>
           </form>
         </div>
         
-        <!-- 非实验设备只显示收藏按钮 -->
-        <div class="p-8" v-else>
-          <div class="flex justify-start">
-            <Button variant="outline" @click="collectResource" class="flex items-center">
-              <BookmarkIcon class="w-4 h-4 mr-1.5" />
-              收藏资源
-            </Button>
-          </div>
-        </div>
-        
-        <!-- 评价与留言 -->
-        <div class="border-t border-gray-200"></div>
-        <div class="p-8">
-          <h2 class="text-xl font-semibold mb-6">评价与留言</h2>
-          
-          <!-- 评价列表 -->
-          <div class="space-y-4 mb-8">
-            <div v-if="comments.length === 0" class="text-gray-500 italic">暂无评价</div>
-            <div v-for="comment in comments" :key="comment.id" class="bg-gray-50 p-4 rounded-lg">
-              <div class="flex items-center mb-2">
-                <div class="font-medium">{{ comment.user }}</div>
-                <div class="ml-2 text-sm text-gray-500">{{ comment.date }}</div>
-              </div>
-              <p class="text-gray-700">{{ comment.content }}</p>
-            </div>
-          </div>
-          
-          <!-- 添加评价 -->
-          <div>
-            <h3 class="text-lg font-medium mb-3">添加评价</h3>
-            <textarea 
-              v-model="newComment"
-              rows="3"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 mb-3"
-              placeholder="分享您的使用体验..."
-            ></textarea>
-            <Button size="sm" @click="addComment">提交评价</Button>
-          </div>
-        </div>
+
       </div>
     </div>
   </div>
@@ -559,22 +520,24 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronLeft, Check, Clock, WrenchIcon as Tools, DollarSign, BookmarkIcon, DownloadIcon } from 'lucide-vue-next'
+import { ChevronLeft, Check, Clock, WrenchIcon as Tools, DollarSign, DownloadIcon } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import { 
   getResourceById, 
-  collectResource as apiCollectResource, 
   submitResourceApplication, 
-  addResourceComment, 
-  getResourceComments,
   deleteResource,
   updateResourceWithFile,
   getResourceBookings,
   downloadResource
 } from '@/lib/api/resource'
 import { useAppStore } from '@/stores/app'
-import type { ApiResponse } from '@/lib/api/apiClient'
+import { apiRequest } from '@/lib/api/apiClient'
+type ApiResponse<T = any> = {
+  code: number;
+  message: string;
+  data: T;
+}
 
 interface User {
   id: number
@@ -610,11 +573,7 @@ const application = ref({
   endTime: '',
 })
 
-// 新评论
-const newComment = ref('')
 
-// 资源评价列表
-const comments = ref<any[]>([])
 
 // 资源预约时间段
 const bookings = ref<any[]>([])
@@ -749,37 +708,7 @@ const loadResourceDetails = async () => {
   }
 }
 
-// 加载资源评论
-const loadComments = async () => {
-  try {
-    const response = await getResourceComments(resourceId) as ApiResponse<any[]>
-    if (response && response.code === 200 && response.data) {
-      comments.value = response.data.map((comment: any) => ({
-        id: comment.id,
-        user: comment.nickname || '匿名用户',
-        date: new Date(comment.createdAt).toLocaleDateString(),
-        content: comment.content
-      }))
-    }
-  } catch (error) {
-    console.error('获取评论失败:', error)
-    // 使用临时评论数据
-    comments.value = [
-      { 
-        id: 1, 
-        user: '张三', 
-        date: '2024-01-15', 
-        content: '设备性能优良，实验过程非常顺利，文档齐全，使用方便。' 
-      },
-      { 
-        id: 2, 
-        user: '李四', 
-        date: '2024-01-10', 
-        content: '资源非常有用，但是建议增加更多的使用案例和示例数据。' 
-      }
-    ]
-  }
-}
+
 
 // 加载资源预约时间段
 const loadBookings = async () => {
@@ -849,17 +778,7 @@ const submitApplication = async () => {
   }
 }
 
-// 收藏资源
-const collectResource = async () => {
-  try {
-    console.log('收藏资源:', resourceId)
-    await apiCollectResource(resourceId)
-    alert('资源已收藏')
-  } catch (error) {
-    console.error('收藏资源失败:', error)
-    alert('收藏失败，请稍后重试')
-  }
-}
+
 
 // 下载资源
 const downloadResourceFile = () => {
@@ -872,22 +791,7 @@ const downloadResourceFile = () => {
   }
 }
 
-// 添加评论
-const addComment = async () => {
-  if (newComment.value.trim()) {
-    try {
-      console.log('添加评论:', newComment.value)
-      await addResourceComment(resourceId, newComment.value)
-      alert('评价已提交')
-      newComment.value = ''
-      // 重新加载评论列表
-      loadComments()
-    } catch (error) {
-      console.error('添加评论失败:', error)
-      alert('评论提交失败，请稍后重试')
-    }
-  }
-}
+
 
 // 确认删除资源
 const confirmDelete = async () => {
@@ -1069,7 +973,6 @@ const updateResourceInfo = async () => {
 // 组件挂载时加载数据
 onMounted(() => {
   loadResourceDetails()
-  loadComments()
   loadBookings()
 })
 </script> 

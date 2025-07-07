@@ -68,7 +68,6 @@
             :resources="filteredResources" 
             :current-page="currentPage"
             :total-pages="totalPages"
-            @collect="collectResource"
             @page-change="handlePageChange"
             @sort="handleSort"
           />
@@ -84,7 +83,7 @@ import Navbar from '@/components/layout/Navbar.vue'
 import ResourceSearch from '@/components/resource/ResourceSearch.vue'
 import ResourceFilterSidebar from '@/components/resource/ResourceFilterSidebar.vue'
 import ResourceList from '@/components/resource/ResourceList.vue'
-import { getResources, collectResource as apiCollectResource } from '@/lib/api/resource'
+import { getResources } from '@/lib/api/resource'
 import { useAppStore } from '@/stores/app'
 
 // 定义API响应类型接口
@@ -177,17 +176,7 @@ const handleSort = (option: string) => {
   // 实际项目中这里应该根据排序选项对数据进行排序
 }
 
-// 收藏资源
-const collectResource = async (resourceId: number) => {
-  try {
-    console.log('收藏资源', resourceId)
-    await apiCollectResource(resourceId)
-    alert('收藏成功')
-  } catch (error) {
-    console.error('收藏资源失败:', error)
-    alert('收藏失败，请稍后重试')
-  }
-}
+// 收藏功能已移除
 
 // 加载资源数据
 const loading = ref(false)

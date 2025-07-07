@@ -314,11 +314,10 @@
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <!-- 这里可以使用v-for循环展示最近的预约记录 -->
-                  <tr v-for="i in 3" :key="i" class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">示例用户{{ i }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">示例设备{{ i }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">2023-12-{{ 10 + i }}</td>
+                  <tr v-for="booking in recentEquipmentBookings" :key="booking.id" class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">{{ booking.userName }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ booking.resourceName }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ new Date(booking.startTime).toLocaleString() }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">待审核</span>
                     </td>
@@ -898,7 +897,8 @@ async function fetchSchoolInfo() {
 onMounted(() => {
   fetchSchoolInfo()
   fetchTeachers()
-  updateDashboardData() // 更新仪表盘数据
+  fetchCourses()
+  fetchRecentEquipmentBookings()
 })
 
 const router = useRouter()
@@ -1333,32 +1333,28 @@ function getCourseStatusClass(status: string): string {
   return classMap[status] || 'px-2 py-1 rounded text-xs bg-gray-100 text-gray-800'
 }
 
-onMounted(() => {
-  fetchSchoolInfo()
-  fetchTeachers()
-  // 添加获取课程列表
-  fetchCourses()
-})
+// 设备预约相关
+const recentEquipmentBookings = ref<any[]>([])
+const recentEquipmentLoading = ref(false)
+const recentEquipmentError = ref('')
 
-// 更新仪表盘数据
-async function updateDashboardData() {
+async function fetchRecentEquipmentBookings() {
+  recentEquipmentLoading.value = true
+  recentEquipmentError.value = ''
   try {
-    // 获取待审核设备申请数量
-    const res = await getEquipmentBookings({ 
-      page: 0, 
-      size: 1,
-      status: 'PENDING'
-    })
-    
-    if (res.code === 200 && res.data) {
-      // 更新blocks中的待审核数量
-      const bookingBlock = blocks.value.find(b => b.title === '设备申请管理')
-      if (bookingBlock && bookingBlock.data && bookingBlock.data.length > 0) {
-        bookingBlock.data[0].extra = `${res.data.total || 0}个`
-      }
+    // 获取最近3条预约，按时间倒序
+    const res: any = await getEquipmentBookings({ page: 0, size: 3 })
+    if (res.code === 200 && res.data && Array.isArray(res.data.records)) {
+      recentEquipmentBookings.value = res.data.records
+    } else {
+      recentEquipmentBookings.value = []
+      recentEquipmentError.value = res.message || '获取设备预约数据失败'
     }
   } catch (e: any) {
-    console.error('获取设备申请数量失败:', e)
+    recentEquipmentBookings.value = []
+    recentEquipmentError.value = e.message || '获取设备预约数据失败'
+  } finally {
+    recentEquipmentLoading.value = false
   }
 }
 
