@@ -4,39 +4,38 @@ import ResourceUploader from './ResourceUploader.vue'
 
 const props = defineProps<{
   show: boolean
+  type?: 'PORTFOLIO' | 'AWARD' | 'RESEARCH' | null
+  initialData?: any // 用于编辑模式
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'submit', data: any): void
+  (e: 'success'): void
 }>()
 
 // 成果类型选项
 const achievementTypes = [
-  { id: 'portfolio', name: '作品' },
-  { id: 'award', name: '获奖' },
-  { id: 'research', name: '科研成果' }
+  { id: 'PORTFOLIO', name: '作品' },
+  { id: 'AWARD', name: '获奖' },
+  { id: 'RESEARCH', name: '科研成果' }
 ]
 
 // 表单数据
 const formData = ref({
-  type: 'portfolio',
-  title: '',
-  description: '',
-  date: '',
-  tags: '',
-  // 作品特有字段
-  portfolioUrl: '',
-  // 获奖特有字段
-  competitionName: '',
-  awardLevel: '',
-  issuer: '',
-  // 科研成果特有字段
-  publicationType: '',
-  publicationVenue: '',
-  authors: '',
-  // 通用
-  attachments: []
+  type: props.type || 'PORTFOLIO',
+  title: props.initialData?.title || '',
+  description: props.initialData?.description || '',
+  date: props.initialData?.date || '',
+  tags: Array.isArray(props.initialData?.tags) ? props.initialData?.tags.join(',') : '',
+  portfolioUrl: props.initialData?.portfolioUrl || '',
+  competitionName: props.initialData?.competitionName || '',
+  awardLevel: props.initialData?.awardLevel || '',
+  issuer: props.initialData?.issuer || '',
+  publicationType: props.initialData?.publicationType || '',
+  publicationVenue: props.initialData?.publicationVenue || '',
+  authors: Array.isArray(props.initialData?.authors) ? props.initialData?.authors.join(',') : '',
+  attachments: props.initialData?.attachments || []
 })
 
 // 表单验证状态
@@ -48,11 +47,11 @@ const isValid = computed(() => {
   
   // 类型特定验证
   switch (formData.value.type) {
-    case 'portfolio':
+    case 'PORTFOLIO':
       return true // 作品无特殊必填项
-    case 'award':
+    case 'AWARD':
       return !!formData.value.competitionName && !!formData.value.awardLevel
-    case 'research':
+    case 'RESEARCH':
       return !!formData.value.publicationType && !!formData.value.authors
     default:
       return false
@@ -64,35 +63,40 @@ const handleSubmit = () => {
   if (!isValid.value) return
 
   // 根据类型处理不同字段
-  const submitData = {
+  const baseData = {
     type: formData.value.type,
     title: formData.value.title,
     description: formData.value.description,
     date: formData.value.date,
-    tags: formData.value.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+    tags: formData.value.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag),
     attachments: formData.value.attachments
   }
 
+  let submitData: any = { ...baseData }
+
   // 添加类型特定字段
   switch (formData.value.type) {
-    case 'portfolio':
-      Object.assign(submitData, {
+    case 'PORTFOLIO':
+      submitData = {
+        ...submitData,
         portfolioUrl: formData.value.portfolioUrl
-      })
+      }
       break
-    case 'award':
-      Object.assign(submitData, {
+    case 'AWARD':
+      submitData = {
+        ...submitData,
         competitionName: formData.value.competitionName,
         awardLevel: formData.value.awardLevel,
         issuer: formData.value.issuer
-      })
+      }
       break
-    case 'research':
-      Object.assign(submitData, {
+    case 'RESEARCH':
+      submitData = {
+        ...submitData,
         publicationType: formData.value.publicationType,
         publicationVenue: formData.value.publicationVenue,
-        authors: formData.value.authors.split(',').map(author => author.trim()).filter(author => author)
-      })
+        authors: formData.value.authors.split(',').map((author: string) => author.trim()).filter((author: string) => author)
+      }
       break
   }
 
@@ -107,19 +111,19 @@ const handleFileUploaded = (fileInfo: any) => {
 // 重置表单
 const resetForm = () => {
   formData.value = {
-    type: 'portfolio',
-    title: '',
-    description: '',
-    date: '',
-    tags: '',
-    portfolioUrl: '',
-    competitionName: '',
-    awardLevel: '',
-    issuer: '',
-    publicationType: '',
-    publicationVenue: '',
-    authors: '',
-    attachments: []
+    type: props.type || 'PORTFOLIO',
+    title: props.initialData?.title || '',
+    description: props.initialData?.description || '',
+    date: props.initialData?.date || '',
+    tags: Array.isArray(props.initialData?.tags) ? props.initialData?.tags.join(',') : '',
+    portfolioUrl: props.initialData?.portfolioUrl || '',
+    competitionName: props.initialData?.competitionName || '',
+    awardLevel: props.initialData?.awardLevel || '',
+    issuer: props.initialData?.issuer || '',
+    publicationType: props.initialData?.publicationType || '',
+    publicationVenue: props.initialData?.publicationVenue || '',
+    authors: Array.isArray(props.initialData?.authors) ? props.initialData?.authors.join(',') : '',
+    attachments: props.initialData?.attachments || []
   }
 }
 
@@ -198,7 +202,7 @@ const handleClose = () => {
           </div>
           
           <!-- 作品特有字段 -->
-          <template v-if="formData.type === 'portfolio'">
+          <template v-if="formData.type === 'PORTFOLIO'">
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-1">作品链接</label>
               <input 
@@ -211,14 +215,14 @@ const handleClose = () => {
           </template>
           
           <!-- 获奖特有字段 -->
-          <template v-if="formData.type === 'award'">
+          <template v-if="formData.type === 'AWARD'">
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-1">竞赛名称</label>
               <input 
                 v-model="formData.competitionName"
                 type="text"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="竞赛或荣誉名称"
+                placeholder="竞赛或比赛名称"
               />
             </div>
             
@@ -243,13 +247,13 @@ const handleClose = () => {
                 v-model="formData.issuer"
                 type="text"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="颁发机构名称"
+                placeholder="颁发奖项的机构名称"
               />
             </div>
           </template>
           
-          <!-- 科研成果特有字段 -->
-          <template v-if="formData.type === 'research'">
+          <!-- 科研特有字段 -->
+          <template v-if="formData.type === 'RESEARCH'">
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-1">成果类型</label>
               <select 
@@ -287,46 +291,28 @@ const handleClose = () => {
           
           <!-- 文件上传 -->
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">附件上传</label>
-            <ResourceUploader @file-uploaded="handleFileUploaded" />
-            
-            <!-- 显示已上传的文件 -->
-            <div v-if="formData.attachments.length > 0" class="mt-2">
-              <div v-for="(file, index) in formData.attachments" :key="index" class="flex items-center justify-between bg-gray-50 p-2 rounded-md mb-1">
-                <span class="text-sm text-gray-700">{{ file.name }}</span>
-                <button 
-                  type="button"
-                  @click="formData.attachments.splice(index, 1)"
-                  class="text-red-500 hover:text-red-700"
-                >
-                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">附件</label>
+            <ResourceUploader @uploaded="handleFileUploaded" />
+          </div>
+          
+          <!-- 提交按钮 -->
+          <div class="flex justify-end space-x-3">
+            <button 
+              type="button"
+              @click="handleClose"
+              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              取消
+            </button>
+            <button 
+              type="submit"
+              :disabled="!isValid"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              提交
+            </button>
           </div>
         </form>
-      </div>
-      
-      <!-- 模态框底部 -->
-      <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
-        <button 
-          type="button"
-          @click="handleClose"
-          class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 mr-2 hover:bg-gray-50"
-        >
-          取消
-        </button>
-        <button 
-          type="button"
-          @click="handleSubmit"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          :disabled="!isValid"
-          :class="{ 'opacity-50 cursor-not-allowed': !isValid }"
-        >
-          提交
-        </button>
       </div>
     </div>
   </div>

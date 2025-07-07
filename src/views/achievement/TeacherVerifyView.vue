@@ -3,261 +3,272 @@
       
       <div class="container mx-auto px-6 py-12 max-w-7xl">
         <!-- 页面标题 -->
-        <div class="mb-10">
-          <h1 class="text-3xl font-bold text-gray-900">成果审核</h1>
-          <p class="mt-2 text-gray-600">审核并认证学生提交的成果</p>
+        <div class="mb-8">
+          <h1 class="text-2xl font-medium text-gray-900">成果审核</h1>
+          <p class="mt-1 text-base text-gray-500">审核学生提交的作品集、竞赛获奖和科研成果</p>
         </div>
         
-        <!-- 筛选条件 -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">成果类型</label>
-              <select 
-                v-model="filters.type" 
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">全部类型</option>
-                <option value="portfolio">作品</option>
-                <option value="award">获奖</option>
-                <option value="research">科研成果</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">审核状态</label>
-              <select 
-                v-model="filters.status" 
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">全部状态</option>
-                <option value="pending">待审核</option>
-                <option value="verified">已认证</option>
-                <option value="rejected">已拒绝</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">关键词搜索</label>
-              <div class="relative">
-                <input 
-                  v-model="filters.keyword" 
-                  type="text" 
-                  placeholder="搜索成果名称、描述或学生姓名" 
-                  class="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          <div class="bg-white rounded-lg p-4 shadow-sm relative">
+            <div class="absolute top-3 right-3">
+              <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <span class="text-sm font-medium text-blue-600">总览</span>
               </div>
             </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">学生ID</label>
-              <input 
-                v-model="filters.studentId" 
-                type="number" 
-                placeholder="输入学生ID" 
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">开始日期</label>
-              <input 
-                v-model="filters.startDate" 
-                type="date" 
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">结束日期</label>
-              <input 
-                v-model="filters.endDate" 
-                type="date" 
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div class="pr-12">
+              <p class="text-base text-gray-500">总成果数</p>
+              <p class="mt-1 text-2xl font-semibold">{{ statistics.totalAchievements }}</p>
+              <p class="mt-1 text-sm text-gray-400">包含所有类型的成果总数</p>
             </div>
           </div>
-          
-          <div class="flex justify-end mt-6">
+
+          <div class="bg-white rounded-lg p-4 shadow-sm relative">
+            <div class="absolute top-3 right-3">
+              <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
+                <span class="text-sm font-medium text-green-600">已认</span>
+              </div>
+            </div>
+            <div class="pr-12">
+              <p class="text-base text-gray-500">已认证成果</p>
+              <p class="mt-1 text-2xl font-semibold">{{ statistics.verifiedCount || 0 }}</p>
+              <p class="mt-1 text-sm text-gray-400">认证率 {{ statistics.verifiedRate || 'NaN%' }}</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg p-4 shadow-sm relative">
+            <div class="absolute top-3 right-3">
+              <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
+                <span class="text-sm font-medium text-purple-600">作品</span>
+              </div>
+            </div>
+            <div class="pr-12">
+              <p class="text-base text-gray-500">作品数量</p>
+              <p class="mt-1 text-2xl font-semibold">{{ statistics.portfolioCount }}</p>
+              <p class="mt-1 text-sm text-gray-400">个人作品和项目展示</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg p-4 shadow-sm relative">
+            <div class="absolute top-3 right-3">
+              <div class="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center">
+                <span class="text-sm font-medium text-yellow-600">获奖</span>
+              </div>
+            </div>
+            <div class="pr-12">
+              <p class="text-base text-gray-500">获奖数量</p>
+              <p class="mt-1 text-2xl font-semibold">{{ statistics.awardCount }}</p>
+              <p class="mt-1 text-sm text-gray-400">竞赛和荣誉获奖</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg p-4 shadow-sm relative">
+            <div class="absolute top-3 right-3">
+              <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center">
+                <span class="text-sm font-medium text-indigo-600">科研</span>
+              </div>
+            </div>
+            <div class="pr-12">
+              <p class="text-base text-gray-500">科研成果</p>
+              <p class="mt-1 text-2xl font-semibold">{{ statistics.researchCount }}</p>
+              <p class="mt-1 text-sm text-gray-400">论文、专利等科研成果</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg p-4 shadow-sm relative">
+            <div class="absolute top-3 right-3">
+              <div class="w-10 h-10 rounded-full bg-pink-50 flex items-center justify-center">
+                <span class="text-sm font-medium text-pink-600">访问</span>
+              </div>
+            </div>
+            <div class="pr-12">
+              <p class="text-base text-gray-500">总访问量</p>
+              <p class="mt-1 text-2xl font-semibold">{{ statistics.visitCount || 0 }}</p>
+              <p class="mt-1 text-sm text-gray-400">成果展示页面访问量</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 错误提示 -->
+        <div v-if="error" class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <span class="block sm:inline">{{ error }}</span>
+          <span class="absolute top-0 bottom-0 right-0 px-4 py-3" @click="error = ''">
+            <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>关闭</title>
+              <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+            </svg>
+          </span>
+        </div>
+        
+        <!-- 筛选器 -->
+        <div class="bg-white rounded-lg shadow-sm mb-6">
+          <div class="p-4">
+            <div class="flex items-center space-x-4">
+              <div class="w-48">
+              <select 
+                v-model="filters.type" 
+                  class="w-full text-base rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 h-11"
+              >
+                  <option value="" selected>全部类型</option>
+                  <option :value="AchievementType.PORTFOLIO">作品集</option>
+                  <option :value="AchievementType.AWARD">竞赛获奖</option>
+                  <option :value="AchievementType.RESEARCH">科研成果</option>
+              </select>
+            </div>
+              <div class="w-48">
+              <select 
+                  v-model="filters.verifyStatus" 
+                  class="w-full text-base rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 h-11"
+              >
+                  <option value="" selected>全部状态</option>
+                  <option :value="AchievementStatus.PENDING">待认证</option>
+                  <option :value="AchievementStatus.VERIFIED">已认证</option>
+                  <option :value="AchievementStatus.REJECTED">已拒绝</option>
+              </select>
+            </div>
+              <div class="flex-1">
+                <div class="relative">
+              <input 
+                    type="text" 
+                v-model="filters.keyword" 
+                    placeholder="搜索标题、学生姓名等"
+                    class="w-full text-base rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 h-11 pl-4 pr-10"
+                  >
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+            </div>
+          </div>
+              <div class="flex space-x-3">
             <button 
-              @click="handleResetFilters" 
-              class="px-5 py-2.5 border border-gray-300 rounded-md text-gray-700 mr-3 hover:bg-gray-50"
+                  @click="handleReset" 
+                  class="px-5 py-2 text-base border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               重置
             </button>
             <button 
-              @click="handleApplyFilters" 
-              class="px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  @click="handleFilterChange" 
+                  class="px-5 py-2 text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              筛选
+                  应用筛选
             </button>
+              </div>
+            </div>
           </div>
         </div>
         
         <!-- 成果列表 -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-white rounded-lg shadow-sm">
+          <div class="p-4 border-b border-gray-100">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-medium">成果列表</h2>
+              <div class="text-base text-gray-500">
+                共 {{ total }} 条记录
+              </div>
+            </div>
+          </div>
           <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th scope="col" class="px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成果</th>
-                  <th scope="col" class="px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生</th>
-                  <th scope="col" class="px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
-                  <th scope="col" class="px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                  <th scope="col" class="px-8 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">提交时间</th>
-                  <th scope="col" class="px-8 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+            <table class="w-full">
+              <thead>
+                <tr class="bg-gray-50">
+                  <th class="text-left py-3 px-4 text-base font-medium text-gray-600">标题</th>
+                  <th class="text-left py-3 px-4 text-base font-medium text-gray-600">类型</th>
+                  <th class="text-left py-3 px-4 text-base font-medium text-gray-600">学生</th>
+                  <th class="text-left py-3 px-4 text-base font-medium text-gray-600">提交时间</th>
+                  <th class="text-left py-3 px-4 text-base font-medium text-gray-600">状态</th>
+                  <th class="text-left py-3 px-4 text-base font-medium text-gray-600">操作</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <template v-if="loading">
-                  <tr>
-                    <td colspan="6" class="px-8 py-6 text-center">
-                      <div class="flex justify-center">
-                        <div class="inline-block animate-spin rounded-full h-6 w-6 border-4 border-blue-600 border-r-transparent"></div>
-                      </div>
-                      <p class="text-gray-500 mt-2">加载中...</p>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else-if="filteredAchievements.length === 0">
-                  <tr>
-                    <td colspan="6" class="px-8 py-4 text-center text-gray-500">
-                      没有找到符合条件的成果
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <tr v-for="achievement in filteredAchievements" :key="achievement.id" class="hover:bg-gray-50">
-                    <td class="px-8 py-5 whitespace-nowrap">
-                      <div class="flex items-center">
-                        <div>
-                          <div class="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600" @click="viewAchievementDetail(achievement)">
-                            {{ achievement.title }}
-                          </div>
-                          <div class="text-sm text-gray-500 truncate max-w-md">
-                            {{ achievement.description }}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-8 py-5 whitespace-nowrap">
-                      <div class="text-sm text-gray-900">{{ achievement.studentName }}</div>
-                      <div class="text-sm text-gray-500">ID: {{ achievement.studentId }}</div>
-                    </td>
-                    <td class="px-8 py-5 whitespace-nowrap">
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {{ getTypeText(achievement.type) }}
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="item in achievements" :key="item.id" class="hover:bg-gray-50">
+                  <td class="py-3 px-4 text-base">{{ item.title }}</td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium" :class="getTypeClass(item.type)">
+                      {{ formatType(item.type) }}
                       </span>
                     </td>
-                    <td class="px-8 py-5 whitespace-nowrap">
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="getStatusClass(achievement.status)">
-                        {{ getStatusText(achievement.status) }}
+                  <td class="py-3 px-4 text-base">{{ item.studentName }}</td>
+                  <td class="py-3 px-4 text-base text-gray-500">{{ formatDate(item.createdAt) }}</td>
+                  <td class="py-3 px-4">
+                    <span 
+                      :class="getStatusClass(item.verifyStatus)"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium"
+                    >
+                      {{ formatStatus(item.verifyStatus) }}
                       </span>
                     </td>
-                    <td class="px-8 py-5 whitespace-nowrap text-sm text-gray-500">
-                      {{ formatDate(achievement.createdAt) }}
-                    </td>
-                    <td class="px-8 py-5 whitespace-nowrap text-right text-sm font-medium">
+                  <td class="py-3 px-4">
+                    <div class="flex items-center space-x-3">
                       <button 
-                        @click="viewAchievementDetail(achievement)" 
-                        class="text-blue-600 hover:text-blue-900 mr-4"
+                        @click="viewDetail(item)" 
+                        class="text-base text-blue-600 hover:text-blue-800 transition-colors"
                       >
                         查看
                       </button>
                       <button 
-                        v-if="achievement.status === 'pending'"
-                        @click="openVerifyModal(achievement)" 
-                        class="text-blue-600 hover:text-blue-900"
+                        v-if="item.verifyStatus === 'pending'"
+                        @click="openVerifyModal(item)"
+                        class="text-base text-green-600 hover:text-green-800 transition-colors"
                       >
                         审核
                       </button>
+                    </div>
                     </td>
                   </tr>
-                </template>
               </tbody>
             </table>
           </div>
-        </div>
-        
-        <!-- 分页 -->
-        <div v-if="totalPages > 1" class="mt-8 flex justify-center">
+          <div class="p-4 border-t border-gray-100">
           <Pagination
             :current-page="currentPage"
             :total-pages="totalPages"
             @page-change="handlePageChange"
           />
+          </div>
         </div>
         
-        <!-- 审核模态框 -->
-        <div v-if="showVerifyModal && currentAchievement" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div class="bg-white rounded-lg shadow-xl w-full max-w-xl">
-            <div class="px-8 py-5 border-b flex justify-between items-center">
-              <h3 class="text-lg font-semibold text-gray-900">审核成果</h3>
-              <button @click="showVerifyModal = false" class="text-gray-400 hover:text-gray-500">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- 审核弹窗 -->
+        <div v-if="showVerifyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-medium">审核成果</h3>
+              <button @click="closeVerifyModal" class="text-gray-400 hover:text-gray-500">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            
-            <div class="px-8 py-5">
-              <div class="mb-5">
-                <p class="text-sm font-medium text-gray-700">成果标题</p>
-                <p class="mt-1">{{ currentAchievement.title }}</p>
+            <div class="mb-4">
+              <label class="block text-base font-medium mb-1 text-gray-700">审核结果</label>
+              <select 
+                v-model="verifyForm.isVerified" 
+                class="w-full text-base rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 h-11"
+              >
+                <option :value="true">通过</option>
+                <option :value="false">拒绝</option>
+              </select>
               </div>
-              
-              <div class="mb-5">
-                <p class="text-sm font-medium text-gray-700">学生</p>
-                <p class="mt-1">{{ currentAchievement.studentName }}</p>
-              </div>
-              
-              <div class="mb-5">
-                <p class="text-sm font-medium text-gray-700">类型</p>
-                <p class="mt-1">{{ getTypeText(currentAchievement.type) }}</p>
-              </div>
-              
-              <div class="mb-5">
-                <label class="block text-sm font-medium text-gray-700 mb-1">审核结果</label>
-                <div class="flex space-x-4">
-                  <label class="inline-flex items-center">
-                    <input type="radio" v-model="verifyStatus" value="verified" class="form-radio h-4 w-4 text-blue-600">
-                    <span class="ml-2">通过</span>
-                  </label>
-                  <label class="inline-flex items-center">
-                    <input type="radio" v-model="verifyStatus" value="rejected" class="form-radio h-4 w-4 text-red-600">
-                    <span class="ml-2">拒绝</span>
-                  </label>
-                </div>
-              </div>
-              
-              <div class="mb-5">
-                <label class="block text-sm font-medium text-gray-700 mb-1">审核意见</label>
+            <div class="mb-4">
+              <label class="block text-base font-medium mb-1 text-gray-700">审核意见</label>
                 <textarea 
-                  v-model="verifyComment" 
-                  rows="3" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="请输入审核意见或建议..."
+                v-model="verifyForm.comment"
+                rows="4"
+                class="w-full text-base rounded-lg border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                placeholder="请输入审核意见"
                 ></textarea>
-              </div>
             </div>
-            
-            <div class="px-8 py-5 border-t bg-gray-50 flex justify-end">
+            <div class="flex justify-end space-x-3">
               <button 
-                @click="showVerifyModal = false" 
-                class="px-5 py-2.5 border border-gray-300 rounded-md text-gray-700 mr-3 hover:bg-gray-50"
+                @click="closeVerifyModal"
+                class="px-5 py-2 text-base border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 取消
               </button>
               <button 
-                @click="submitVerification" 
-                class="px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                :disabled="!verifyStatus"
-                :class="{ 'opacity-50 cursor-not-allowed': !verifyStatus }"
+                @click="submitVerify"
+                class="px-5 py-2 text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 提交
               </button>
@@ -271,25 +282,92 @@
   <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
   import { useRouter } from 'vue-router'
-  import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
   import Pagination from '@/components/ui/Pagination.vue'
-  import Navbar from '@/components/layout/Navbar.vue'
-  import { achievementApi } from '@/lib/api/achievement'
-  
+  import { 
+    type Achievement, 
+    AchievementStatus,
+    type VerifyAwardDTO,
+    type VerifyResearchDTO,
+    type CompetitionAwardVO,
+    type ResearchVO,
+    competitionAwardApi,
+    researchApi,
+    achievementStatisticsApi,
+    AchievementType,
+    getSchoolStudentsOverview,
+    portfolioApi
+  } from '@/lib/api/achievement'
+  import { useAppStore } from '@/stores/app'
+  import { User } from '@/types'
+  import { 
+    competitionAwardApi,
+    portfolioApi,
+    researchApi,
+    achievementStatisticsApi,
+    AchievementType,
+    AchievementStatus
+  } from '@/lib/api/achievement'
+  import type { 
+    Achievement,
+    CompetitionAwardVO,
+    PortfolioItemVO,
+    ResearchVO,
+    StudentAchievementOverviewVO
+  } from '@/lib/api/achievement'
+  import { getMe } from '@/lib/api/auth'
+
+  // 类型定义
+  interface Filters {
+    type: string
+    verifyStatus: string
+    keyword: string
+    studentId: string
+    startDate: string
+    endDate: string
+  }
+
+  interface VerifyForm {
+    isVerified: boolean
+    comment?: string
+  }
+
   const router = useRouter()
+  const appStore = useAppStore()
   const loading = ref(false)
   const currentPage = ref(1)
   const totalPages = ref(1)
-  const achievements = ref([])
+  const total = ref(0)
+  const achievements = ref<Achievement[]>([])
   const showVerifyModal = ref(false)
-  const currentAchievement = ref(null)
-  const verifyComment = ref('')
-  const verifyStatus = ref('')
+  const selectedAchievement = ref<Achievement | null>(null)
+  const verifyForm = ref<VerifyForm>({
+    isVerified: true,
+    comment: ''
+  })
+  const error = ref<string>('')
+  
+  // 统计数据
+  const statistics = ref<{
+    totalAchievements: number
+    verifiedCount: number
+    portfolioCount: number
+    awardCount: number
+    researchCount: number
+    visitCount: number
+    verifiedRate?: string
+  }>({
+    totalAchievements: 0,
+    verifiedCount: 0,
+    portfolioCount: 0,
+    awardCount: 0,
+    researchCount: 0,
+    visitCount: 0
+  })
   
   // 筛选条件
-  const filters = ref({
+  const filters = ref<Filters>({
     type: '',
-    status: 'pending', // 默认显示待审核的成果
+    verifyStatus: '',
     keyword: '',
     studentId: '',
     startDate: '',
@@ -303,19 +381,18 @@
       if (filters.value.type && achievement.type !== filters.value.type) return false
       
       // 按状态筛选
-      if (filters.value.status) {
-        if (filters.value.status === 'pending' && achievement.status !== 'pending') return false
-        if (filters.value.status === 'verified' && achievement.status !== 'verified') return false
-        if (filters.value.status === 'rejected' && achievement.status !== 'rejected') return false
+      if (filters.value.verifyStatus) {
+        if (filters.value.verifyStatus === 'pending' && achievement.verifyStatus !== 'pending') return false
+        if (filters.value.verifyStatus === 'verified' && achievement.verifyStatus !== 'verified') return false
+        if (filters.value.verifyStatus === 'rejected' && achievement.verifyStatus !== 'rejected') return false
       }
       
       // 按关键词筛选
       if (filters.value.keyword) {
         const keyword = filters.value.keyword.toLowerCase()
         const title = (achievement.title || '').toLowerCase()
-        const description = (achievement.description || '').toLowerCase()
         const studentName = (achievement.studentName || '').toLowerCase()
-        if (!title.includes(keyword) && !description.includes(keyword) && !studentName.includes(keyword)) {
+        if (!title.includes(keyword) && !studentName.includes(keyword)) {
           return false
         }
       }
@@ -341,96 +418,200 @@
     })
   })
   
-  // 获取成果列表
-  const fetchAchievements = async () => {
-    loading.value = true
+  // 检查用户权限
+  const checkUserPermission = () => {
+    const user = appStore.user as User
+    if (!user) {
+      router.push('/login')
+      return false
+    }
+
+    const allowedRoles = ['TEACHER', 'SCH_ADMIN', 'SCHOOLADMIN']
+    if (!allowedRoles.includes(user.role.toUpperCase())) {
+      router.push('/')
+      return false
+    }
+
+    return true
+  }
+  
+  // 获取统计数据
+  const fetchStatistics = async () => {
+    if (!checkUserPermission()) return
+
     try {
-      const response = await achievementApi.getList({
-        page: currentPage.value,
-        size: 10,
-        type: filters.value.type,
-        status: filters.value.status,
-        keyword: filters.value.keyword,
-        studentId: filters.value.studentId,
-        startDate: filters.value.startDate,
-        endDate: filters.value.endDate
-      })
+      const user = appStore.user as User
+      if (!user?.organizationId) return
+
+      // 教师有权限获取组织的成果统计
+      const statsResponse = await achievementStatisticsApi.getSchoolStatistics()
       
-      if (response && response.data) {
-        achievements.value = response.data.records || []
-        totalPages.value = response.data.pages || 1
-      } else {
-        achievements.value = []
-        totalPages.value = 1
+      if (statsResponse.data) {
+        statistics.value = {
+          totalAchievements: statsResponse.data.totalAchievements || 0,
+          verifiedCount: statsResponse.data.verifiedCount || 0,
+          portfolioCount: statsResponse.data.portfolioCount || 0,
+          awardCount: statsResponse.data.awardCount || 0,
+          researchCount: statsResponse.data.researchCount || 0,
+          visitCount: statsResponse.data.totalStudents || 0,
+          verifiedRate: statsResponse.data.totalAchievements > 0 
+            ? `${Math.round((statsResponse.data.verifiedCount / statsResponse.data.totalAchievements) * 100)}%` 
+            : '0%'
+        }
       }
     } catch (error) {
-      console.error('获取成果列表失败:', error)
+      console.error('获取统计数据失败:', error)
+    }
+  }
+  
+  // 获取成果列表
+  const fetchAchievements = async () => {
+    if (!checkUserPermission()) return
+
+    loading.value = true
+    error.value = ''
+    try {
+      const user = appStore.user as User
+      if (!user) {
+        error.value = '用户信息不存在'
+        return
+      }
+
+      if (!user.organizationId) {
+        error.value = '组织ID不存在'
+        return
+      }
+
+      // 添加调试日志
+      console.log('开始获取成果列表，用户信息:', {
+        userId: user.id,
+        role: user.role,
+        organizationId: user.organizationId,
+        organizationName: user.organizationName
+      })
+
+      // 获取统计数据
+      await fetchStatistics()
+
+      try {
+        // 获取学生成果概览
+        const overviewResponse = await achievementStatisticsApi.getSchoolStudentsOverview({
+        page: currentPage.value,
+        size: 10,
+          type: filters.value.type || undefined,
+          verifyStatus: filters.value.verifyStatus || undefined,
+          keyword: filters.value.keyword || undefined,
+          startDate: filters.value.startDate || undefined,
+          endDate: filters.value.endDate || undefined
+        })
+        
+        if (!overviewResponse.data) {
+          console.warn('[TeacherVerifyView] 响应中没有data字段')
+          return
+        }
+        
+        // 更新数据
+        achievements.value = overviewResponse.data.content || []
+        total.value = overviewResponse.data.totalElements || 0
+        totalPages.value = overviewResponse.data.totalPages || 1
+
+    } catch (err: any) {
+      console.error('获取成果列表失败:', err)
+      error.value = err.message || '获取成果列表失败，请稍后重试'
       achievements.value = []
       totalPages.value = 1
+      
+      // 如果是401错误,跳转到登录页
+      if (err.status === 401) {
+        appStore.logout()
+        router.push('/login')
+        return
+      }
+      
+      // 如果是403错误,提示权限不足
+      if (err.status === 403) {
+        error.value = '您没有权限访问此页面'
+        router.push('/')
+        return
+      }
     } finally {
       loading.value = false
     }
   }
   
   // 打开审核模态框
-  const openVerifyModal = (achievement) => {
-    currentAchievement.value = achievement
-    verifyComment.value = ''
-    verifyStatus.value = ''
+  const openVerifyModal = (achievement: Achievement) => {
+    selectedAchievement.value = achievement
+    verifyForm.value = {
+      isVerified: true,
+      comment: ''
+    }
     showVerifyModal.value = true
   }
   
-  // 提交审核结果
-  const submitVerification = async () => {
-    if (!currentAchievement.value || !verifyStatus.value) return
+  // 关闭审核模态框
+  const closeVerifyModal = () => {
+    showVerifyModal.value = false
+    selectedAchievement.value = null
+    verifyForm.value = {
+      isVerified: true,
+      comment: ''
+    }
+  }
+  
+  // 提交审核
+  const submitVerify = async () => {
+    if (!selectedAchievement.value) return
     
-    loading.value = true
     try {
-      const isApproved = verifyStatus.value === 'verified'
-      await achievementApi.verifyAchievement(
-        currentAchievement.value.id,
-        isApproved,
-        verifyComment.value
-      )
-      
-      // 更新本地成果状态
-      const index = achievements.value.findIndex(a => a.id === currentAchievement.value.id)
-      if (index !== -1) {
-        achievements.value[index].status = verifyStatus.value
-        achievements.value[index].verifyComment = verifyComment.value
+      let response
+      const verifyData = {
+        isVerified: verifyForm.value.isVerified,
+        comment: verifyForm.value.comment
+      }
+
+      switch (selectedAchievement.value.type) {
+        case AchievementType.PORTFOLIO:
+          response = await portfolioApi.verifyPortfolio(selectedAchievement.value.id, verifyData)
+          break
+        case AchievementType.AWARD:
+          response = await competitionAwardApi.verifyAward(selectedAchievement.value.id, verifyData)
+          break
+        case AchievementType.RESEARCH:
+          response = await researchApi.verifyResearch(selectedAchievement.value.id, verifyData)
+          break
+        default:
+          throw new Error('不支持的成果类型')
       }
       
-      // 关闭模态框
-      showVerifyModal.value = false
-      
-      // 如果当前是按状态筛选的，可能需要重新获取列表
-      if (filters.value.status) {
-        fetchAchievements()
+      if (response.data) {
+        // 刷新成果列表
+      await fetchAchievements()
+        closeVerifyModal()
       }
-    } catch (error) {
-      console.error('提交审核结果失败:', error)
-    } finally {
-      loading.value = false
+    } catch (err) {
+      console.error('审核失败:', err)
+      error.value = '审核失败'
     }
   }
   
   // 处理分页变化
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     currentPage.value = page
     fetchAchievements()
   }
   
-  // 应用筛选条件
-  const handleApplyFilters = () => {
-    currentPage.value = 1 // 重置到第一页
+  // 筛选条件改变
+  const handleFilterChange = () => {
+    currentPage.value = 1
     fetchAchievements()
   }
   
   // 重置筛选条件
-  const handleResetFilters = () => {
+  const handleReset = () => {
     filters.value = {
       type: '',
-      status: 'pending',
+      verifyStatus: '',
       keyword: '',
       studentId: '',
       startDate: '',
@@ -441,12 +622,20 @@
   }
   
   // 查看成果详情
-  const viewAchievementDetail = (achievement) => {
-    router.push(`/achievement/detail/${achievement.type}/${achievement.id}`)
+  const viewDetail = (achievement: Achievement) => {
+    const routes = {
+      [AchievementType.PORTFOLIO]: '/achievement/portfolio/',
+      [AchievementType.AWARD]: '/achievement/award/',
+      [AchievementType.RESEARCH]: '/achievement/research/'
+    }
+    const route = routes[achievement.type]
+    if (route) {
+      router.push(route + achievement.id)
+    }
   }
   
   // 获取成果类型显示文本
-  const getTypeText = (type) => {
+  const formatType = (type: string) => {
     switch (type) {
       case 'portfolio': return '作品'
       case 'award': return '获奖'
@@ -456,7 +645,7 @@
   }
   
   // 获取成果状态显示文本
-  const getStatusText = (status) => {
+  const formatStatus = (status: string) => {
     switch (status) {
       case 'pending': return '待审核'
       case 'verified': return '已认证'
@@ -465,8 +654,8 @@
     }
   }
   
-  // 获取状态样式类
-  const getStatusClass = (status) => {
+  // 获取状态样式类w
+  const getStatusClass = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800'
       case 'verified': return 'bg-green-100 text-green-800'
@@ -475,8 +664,8 @@
     }
   }
   
-  // 获取创建时间的格式化显示
-  const formatDate = (dateString) => {
+  // 格式化日期
+  const formatDate = (dateString: string) => {
     if (!dateString) return ''
     const date = new Date(dateString)
     return date.toLocaleDateString('zh-CN', { 
@@ -488,7 +677,29 @@
     })
   }
   
-  onMounted(() => {
-    fetchAchievements()
+  onMounted(async () => {
+    console.log('[TeacherVerifyView] 当前用户信息:', appStore.user)
+    console.log('[TeacherVerifyView] 组织ID:', appStore.user?.organizationId)
+    
+    // 获取完整的用户信息
+    try {
+      const response = await getMe()
+      if (response.data) {
+        console.log('[TeacherVerifyView] 获取到完整用户信息:', response.data)
+        appStore.setUser(response.data)
+        
+        // 重新检查组织ID
+        if (!appStore.user?.organizationId) {
+          console.warn('[TeacherVerifyView] 警告: 获取完整用户信息后仍未获取到组织ID')
+          return
+        }
+        
+        // 有组织ID后再获取数据
+        await fetchStatistics()
+        await fetchAchievements()
+      }
+    } catch (error) {
+      console.error('[TeacherVerifyView] 获取用户信息失败:', error)
+    }
   })
   </script>

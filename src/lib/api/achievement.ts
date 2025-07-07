@@ -1,6 +1,6 @@
 import { apiRequest } from './apiClient'
 
-// 定义API响应类型
+// 基础响应类型
 export interface ApiResponse<T> {
   code: number
   message: string
@@ -8,13 +8,13 @@ export interface ApiResponse<T> {
   otherUserId: number | null
 }
 
-// 定义分页响应类型
+// 分页响应类型
 export interface PagedResponse<T> {
-  records: T[]          // 数据列表
-  total: number        // 总记录数
-  size: number         // 每页大小
-  current: number      // 当前页码
-  pages: number        // 总页数
+  records: T[]
+  total: number
+  size: number
+  current: number
+  pages: number
 }
 
 // 学生成果概览VO
@@ -106,7 +106,6 @@ export interface PortfolioItemVO {
 // 作品资源VO
 export interface PortfolioResourceVO {
   id: number
-  portfolioId: number
   resourceName: string
   resourceUrl: string
   resourceType: string
@@ -127,14 +126,34 @@ export interface ResearchAchievementVO {
   studentName: string
 }
 
-// 成果类型
+// 基础成果类型
+export interface Achievement {
+  id: number
+  title: string
+  type: AchievementType
+  studentId: number
+  studentName: string
+  organizationName: string
+  description: string
+  verifyStatus: AchievementStatus
+  isPublic: boolean
+  createdAt: string
+  updatedAt: string
+  verifierId?: number
+  verifierName?: string
+  verifyDate?: string
+  viewCount?: number
+  likeCount?: number
+}
+
+// 成果类型枚举
 export enum AchievementType {
   PORTFOLIO = 'portfolio',
   AWARD = 'award',
   RESEARCH = 'research'
 }
 
-// 成果状态
+// 成果状态枚举
 export enum AchievementStatus {
   PENDING = 'pending',
   VERIFIED = 'verified',
@@ -158,26 +177,10 @@ export enum AwardLevel {
   OTHER = 'other'
 }
 
-// 成果查询参数
-interface AchievementQuery {
-  page?: number
-  size?: number
-  type?: string
-  status?: string
-  keyword?: string
-  userId?: number
-}
-
-// 基础成果类型
-export interface Achievement {
-  id: number
-  title: string
-  type: 'portfolio' | 'award' | 'research'
-  studentId: number
-  studentName: string
-  verifyStatus: 'pending' | 'verified' | 'rejected'
-  createdAt: string
-  updatedAt: string
+// 审核参数
+export interface VerifyDTO {
+  status: AchievementStatus
+  comment?: string
 }
 
 // 学校统计数据
@@ -195,12 +198,6 @@ export interface SchoolAchievementQuery {
   type?: string
   verifyStatus?: string
   keyword?: string
-}
-
-// 成果审核参数
-export interface VerifyAchievementDTO {
-  status: 'verified' | 'rejected'
-  comment: string
 }
 
 // 创建作品的请求体类型
@@ -322,150 +319,17 @@ export interface VerifyResearchDTO {
   isVerified: boolean      // 认证结果
 }
 
-// 成果相关接口
-export const achievementApi = {
-  // 获取成果概览
-  getOverview: () => {
-    return apiRequest<ApiResponse<StudentAchievementOverviewVO>>('/v1/achievement/statistics/overview')
-  },
-  
-  // 获取统计数据
-  getStatistics: () => {
-    return apiRequest<ApiResponse<SchoolStatisticsVO>>('/v1/achievement/statistics')
-  },
-  
-  // 企业端获取成果列表（只返回已认证的成果）
-  getVerifiedEnterpriseList: (params: any) => {
-    const queryParams = new URLSearchParams()
-    if (params.page) queryParams.append('page', params.page.toString())
-    if (params.size) queryParams.append('size', params.size.toString())
-    if (params.type) queryParams.append('type', params.type)
-    if (params.school) queryParams.append('school', params.school)
-    if (params.major) queryParams.append('major', params.major)
-    if (params.educationLevel) queryParams.append('educationLevel', params.educationLevel)
-    if (params.keyword) queryParams.append('keyword', params.keyword)
-    queryParams.append('isVerified', 'true')
-    
-    return apiRequest(`/v1/enterprise/achievements/verified?${queryParams.toString()}`)
-  },
-
-  // 获取学校成果统计
-  getSchoolStatistics() {
-    return apiRequest<ApiResponse<SchoolStatisticsVO>>('/v1/school/achievements/statistics')
-  },
-
-  // 获取学校成果列表
-  getSchoolAchievements(params: SchoolAchievementQuery) {
-    const queryParams = new URLSearchParams()
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value.toString())
-    })
-    return apiRequest<ApiResponse<PagedResponse<Achievement>>>(`/v1/school/achievements?${queryParams.toString()}`)
-  },
-
-  // 审核成果
-  verifyAchievement(id: number, data: VerifyAchievementDTO) {
-    return apiRequest<ApiResponse<void>>(`/v1/school/achievements/${id}/verify`, {
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
-  },
-
-  // 获取学校选项
-  getSchoolOptions() {
-    return apiRequest('/v1/common/schools')
-  },
-
-  // 获取专业选项
-  getMajorOptions() {
-    return apiRequest('/v1/common/majors')
-  },
-  
-  // 获取企业视角的统计数据
-  getEnterpriseStatistics: () => {
-    return apiRequest('/v1/enterprise/achievements/statistics')
-  },
-  
-  // 企业用户收藏成果
-  favoriteAchievement: (achievementId: number | string) => {
-    return apiRequest(`/v1/enterprise/achievements/${achievementId}/favorite`, {
-      method: 'POST'
-    })
-  },
-  
-  // 企业用户取消收藏成果
-  unfavoriteAchievement: (achievementId: number | string) => {
-    return apiRequest(`/v1/enterprise/achievements/${achievementId}/favorite`, {
-      method: 'DELETE'
-    })
-  },
-  
-  // 获取企业用户的收藏列表
-  getFavorites: (page: number, size: number) => {
-    const queryParams = new URLSearchParams()
-    queryParams.append('page', page.toString())
-    queryParams.append('size', size.toString())
-    return apiRequest(`/v1/enterprise/achievements/favorites?${queryParams.toString()}`)
-  },
-  
-  // 检查成果是否已收藏
-  checkFavoriteStatus: (achievementId: number | string) => {
-    return apiRequest(`/v1/enterprise/achievements/${achievementId}/favorite/status`)
-  },
-  
-  // 评价成果
-  rateAchievement: (achievementId: number | string, data: { rating: number, comment: string }) => {
-    return apiRequest(`/v1/enterprise/achievements/${achievementId}/rate`, {
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
-  },
-  
-  // 获取学生能力标签
-  getStudentSkills: (studentId: number | string) => {
-    return apiRequest(`/v1/enterprise/students/${studentId}/skills`)
-  },
-  
-  // 获取成果列表
-  getList: (params: AchievementQuery) => {
-    const queryParams = new URLSearchParams()
-    if (params.page) queryParams.append('page', params.page.toString())
-    if (params.size) queryParams.append('size', params.size.toString())
-    if (params.type) queryParams.append('type', params.type)
-    if (params.status) queryParams.append('status', params.status)
-    if (params.keyword) queryParams.append('keyword', params.keyword)
-    if (params.userId) queryParams.append('userId', params.userId.toString())
-    
-    return apiRequest(`/v1/achievement/list?${queryParams.toString()}`)
-  },
-  
-  // 获取成果详情
-  getDetail: (id: number | string) => {
-    return apiRequest(`/v1/achievement/${id}`)
-  },
-  
-  // 创建成果
-  create: (data: any) => {
-    return apiRequest('/v1/achievement', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
-  },
-  
-  // 更新成果
-  update: (id: number | string, data: any) => {
-    return apiRequest(`/v1/achievement/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    })
-  },
-  
-  // 删除成果
-  delete: (id: number | string) => {
-    return apiRequest(`/v1/achievement/${id}`, {
-      method: 'DELETE'
-    })
-  }
+// 学校成果统计数据类型
+export interface SchoolAchievementStatistics {
+  totalStudents: number
+  totalAchievements: number
+  totalVerifiedAchievements: number
+  portfolioCount: number
+  awardCount: number
+  researchCount: number
+  avgAchievementsPerStudent: number
+  verificationRate: number
+  [key: string]: number  // 允许其他统计数据
 }
 
 // 成果统计相关接口
@@ -488,6 +352,34 @@ export const achievementStatisticsApi = {
   // 获取组织成果统计
   getOrganizationStatistics: (organizationId: number) => {
     return apiRequest<ApiResponse<OrganizationStatisticsVO>>(`/v1/achievement/statistics/organization/${organizationId}`)
+  },
+
+  // 获取学校学生成果概览列表（分页）
+  getSchoolStudentsOverview(params: { page: number; size: number }) {
+    const queryParams = new URLSearchParams()
+    queryParams.append('page', params.page.toString())
+    queryParams.append('size', params.size.toString())
+    return apiRequest<ApiResponse<{
+      content: StudentAchievementOverviewVO[];
+      totalPages: number;
+      totalElements: number;
+      size: number;
+      number: number;
+    }>>(`/v1/achievement/statistics/school/students?${queryParams.toString()}`)
+  },
+
+  // 获取学校成果优秀学生列表
+  getSchoolTopStudents: (limit?: number) => {
+    const queryParams = new URLSearchParams()
+    if (limit) {
+      queryParams.append('limit', limit.toString())
+    }
+    return apiRequest<ApiResponse<StudentAchievementOverviewVO[]>>(`/v1/achievement/statistics/school/top-students?${queryParams.toString()}`)
+  },
+
+  // 获取学校统计数据
+  getSchoolStatistics() {
+    return apiRequest<ApiResponse<SchoolStatisticsVO>>('/v1/achievement/statistics/school/statistics')
   }
 }
 
@@ -498,14 +390,14 @@ export const competitionAwardApi = {
     return apiRequest<ApiResponse<CompetitionAwardVO[]>>('/v1/awards')
   },
 
-    // 分页获取竞赛列表
-    getAwardsByPage: (params: { page: number; size: number }) => {
-      const queryParams = new URLSearchParams()
-      queryParams.append('page', params.page.toString())
-      queryParams.append('size', params.size.toString())
-      
-      return apiRequest<ApiResponse<PagedResponse<CompetitionAwardVO>>>(`/v1/awards/page?${queryParams.toString()}`)
-    },
+  // 分页获取竞赛列表
+  getAwardsByPage: (params: { page: number; size: number }) => {
+    const queryParams = new URLSearchParams()
+    queryParams.append('page', params.page.toString())
+    queryParams.append('size', params.size.toString())
+    
+    return apiRequest<ApiResponse<PagedResponse<CompetitionAwardVO>>>(`/v1/awards/page?${queryParams.toString()}`)
+  },
 
   // 获取公开获奖列表
   getPublicAwards(page: number, size: number) {
@@ -629,23 +521,35 @@ export const portfolioApi = {
       method: 'DELETE'
     })
   },
-
-  // 获取作品资源列表
-  getPortfolioResources(id: number) {
-    return apiRequest<ApiResponse<PortfolioResourceVO[]>>(`/v1/portfolio/items/${id}/resources`)
-  },
-
   // 上传作品资源
   uploadPortfolioResource(id: number, data: FormData) {
     return apiRequest<ApiResponse<PortfolioResourceVO>>(`/v1/portfolio/items/${id}/resources`, {
       method: 'POST',
       body: data
     })
-  }
+  },
+  // 删除作品资源
+  deletePortfolioResource(id: number, resourceId: number) {
+    return apiRequest<ApiResponse<void>>(`/v1/portfolio/items/${id}/resources/${resourceId}`, {
+      method: 'DELETE'
+    })
+  },
+
+  // 点赞作品
+  likeAchievement(id: number) {
+    return apiRequest<ApiResponse<void>>(`/v1/achievements/${id}/like`, {
+      method: 'POST'
+    })
+  },
 }
 
 // 科研成果相关接口
 export const researchApi = {
+  // 获取科研成果列表
+  getResearchList() {
+    return apiRequest<ApiResponse<ResearchVO[]>>('/v1/research')
+  },
+
   // 创建科研成果
   createResearch(data: CreateResearchDTO) {
     const formData = new FormData()
@@ -757,5 +661,6 @@ export const researchApi = {
       method: 'POST',
       body: formData
     })
-  }
+  },
+  
 }

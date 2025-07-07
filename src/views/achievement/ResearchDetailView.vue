@@ -1,26 +1,125 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { researchApi } from '@/lib/api/achievement'
-import type { ResearchVO } from '@/lib/api/achievement'
+import { researchApi, type ResearchVO } from '@/lib/api/achievement'
 
 const route = useRoute()
 const router = useRouter()
-const loading = ref(true)
+const loading = ref(false)
+const error = ref('')
 const research = ref<ResearchVO | null>(null)
 
+// 判断是否为作者（从路由参数获取）
+const isAuthor = computed(() => {
+  return route.query.isAuthor === 'true'
+})
+
 const fetchResearchDetail = async () => {
+  const id = parseInt(route.params.id as string)
+  if (!id) return
+  
+  loading.value = true
+  error.value = ''
   try {
-    loading.value = true
-    const response = await researchApi.getResearchById(Number(route.params.id))
+    const response = await researchApi.getResearchById(id)
     if (response.data) {
       research.value = response.data
     }
-  } catch (error) {
-    console.error('获取科研成果详情失败:', error)
+  } catch (err: any) {
+    console.error('获取科研成果详情失败:', err)
+    error.value = err.message || '获取科研成果详情失败，请稍后重试'
   } finally {
     loading.value = false
   }
+}
+
+// 删除研究成果
+const handleDelete = async () => {
+  if (!research.value?.id) return
+  
+  if (!confirm('确定要删除这个研究成果吗？')) return
+  
+  loading.value = true
+  try {
+    await researchApi.deleteResearch(research.value.id)
+    router.push('/achievement')
+  } catch (err: any) {
+    error.value = err.message || '删除失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 编辑研究成果
+const handleEdit = async () => {
+  if (!research.value?.id) return
+  
+  loading.value = true
+  error.value = ''
+  try {
+    const formData = new FormData()
+    const data = {
+      title: research.value.title || '',
+      description: research.value.description || '',
+      type: research.value.type || '',
+      authors: research.value.authors || [],
+      publisher: research.value.publisher || '',
+      publicationDate: research.value.publicationDate || '',
+      isPublic: research.value.isPublic ?? false
+    }
+    
+    // 将数据添加到FormData
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (Array.isArray(value)) {
+          // 处理数组（如authors）
+          formData.append(key, JSON.stringify(value))
+        } else if (typeof value === 'boolean') {
+          // 处理布尔值
+          formData.append(key, value.toString())
+        } else {
+          // 处理其他值
+          formData.append(key, String(value))
+        }
+      }
+    })
+
+    await researchApi.updateResearch(research.value.id, formData)
+    await fetchResearchDetail() // 刷新数据
+  } catch (err: any) {
+    error.value = err.message || '更新失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 上传资源
+const handleUploadFile = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files?.length || !research.value?.id) return
+  
+  const file = input.files[0]
+  loading.value = true
+  try {
+    await researchApi.uploadResearchFile(research.value.id, file)
+    await fetchResearchDetail()
+  } catch (err: any) {
+    error.value = err.message || '上传失败'
+  } finally {
+    loading.value = false
+    input.value = ''  // 清空input
+  }
+}
+
+// 格式化日期
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN', { 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit' 
+  })
 }
 
 onMounted(() => {
@@ -30,91 +129,145 @@ onMounted(() => {
 
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-      <p class="mt-4 text-gray-600">加载中...</p>
+    <div v-if="error" class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+      <span class="block sm:inline">{{ error }}</span>
     </div>
 
-    <div v-else-if="research" class="bg-white rounded-lg shadow-lg p-6">
-      <!-- 返回按钮 -->
-      <button 
-        @click="router.back()"
-        class="mb-6 text-gray-600 hover:text-gray-800 flex items-center"
-      >
-        <span class="mr-2">←</span> 返回
-      </button>
+    <div v-if="loading" class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+    </div>
 
-      <!-- 标题部分 -->
-      <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">{{ research.title }}</h1>
-        <div class="mt-4 flex items-center space-x-4">
-          <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-sm">科研成果</span>
-          <span 
-            :class="research.isVerified ? 'bg-teal-50 text-teal-600' : 'bg-gray-50 text-gray-600'"
-            class="px-2 py-1 rounded text-sm"
-          >
-            {{ research.isVerified ? '已认证' : '待认证' }}
-          </span>
-          <span class="text-gray-500">{{ research.publicationDate }}</span>
-        </div>
-      </div>
-
-      <!-- 封面图片 -->
-      <div v-if="research.coverImageUrl" class="mb-8">
-        <img 
-          :src="research.coverImageUrl" 
-          :alt="research.title"
-          class="w-full h-auto rounded-lg shadow"
+    <div v-else-if="research" class="bg-white shadow rounded-lg overflow-hidden">
+      <!-- 操作按钮 - 仅作者可见 -->
+      <div v-if="isAuthor" class="px-6 py-4 bg-gray-50 border-b flex justify-end space-x-4">
+        <input
+          type="file"
+          id="fileUpload"
+          class="hidden"
+          @change="handleUploadFile"
+        />
+        <label
+          for="fileUpload"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
         >
+          上传资源
+        </label>
+        <button
+          @click="handleEdit"
+          class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+        >
+          编辑
+        </button>
+        <button
+          @click="handleDelete"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          删除
+        </button>
       </div>
 
-      <!-- 详情信息 -->
-      <div class="space-y-6">
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">成果类型</h2>
-          <p class="text-gray-600">{{ research.type }}</p>
+      <div class="px-6 py-4">
+        <div class="flex justify-between items-start mb-4">
+          <h1 class="text-2xl font-bold text-gray-900">{{ research.title }}</h1>
+          <span 
+            class="px-2 py-1 rounded-full text-xs"
+            :class="research.isPublic ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+          >
+            {{ research.isPublic ? '公开' : '不公开' }}
+          </span>
         </div>
-
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">作者</h2>
-          <p class="text-gray-600">{{ research.authors }}</p>
+        
+        <div class="flex items-center space-x-4 text-sm text-gray-500 mb-6">
+          <span>发布日期：{{ formatDate(research.publicationDate) }}</span>
+          <span>状态：
+            <span class="px-2 py-0.5 rounded-full text-xs" 
+                  :class="research.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+              {{ research.isVerified ? '已认证' : '待认证' }}
+            </span>
+          </span>
+          <span>创建时间：{{ formatDate(research.createdAt) }}</span>
         </div>
-
-        <div v-if="research.publisher">
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">发表单位</h2>
-          <p class="text-gray-600">{{ research.publisher }}</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">基本信息</h3>
+            <div class="space-y-3">
+              <div class="flex">
+                <span class="w-24 text-gray-500">成果类型</span>
+                <span class="text-gray-800">{{ research.type }}</span>
+              </div>
+              <div class="flex">
+                <span class="w-24 text-gray-500">作者</span>
+                <span class="text-gray-800">{{ research.authors }}</span>
+              </div>
+              <div class="flex">
+                <span class="w-24 text-gray-500">提交人</span>
+                <span class="text-gray-800">{{ research.userName }}</span>
+              </div>
+              <div class="flex">
+                <span class="w-24 text-gray-500">所属组织</span>
+                <span class="text-gray-800">{{ research.organizationName }}</span>
+              </div>
+              <div class="flex">
+                <span class="w-24 text-gray-500">发表单位</span>
+                <span class="text-gray-800">{{ research.publisher || '未提供' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="research.coverImageUrl" class="flex justify-center items-center">
+            <img 
+              :src="research.coverImageUrl" 
+              alt="封面图片" 
+              class="max-w-full max-h-64 rounded-lg shadow-sm object-contain"
+            >
+          </div>
         </div>
-
-        <div>
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">成果描述</h2>
+        
+        <div class="mb-8">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">成果描述</h3>
           <p class="text-gray-600 whitespace-pre-line">{{ research.description }}</p>
         </div>
-
-        <!-- 附件下载 -->
-        <div v-if="research.fileUrl" class="mt-8">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">成果文件</h2>
+        
+        <div v-if="research.isVerified" class="mb-8">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">认证信息</h3>
+          <div class="space-y-3">
+            <div class="flex">
+              <span class="w-24 text-gray-500">认证人</span>
+              <span class="text-gray-800">{{ research.verifierName || '未知' }}</span>
+            </div>
+            <div class="flex">
+              <span class="w-24 text-gray-500">认证时间</span>
+              <span class="text-gray-800">{{ research.verifyDate ? formatDate(research.verifyDate) : '未知' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div v-if="research.fileUrl" class="mb-8">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">相关文件</h3>
           <a 
-            :href="research.fileUrl"
+            :href="research.fileUrl" 
             target="_blank"
-            class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+            class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             下载文件
           </a>
         </div>
+        
+        <div class="mt-8 pt-6 border-t border-gray-200">
+          <div class="flex justify-between text-sm text-gray-500">
+            <span>最后更新时间：{{ formatDate(research.updatedAt) }}</span>
+            <span>ID: {{ research.id }}</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div v-else class="text-center py-8">
-      <p class="text-gray-600">科研成果信息不存在或已被删除</p>
-      <button 
-        @click="router.back()"
-        class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        返回上一页
-      </button>
+    <div v-else class="text-center text-gray-500 py-8">
+      未找到科研成果信息
     </div>
   </div>
 </template> 

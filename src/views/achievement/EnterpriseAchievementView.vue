@@ -8,22 +8,12 @@
             <h1 class="text-3xl font-bold text-gray-900">企业成果浏览</h1>
             <p class="mt-2 text-lg text-gray-600">发现和联系优秀学生人才</p>
           </div>
-          
-          <!-- 操作区域 -->
-          <div class="flex mt-4 md:mt-0 space-x-4">
-            <button type="button" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              高级筛选
-            </button>
-            <!-- 删除审核按钮，企业用户不应该有权限审核学生成果 -->
-          </div>
+
         </div>
         
         <!-- 筛选区域 -->
         <div class="bg-white rounded-xl shadow-md p-8 mb-10">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
             <!-- 筛选控件 -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">成果类型</label>
@@ -37,9 +27,7 @@
                 <option value="research">科研成果</option>
               </select>
             </div>
-            
-            <!-- 移除认证状态筛选选项 -->
-            
+   
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">学校</label>
               <select
@@ -51,7 +39,7 @@
               </select>
             </div>
             
-            <div>
+            <!-- <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">专业方向</label>
               <select
                 v-model="filters.major"
@@ -60,7 +48,7 @@
                 <option value="">全部专业</option>
                 <option v-for="major in majorOptions" :key="major.id" :value="major.id">{{ major.name }}</option>
               </select>
-            </div>
+            </div> -->
             
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">学历层次</label>
@@ -207,8 +195,11 @@
                       achievement.type === 'award' ? '获奖' : '科研成果'
                     }}
                   </span>
-                  <!-- 移除认证状态标签，因为企业只能看到已认证的成果 -->
-                  <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                  <!-- 只在获奖类型显示认证状态标签 -->
+                  <span 
+                    v-if="achievement.type === 'award'"
+                    class="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800"
+                  >
                     已认证
                   </span>
                 </div>
@@ -277,8 +268,11 @@
                           achievement.type === 'award' ? '获奖' : '科研成果'
                         }}
                       </span>
-                      <!-- 移除认证状态标签，因为企业只能看到已认证的成果 -->
-                      <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                      <!-- 只在获奖类型显示认证状态标签 -->
+                      <span 
+                        v-if="achievement.type === 'award'"
+                        class="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800"
+                      >
                         已认证
                       </span>
                     </div>
@@ -327,7 +321,14 @@
   import { ref, computed, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
   import Pagination from '@/components/ui/Pagination.vue'
-  import { achievementApi } from '@/lib/api/achievement'
+  import { 
+    competitionAwardApi,
+    portfolioApi,
+    researchApi,
+    achievementStatisticsApi,
+    AchievementType
+  } from '@/lib/api/achievement'
+import { getAllSchools } from '@/lib/api/organization'
   
   const router = useRouter()
   const loading = ref(false)
@@ -335,6 +336,8 @@
   const selectedCategory = ref('all')
   const currentPage = ref(1)
   const totalPages = ref(1)
+  const viewMode = ref('grid')
+  const sortBy = ref('newest')
   
   // 统计数据
   const statistics = ref({
@@ -345,31 +348,27 @@
   
   // 筛选条件
   const filters = ref({
+    type: '',
     school: '',
     major: '',
-    grade: '',
+    educationLevel: '',
     keyword: '',
     startDate: '',
     endDate: '',
-    sort: 'newest'
+    sort: 'newest',
+    verifyStatus: ''
   })
   
-  // 学校和专业选项
-  const schoolOptions = ref([
-    { id: 1, name: '北京大学' },
-    { id: 2, name: '清华大学' },
-    { id: 3, name: '复旦大学' },
-    { id: 4, name: '浙江大学' },
-    { id: 5, name: '南京大学' }
-  ])
+  // 学校选项
+  const schoolOptions = ref([])
   
-  const majorOptions = ref([
-    { id: 1, name: '计算机科学与技术' },
-    { id: 2, name: '人工智能' },
-    { id: 3, name: '软件工程' },
-    { id: 4, name: '数据科学与大数据技术' },
-    { id: 5, name: '网络空间安全' }
-  ])
+  // const majorOptions = ref([
+  //   { id: 1, name: '计算机科学与技术' },
+  //   { id: 2, name: '人工智能' },
+  //   { id: 3, name: '软件工程' },
+  //   { id: 4, name: '数据科学与大数据技术' },
+  //   { id: 5, name: '网络空间安全' }
+  // ])
   
   // 成果列表
   const achievements = ref([])
@@ -397,7 +396,8 @@
       keyword: '',
       startDate: '',
       endDate: '',
-      sort: 'newest'
+      sort: 'newest',
+      verifyStatus: ''
     }
     currentPage.value = 1
     fetchAchievements()
@@ -411,31 +411,110 @@
   
   // 查看成果详情
   const viewAchievementDetail = (achievement) => {
-    router.push(`/achievement/detail/${achievement.type}/${achievement.id}`)
+    // 根据不同类型的成果跳转到对应的详情页
+    switch (achievement.type) {
+      case 'portfolio':
+        router.push(`/achievement/enterprise/portfolio/${achievement.id}`)
+        break
+      case 'award':
+        router.push(`/achievement/enterprise/award/${achievement.id}`)
+        break
+      case 'research':
+        router.push(`/achievement/enterprise/research/${achievement.id}`)
+        break
+      default:
+        console.error('未知的成果类型:', achievement.type)
+    }
   }
   
   // 获取成果列表
   const fetchAchievements = async () => {
     loading.value = true
     try {
-      // 调用API获取成果列表，默认只获取已认证的成果
-      const response = await achievementApi.getVerifiedEnterpriseList({
-        page: currentPage.value,
-        size: 10,
-        type: filters.value.type,
-        school: filters.value.school,
-        major: filters.value.major,
-        educationLevel: filters.value.educationLevel,
-        keyword: filters.value.keyword
-      })
-      
-      if (response && response.data) {
-        achievements.value = response.data.records || []
-        totalPages.value = response.data.pages || 1
-      } else {
-        achievements.value = []
-        totalPages.value = 1
+      // 企业用户只能访问公开API
+      // 并行获取不同类型的成果
+      const [awardResponse, portfolioResponse, researchResponse] = await Promise.all([
+        competitionAwardApi.getPublicAwards(currentPage.value, 10),
+        portfolioApi.getPublicPortfolioItems(currentPage.value, 10),
+        researchApi.getPublicResearch(currentPage.value, 10)
+      ])
+
+      // 合并结果
+      let allAchievements = []
+
+      // 处理竞赛获奖数据
+      if (awardResponse.data?.records) {
+        const awards = awardResponse.data.records.map(award => ({
+          id: award.id,
+          type: 'award' as AchievementType,
+          title: award.competitionName,
+          description: award.description,
+          studentName: award.userName,
+          schoolName: award.organizationName,
+          createdAt: award.createdAt,
+          coverImageUrl: award.certificateUrl || null,
+          studentAvatarUrl: null, // API没有提供头像
+          majorName: '', // API没有提供专业信息
+          organizationId: award.userId // 使用userId作为组织ID过滤条件
+        }))
+        allAchievements = [...allAchievements, ...awards]
       }
+
+      // 处理作品集数据
+      if (portfolioResponse.data?.records) {
+        const portfolios = portfolioResponse.data.records.map(portfolio => ({
+          id: portfolio.id,
+          type: 'portfolio' as AchievementType,
+          title: portfolio.title,
+          description: portfolio.description,
+          studentName: portfolio.userName,
+          schoolName: portfolio.organizationName,
+          createdAt: portfolio.createdAt,
+          coverImageUrl: portfolio.coverImageUrl || null,
+          studentAvatarUrl: null, // API没有提供头像
+          majorName: '', // API没有提供专业信息
+          organizationId: portfolio.userId // 使用userId作为组织ID过滤条件
+        }))
+        allAchievements = [...allAchievements, ...portfolios]
+      }
+
+      // 处理科研成果数据
+      if (researchResponse.data?.records) {
+        const research = researchResponse.data.records.map(research => ({
+          id: research.id,
+          type: 'research' as AchievementType,
+          title: research.title,
+          description: research.description,
+          studentName: research.userName,
+          schoolName: research.organizationName,
+          createdAt: research.createdAt,
+          coverImageUrl: research.coverImageUrl || null,
+          studentAvatarUrl: null, // API没有提供头像
+          majorName: '', // API没有提供专业信息
+          organizationId: research.userId // 使用userId作为组织ID过滤条件
+        }))
+        allAchievements = [...allAchievements, ...research]
+      }
+
+      // 根据筛选条件过滤
+      achievements.value = allAchievements.filter(achievement => {
+        if (filters.value.type && achievement.type !== filters.value.type) return false
+        if (filters.value.school && achievement.organizationId !== Number(filters.value.school)) return false
+        if (filters.value.keyword && !achievement.title.toLowerCase().includes(filters.value.keyword.toLowerCase())) return false
+        // 只在获奖类型时过滤认证状态
+        if (achievement.type === 'award' && filters.value.verifyStatus && achievement.verifyStatus !== filters.value.verifyStatus) return false
+        return true
+      })
+
+      // 计算总页数
+      const totalItems = achievements.value.length
+      totalPages.value = Math.ceil(totalItems / 10)
+
+      // 根据当前页码截取数据
+      const start = (currentPage.value - 1) * 10
+      const end = start + 10
+      achievements.value = achievements.value.slice(start, end)
+
     } catch (error) {
       console.error('获取成果列表失败:', error)
       achievements.value = []
@@ -445,26 +524,33 @@
     }
   }
   
-  // 获取统计数据
+  // 获取统计数据 - 使用公开API
   const fetchStatistics = async () => {
     try {
-      const response = await achievementApi.getEnterpriseStatistics()
+      // 获取成果统计概览 - 使用公开API
+      const overviewResponse = await achievementStatisticsApi.getStudentOverview(1) // 使用一个默认的学生ID
       
-      if (response && response.data) {
+      if (overviewResponse.data) {
         statistics.value = {
-          total: response.data.totalAchievements || 0,
-          students: response.data.totalStudents || 0,
-          topViews: response.data.maxViews || 0
+          total: overviewResponse.data.portfolioCount + overviewResponse.data.awardCount + overviewResponse.data.researchCount,
+          students: 1,
+          topViews: overviewResponse.data.totalViewCount || 0
         }
       }
     } catch (error) {
       console.error('获取统计数据失败:', error)
+      // 设置默认统计数据
+      statistics.value = {
+        total: 0,
+        students: 0,
+        topViews: 0
+      }
     }
   }
   
   // 获取成果类型显示文本
-  const getTypeText = (type) => {
-    const typeMap = {
+  const getTypeText = (type: AchievementType): string => {
+    const typeMap: Record<AchievementType, string> = {
       'portfolio': '作品',
       'award': '获奖',
       'research': '科研成果'
@@ -473,8 +559,8 @@
   }
   
   // 获取成果类型样式
-  const getTypeClass = (type) => {
-    const classMap = {
+  const getTypeClass = (type: AchievementType): string => {
+    const classMap: Record<AchievementType, string> = {
       'portfolio': 'bg-green-600',
       'award': 'bg-yellow-500',
       'research': 'bg-indigo-600'
@@ -483,8 +569,8 @@
   }
   
   // 获取默认封面图
-  const getDefaultCover = (type) => {
-    const coverMap = {
+  const getDefaultCover = (type: AchievementType): string => {
+    const coverMap: Record<AchievementType, string> = {
       'portfolio': 'https://via.placeholder.com/400x250?text=作品',
       'award': 'https://via.placeholder.com/400x250?text=获奖',
       'research': 'https://via.placeholder.com/400x250?text=科研成果'
@@ -493,19 +579,36 @@
   }
   
   // 格式化日期
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     if (!dateString) return ''
     
     const date = new Date(dateString)
     return date.toLocaleDateString('zh-CN', { 
       year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit' 
+      month: 'long',
+      day: 'numeric'
     })
   }
   
+  // 获取学校列表
+  const fetchSchools = async () => {
+    try {
+      const response = await getAllSchools()
+      if (response.data) {
+        schoolOptions.value = response.data.map(school => ({
+          id: school.id,
+          name: school.name
+        }))
+      }
+    } catch (error) {
+      console.error('获取学校列表失败:', error)
+      schoolOptions.value = []
+    }
+  }
+
   onMounted(() => {
     fetchStatistics()
     fetchAchievements()
+    fetchSchools()
   })
   </script>

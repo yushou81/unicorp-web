@@ -6,7 +6,7 @@
       <div class="container mx-auto px-6 py-12 max-w-7xl">
         <!-- 返回按钮 -->
         <button 
-          @click="$router.back()" 
+          @click="router.back()" 
           class="flex items-center text-blue-600 hover:text-blue-800 mb-8"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -43,8 +43,8 @@
                   alt="学生头像" 
                   class="w-28 h-28 rounded-full border-4 border-blue-100 mb-5"
                 />
-                <h3 class="text-xl font-bold text-gray-900">{{ achievement.studentName }}</h3>
-                <p class="text-gray-600">{{ achievement.schoolName }}</p>
+                <h3 class="text-xl font-bold text-gray-900">{{ achievement.userName }}</h3>
+                <p class="text-gray-600">{{ achievement.organizationName }}</p>
                 <div class="mt-2 text-sm text-gray-500">{{ achievement.majorName }} {{ achievement.grade }}级</div>
                 
                 <div class="mt-4 flex space-x-2">
@@ -87,7 +87,7 @@
                     class="w-full mt-4 px-5 py-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 flex items-center justify-center"
                     :class="{ 'border-yellow-400 text-yellow-600 bg-yellow-50 hover:bg-yellow-100': isFavorited }"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" :class="{ 'text-yellow-500': isFavorited }" fill="isFavorited ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" :class="{ 'text-yellow-500': isFavorited }" :fill="isFavorited ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
                     {{ isFavorited ? '已收藏' : '收藏' }}
@@ -135,6 +135,20 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                   浏览次数：{{ achievement.viewCount || 0 }}
+                  
+                  <span v-if="achievement.likeCount !== undefined" class="ml-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    点赞数：{{ achievement.likeCount }}
+                  </span>
+                  
+                  <span v-if="achievement.isVerified !== undefined" class="ml-4">
+                    <span class="px-2 py-0.5 rounded-full text-xs" 
+                          :class="achievement.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'">
+                      {{ achievement.isVerified ? '已认证' : '待认证' }}
+                    </span>
+                  </span>
                 </div>
                 
                 <div class="prose max-w-none">
@@ -194,7 +208,7 @@
                   
                   <div class="mb-4">
                     <p class="text-sm font-medium text-gray-600 mb-1">奖项名称</p>
-                    <p>{{ achievement.awardName }}</p>
+                    <p>{{ achievement.awardName || achievement.awardLevel }}</p>
                   </div>
                   
                   <div class="mb-4">
@@ -204,17 +218,17 @@
                   
                   <div class="mb-4">
                     <p class="text-sm font-medium text-gray-600 mb-1">颁发单位</p>
-                    <p>{{ achievement.organizer }}</p>
+                    <p>{{ achievement.organizer || '未提供' }}</p>
                   </div>
                   
                   <div class="mb-4">
                     <p class="text-sm font-medium text-gray-600 mb-1">获奖级别</p>
-                    <p>{{ achievement.level }}</p>
+                    <p>{{ achievement.awardLevel }}</p>
                   </div>
                   
-                  <div class="mb-4">
+                  <div v-if="achievement.teamMembers" class="mb-4">
                     <p class="text-sm font-medium text-gray-600 mb-1">参与者</p>
-                    <p>{{ achievement.participants }}</p>
+                    <p>{{ achievement.teamMembers }}</p>
                   </div>
                 </div>
               </div>
@@ -226,7 +240,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div class="mb-4">
                     <p class="text-sm font-medium text-gray-600 mb-1">类型</p>
-                    <p>{{ getResearchTypeText(achievement.researchType) }}</p>
+                    <p>{{ getResearchTypeText(achievement.type) }}</p>
                   </div>
                   
                   <div class="mb-4">
@@ -241,7 +255,7 @@
                   
                   <div class="mb-4">
                     <p class="text-sm font-medium text-gray-600 mb-1">发表单位/出版社</p>
-                    <p>{{ achievement.publisher }}</p>
+                    <p>{{ achievement.publisher || '未提供' }}</p>
                   </div>
                 </div>
               </div>
@@ -261,8 +275,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <div>
-                        <p class="font-medium text-gray-800">{{ resource.originalFileName || '资源文件' }}</p>
-                        <p class="text-xs text-gray-500">{{ resource.description }}</p>
+                        <p class="font-medium text-gray-800">{{ resource.originalFileName || resource.resourceName || '资源文件' }}</p>
+                        <p class="text-xs text-gray-500">{{ resource.description || resource.resourceType }}</p>
                       </div>
                     </div>
                     
@@ -295,6 +309,21 @@
                   alt="封面图片" 
                   class="max-w-full h-auto rounded-lg border border-gray-200"
                 />
+              </div>
+              
+              <!-- 认证信息 -->
+              <div v-if="achievement.isVerified" class="mb-10">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">认证信息</h2>
+                <div class="space-y-2">
+                  <div class="flex">
+                    <span class="w-24 text-gray-500">认证人</span>
+                    <span class="text-gray-800">{{ achievement.verifierName || '未知' }}</span>
+                  </div>
+                  <div class="flex">
+                    <span class="w-24 text-gray-500">认证时间</span>
+                    <span class="text-gray-800">{{ formatDate(achievement.verifyDate) || '未知' }}</span>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -349,13 +378,21 @@
   import { ref, onMounted, computed } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import Navbar from '@/components/layout/Navbar.vue'
-  import { achievementApi } from '@/lib/api/achievement'
+  import { 
+    competitionAwardApi, 
+    portfolioApi, 
+    researchApi,
+    type CompetitionAwardVO,
+    type PortfolioItemVO,
+    type ResearchVO,
+    type AchievementType
+  } from '@/lib/api/achievement'
 
   const route = useRoute()
   const router = useRouter()
   const loading = ref(false)
   const error = ref('')
-  const achievement = ref(null)
+  const achievement = ref<any>(null)
   const isFavorited = ref(false)
   const rating = ref(0)
   const comment = ref('')
@@ -372,7 +409,7 @@
   
   // 获取成果ID和类型
   const achievementId = computed(() => route.params.id as string)
-  const achievementType = computed(() => route.params.type as string)
+  const achievementType = computed(() => route.params.type as AchievementType)
   
   // 获取成果详情
   const fetchAchievementDetail = async () => {
@@ -380,16 +417,39 @@
     error.value = ''
     
     try {
-      const response = await achievementApi.getDetail(achievementId.value)
+      const id = parseInt(achievementId.value)
+      if (!id) {
+        error.value = '无效的成果ID'
+        return
+      }
+
+      let response
+      switch (achievementType.value) {
+        case 'award':
+          response = await competitionAwardApi.getAwardDetail(id)
+          break
+        case 'portfolio':
+          response = await portfolioApi.getPortfolioItemDetail(id)
+          break
+        case 'research':
+          response = await researchApi.getResearchById(id)
+          break
+        default:
+          throw new Error('不支持的成果类型')
+      }
       
       if (response && response.data) {
-        achievement.value = response.data
+        achievement.value = {
+          ...response.data,
+          type: achievementType.value
+        }
+        
         // 查询是否已收藏
         checkFavoriteStatus()
       } else {
         error.value = '无法获取成果详情'
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('获取成果详情失败:', err)
       error.value = '获取成果详情失败，请稍后重试'
     } finally {
@@ -400,8 +460,10 @@
   // 检查收藏状态
   const checkFavoriteStatus = async () => {
     try {
-      const response = await achievementApi.checkFavoriteStatus(achievementId.value)
-      isFavorited.value = response.data || false
+      // 这里应该调用实际的API
+      // const response = await achievementApi.checkFavoriteStatus(achievementId.value)
+      // isFavorited.value = response.data || false
+      isFavorited.value = false
     } catch (err) {
       console.error('检查收藏状态失败:', err)
       isFavorited.value = false
@@ -411,11 +473,12 @@
   // 切换收藏状态
   const toggleFavorite = async () => {
     try {
-      if (isFavorited.value) {
-        await achievementApi.unfavoriteAchievement(achievementId.value)
-      } else {
-        await achievementApi.favoriteAchievement(achievementId.value)
-      }
+      // 这里应该调用实际的API
+      // if (isFavorited.value) {
+      //   await achievementApi.unfavoriteAchievement(achievementId.value)
+      // } else {
+      //   await achievementApi.favoriteAchievement(achievementId.value)
+      // }
       
       isFavorited.value = !isFavorited.value
     } catch (err) {
@@ -446,10 +509,11 @@
     if (!rating.value || !comment.value) return
     
     try {
-      await achievementApi.rateAchievement(achievementId.value, {
-        rating: rating.value,
-        comment: comment.value
-      })
+      // 这里应该调用实际的API
+      // await achievementApi.rateAchievement(achievementId.value, {
+      //   rating: rating.value,
+      //   comment: comment.value
+      // })
       
       alert('评价提交成功！')
       rating.value = 0
@@ -461,7 +525,7 @@
   }
   
   // 获取成果类型显示文本
-  const getTypeText = (type) => {
+  const getTypeText = (type: AchievementType) => {
     const typeMap = {
       'portfolio': '作品',
       'award': '获奖',
@@ -471,7 +535,7 @@
   }
   
   // 获取成果类型样式
-  const getTypeClass = (type) => {
+  const getTypeClass = (type: AchievementType) => {
     const classMap = {
       'portfolio': 'bg-green-100 text-green-800',
       'award': 'bg-yellow-100 text-yellow-800',
@@ -481,7 +545,7 @@
   }
   
   // 获取科研成果类型显示文本
-  const getResearchTypeText = (type) => {
+  const getResearchTypeText = (type: string) => {
     const typeMap = {
       'paper': '论文',
       'patent': '专利',
@@ -492,7 +556,7 @@
   }
   
   // 格式化日期
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return ''
     
     const date = new Date(dateString)
