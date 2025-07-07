@@ -212,6 +212,17 @@ export interface CreatePortfolioDTO {
   coverImage?: File
 }
 
+// 创建作品的表单数据类型（用于FormData提交）
+export interface CreatePortfolioFormDTO {
+  title: string           // 作品标题
+  description: string     // 作品描述
+  projectUrl?: string     // 项目链接
+  category: string        // 作品分类
+  tags: string[]           // 标签（逗号分隔的字符串）
+  isPublic: string       // 是否公开（'true' 或 'false' 字符串）
+  coverImage?: File      // 封面图片文件
+}
+
 // 更新作品的请求体类型
 export interface UpdatePortfolioDTO {
   title?: string
@@ -500,10 +511,39 @@ export const portfolioApi = {
   },
 
   // 创建作品
-  createPortfolioItem(data: FormData) {
-    return apiRequest<ApiResponse<PortfolioItemVO>>('/v1/portfolio/items/create', {
+   createPortfolioItem(data: CreatePortfolioFormDTO) {
+    const formData = new FormData()
+    // 添加其他字段...
+    formData.append('title', data.title)
+    formData.append('description', data.description)
+    formData.append('category', data.category)
+    formData.append('isPublic', data.isPublic)
+    if (data.projectUrl) {
+      formData.append('projectUrl', data.projectUrl)
+    }
+
+    // 【最终正确的核心代码】直接遍历数组
+    // 现在 data.tags 本身就是数组，不再需要 JSON 解析
+    if (Array.isArray(data.tags)) {
+      data.tags.forEach(tag => {
+        formData.append('tags', tag); // <--- 修改点 2
+      });
+    }
+
+    // 添加封面图片
+    if (data.coverImage instanceof File) {
+      formData.append('coverImage', data.coverImage)
+    }
+
+    // 日志...
+    console.log('最终发送的 FormData 字段:')
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value)
+    }
+
+    return apiRequest<ApiResponse<PortfolioItemVO>>('/v1/portfolio/items', {
       method: 'POST',
-      body: data
+      body: formData
     })
   },
 
@@ -551,21 +591,10 @@ export const researchApi = {
   },
 
   // 创建科研成果
-  createResearch(data: CreateResearchDTO) {
-    const formData = new FormData()
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
-        if (value instanceof File) {
-          formData.append(key, value)
-        } else {
-          formData.append(key, value.toString())
-        }
-      }
-    })
-
+  createResearch(data: FormData) {
     return apiRequest<ApiResponse<ResearchVO>>('/v1/research', {
       method: 'POST',
-      body: formData
+      body: data
     })
   },
 
@@ -655,7 +684,7 @@ export const researchApi = {
   // 上传科研成果封面图片
   uploadResearchCover(id: number, image: File) {
     const formData = new FormData()
-    formData.append('file', image)
+    formData.append('coverImage', image)
     
     return apiRequest<ApiResponse<ResearchVO>>(`/v1/research/${id}/cover`, {
       method: 'POST',

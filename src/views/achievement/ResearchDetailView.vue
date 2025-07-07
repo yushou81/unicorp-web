@@ -54,6 +54,12 @@ const handleDelete = async () => {
 const handleEdit = async () => {
   if (!research.value?.id) return
   
+  // 如果已认证，不允许编辑
+  if (research.value.isVerified) {
+    error.value = '已认证的科研成果不允许修改'
+    return
+  }
+  
   loading.value = true
   error.value = ''
   try {
@@ -93,10 +99,17 @@ const handleEdit = async () => {
   }
 }
 
-// 上传资源
+// 上传资源文件
 const handleUploadFile = async (event: Event) => {
   const input = event.target as HTMLInputElement
   if (!input.files?.length || !research.value?.id) return
+  
+  // 如果已认证，不允许上传
+  if (research.value.isVerified) {
+    error.value = '已认证的科研成果不允许修改'
+    input.value = ''  // 清空input
+    return
+  }
   
   const file = input.files[0]
   loading.value = true
@@ -104,7 +117,47 @@ const handleUploadFile = async (event: Event) => {
     await researchApi.uploadResearchFile(research.value.id, file)
     await fetchResearchDetail()
   } catch (err: any) {
-    error.value = err.message || '上传失败'
+    error.value = err.message || '上传资源文件失败'
+  } finally {
+    loading.value = false
+    input.value = ''  // 清空input
+  }
+}
+
+// 上传封面图片
+const handleUploadCover = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files?.length || !research.value?.id) return
+  
+  // 如果已认证，不允许上传
+  if (research.value.isVerified) {
+    error.value = '已认证的科研成果不允许修改'
+    input.value = ''  // 清空input
+    return
+  }
+  
+  const file = input.files[0]
+  if (!file.type.startsWith('image/')) {
+    error.value = '请选择图片文件'
+    input.value = ''
+    return
+  }
+  
+  console.log('准备上传封面图片:', {
+    name: file.name,
+    type: file.type,
+    size: file.size
+  })
+  
+  loading.value = true
+  try {
+    console.log('开始上传封面图片...')
+    await researchApi.uploadResearchCover(research.value.id, file)
+    console.log('封面图片上传成功')
+    await fetchResearchDetail()
+  } catch (err: any) {
+    console.error('上传封面图片失败:', err)
+    error.value = err.message || '上传封面图片失败'
   } finally {
     loading.value = false
     input.value = ''  // 清空input
@@ -140,6 +193,8 @@ onMounted(() => {
     <div v-else-if="research" class="bg-white shadow rounded-lg overflow-hidden">
       <!-- 操作按钮 - 仅作者可见 -->
       <div v-if="isAuthor" class="px-6 py-4 bg-gray-50 border-b flex justify-end space-x-4">
+        <!-- 上传资源文件 - 仅未认证时可见 -->
+        <template v-if="!research.isVerified">
         <input
           type="file"
           id="fileUpload"
@@ -150,7 +205,22 @@ onMounted(() => {
           for="fileUpload"
           class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
         >
-          上传资源
+            上传资源文件
+          </label>
+
+          <!-- 上传封面图片 - 仅未认证时可见 -->
+          <input
+            type="file"
+            id="coverUpload"
+            class="hidden"
+            accept="image/*"
+            @change="handleUploadCover"
+          />
+          <label
+            for="coverUpload"
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 cursor-pointer"
+          >
+            上传封面图片
         </label>
         <button
           @click="handleEdit"
@@ -158,6 +228,8 @@ onMounted(() => {
         >
           编辑
         </button>
+        </template>
+        <!-- 删除按钮始终可见 -->
         <button
           @click="handleDelete"
           class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"

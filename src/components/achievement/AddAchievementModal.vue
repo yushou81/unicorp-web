@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import ResourceUploader from './ResourceUploader.vue'
+import { researchApi, portfolioApi, competitionAwardApi, type CreatePortfolioFormDTO } from '@/lib/api/achievement'
+import { apiRequest } from '@/lib/api/apiClient'
+import type { UploadFileResponse } from '@/lib/api/file'
 
 const props = defineProps<{
   show: boolean
@@ -21,6 +24,9 @@ const achievementTypes = [
   { id: 'RESEARCH', name: '科研成果' }
 ]
 
+// 错误状态
+const error = ref('')
+
 // 表单数据
 const formData = ref({
   type: props.type || 'PORTFOLIO',
@@ -35,7 +41,9 @@ const formData = ref({
   publicationType: props.initialData?.publicationType || '',
   publicationVenue: props.initialData?.publicationVenue || '',
   authors: Array.isArray(props.initialData?.authors) ? props.initialData?.authors.join(',') : '',
-  attachments: props.initialData?.attachments || []
+  attachments: [] as any[], // 存储上传的文件信息
+  coverImage: null as File | null, // 添加封面图片字段
+  researchFile: null as File | null // 添加研究文件字段
 })
 
 // 表单验证状态
@@ -58,73 +66,298 @@ const isValid = computed(() => {
   }
 })
 
-// 处理表单提交
-const handleSubmit = () => {
-  if (!isValid.value) return
+// 当前成果ID
+const currentAchievementId = ref<number | null>(null)
 
-  // 根据类型处理不同字段
-  const baseData = {
-    type: formData.value.type,
-    title: formData.value.title,
-    description: formData.value.description,
-    date: formData.value.date,
-    tags: formData.value.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag),
-    attachments: formData.value.attachments
+// 处理文件上传成功
+const handleFileUploaded = (fileInfo: any) => {
+  console.log('收到文件上传事件，文件信息:', {
+    type: fileInfo.type,
+    file: fileInfo.file ? {
+      name: fileInfo.file.name,
+      type: fileInfo.file.type,
+      size: fileInfo.file.size
+    } : null
+  })
+
+  // 根据文件类型设置对应的字段
+  if (fileInfo.type === 'cover') {
+    console.log('设置封面图片:', fileInfo.file.name)
+    formData.value.coverImage = fileInfo.file
+  } else if (fileInfo.type === 'research') {
+    console.log('设置研究文件:', fileInfo.file.name)
+    formData.value.researchFile = fileInfo.file
   }
 
-  let submitData: any = { ...baseData }
-
-  // 添加类型特定字段
-  switch (formData.value.type) {
-    case 'PORTFOLIO':
-      submitData = {
-        ...submitData,
-        portfolioUrl: formData.value.portfolioUrl
-      }
-      break
-    case 'AWARD':
-      submitData = {
-        ...submitData,
-        competitionName: formData.value.competitionName,
-        awardLevel: formData.value.awardLevel,
-        issuer: formData.value.issuer
-      }
-      break
-    case 'RESEARCH':
-      submitData = {
-        ...submitData,
-        publicationType: formData.value.publicationType,
-        publicationVenue: formData.value.publicationVenue,
-        authors: formData.value.authors.split(',').map((author: string) => author.trim()).filter((author: string) => author)
-      }
-      break
-  }
-
-  emit('submit', submitData)
+  // 打印当前表单数据中的文件状态
+  console.log('当前表单文件状态:', {
+    coverImage: formData.value.coverImage ? {
+      name: formData.value.coverImage.name,
+      type: formData.value.coverImage.type,
+      size: formData.value.coverImage.size
+    } : null,
+    researchFile: formData.value.researchFile ? {
+      name: formData.value.researchFile.name,
+      type: formData.value.researchFile.type,
+      size: formData.value.researchFile.size
+    } : null
+  })
 }
 
-// 处理文件上传
-const handleFileUploaded = (fileInfo: any) => {
-  formData.value.attachments.push(fileInfo)
+// 处理文件上传错误
+const handleUploadError = (error: Error) => {
+  console.error('文件上传失败:', error)
+}
+
+// 处理表单提交
+const handleSubmit = async () => {
+  if (!isValid.value) {
+    console.log('表单验证未通过:', formData.value)
+    return
+  }
+
+  try {
+    let response
+    // 根据类型处理不同字段
+    switch (formData.value.type) {
+      case 'PORTFOLIO': {
+        // 检查文件对象
+        console.log('formData.value:', formData.value)
+        console.log('coverImage:', formData.value.coverImage)
+        if (formData.value.coverImage) {
+          console.log('coverImage type:', Object.prototype.toString.call(formData.value.coverImage))
+          console.log('是否为File实例:', formData.value.coverImage instanceof File)
+          console.log('coverImage详情:', {
+            name: formData.value.coverImage.name,
+            type: formData.value.coverImage.type,
+            size: formData.value.coverImage.size,
+            lastModified: formData.value.coverImage.lastModified
+          })
+        }
+
+        // 处理标签 - 确保是非空字符串
+        const tags = formData.value.tags
+          ? formData.value.tags
+              .split(',')
+              .map((tag: string) => tag.trim())
+              .filter((tag: string) => tag)
+              .join(',')
+          : ''
+        
+        // 创建作品集数据
+        const portfolioData: CreatePortfolioFormDTO = {
+          title: formData.value.title.trim(),
+          description: formData.value.description.trim(),
+          projectUrl: formData.value.portfolioUrl?.trim() || '',
+          category: 'other',
+          isPublic: 'true',
+          tags: tags
+        }
+
+        // 如果有封面图片，直接添加到数据中
+        if (formData.value.coverImage instanceof File) {
+          console.log('添加封面图片:', {
+            name: formData.value.coverImage.name,
+            type: formData.value.coverImage.type,
+            size: formData.value.coverImage.size
+          })
+          portfolioData.coverImage = formData.value.coverImage
+        } else {
+          console.log('没有找到有效的封面图片文件')
+        }
+
+        // 打印详细的请求数据
+        console.log('创建作品集，提交数据（详细）:', {
+          title: {
+            value: portfolioData.title,
+            type: typeof portfolioData.title
+          },
+          description: {
+            value: portfolioData.description,
+            type: typeof portfolioData.description
+          },
+          projectUrl: {
+            value: portfolioData.projectUrl,
+            type: typeof portfolioData.projectUrl
+          },
+          category: {
+            value: portfolioData.category,
+            type: typeof portfolioData.category
+          },
+          isPublic: {
+            value: portfolioData.isPublic,
+            type: typeof portfolioData.isPublic
+          },
+          tags: {
+            value: portfolioData.tags,
+            type: typeof portfolioData.tags
+          },
+          coverImage: portfolioData.coverImage ? {
+            name: portfolioData.coverImage.name,
+            type: portfolioData.coverImage.type,
+            size: portfolioData.coverImage.size
+          } : null
+        })
+        
+        response = await portfolioApi.createPortfolioItem(portfolioData)
+        break
+      }
+      case 'AWARD': {
+        const awardData = {
+          competitionName: formData.value.competitionName,
+          awardLevel: formData.value.awardLevel,
+          awardDate: formData.value.date,
+          description: formData.value.description,
+          isPublic: true
+        }
+        response = await competitionAwardApi.createAward(awardData)
+        break
+      }
+      case 'RESEARCH': {
+        console.log('=== 开始准备科研成果表单数据 ===')
+        console.log('原始表单数据:', {
+          title: formData.value.title,
+          publicationType: formData.value.publicationType,
+          authors: formData.value.authors,
+          date: formData.value.date,
+          description: formData.value.description,
+          coverImage: formData.value.coverImage ? {
+            name: formData.value.coverImage.name,
+            type: formData.value.coverImage.type,
+            size: formData.value.coverImage.size
+          } : null,
+          researchFile: formData.value.researchFile ? {
+            name: formData.value.researchFile.name,
+            type: formData.value.researchFile.type,
+            size: formData.value.researchFile.size
+          } : null
+        })
+
+        const researchFormData = new FormData()
+        
+        // 添加基本字段，确保与 CreateResearchDTO 完全匹配
+        console.log('\n=== 开始构建 FormData ===')
+        
+        // 标题
+        console.log('设置 title:', formData.value.title)
+        researchFormData.append('title', formData.value.title)
+        
+        // 类型
+        console.log('设置 type:', formData.value.publicationType)
+        researchFormData.append('type', formData.value.publicationType)
+        
+        // 作者列表处理
+        const authors = formData.value.authors
+          .split(',')
+          .map((author: string) => author.trim())
+          .filter((author: string) => author)
+          .join(',')
+        console.log('设置 authors:', authors)
+        researchFormData.append('authors', authors)
+        
+        // 发布日期
+        console.log('设置 publicationDate:', formData.value.date)
+        researchFormData.append('publicationDate', formData.value.date)
+        
+        // 摘要和描述
+        console.log('设置 abstract:', formData.value.description)
+        researchFormData.append('abstract', formData.value.description)
+        console.log('设置 description:', formData.value.description)
+        researchFormData.append('description', formData.value.description)
+        
+        // 是否公开
+        console.log('设置 isPublic:', true)
+        researchFormData.append('isPublic', 'true')
+        
+        // 封面图片（可选）
+        if (formData.value.coverImage instanceof File) {
+          console.log('设置 coverImage:', formData.value.coverImage.name)
+          researchFormData.append('coverImage', formData.value.coverImage)
+        } else {
+          console.log('未设置 coverImage')
+        }
+        
+        // 研究文件（可选）
+        if (formData.value.researchFile instanceof File) { 
+          const file = formData.value.researchFile  
+          console.log('设置 file:', {
+            name: file.name,
+            type: file.type,
+            size: file.size
+          })
+          researchFormData.append('file', file)
+        } else {
+          console.warn('未设置研究文件或文件格式不正确')
+        }
+        
+        // 打印最终的 FormData 内容
+        console.log('\n=== FormData 最终内容 ===')
+        for (const [key, value] of researchFormData.entries()) {
+          if (value instanceof File) {
+            console.log(key + ':', {
+              name: value.name,
+              type: value.type,
+              size: value.size
+            })
+          } else {
+            console.log(key + ':', value)
+          }
+        }
+        
+        console.log('\n=== 开始发送请求... ===')
+        response = await researchApi.createResearch(researchFormData)
+        console.log('请求成功，响应:', response)
+        break
+      }
+    }
+
+    // 保存成果ID，用于后续文件上传
+    if (response?.code === 200 || response?.success === true) { // 根据你API返回的成功标识来判断
+      console.log('成功创建成果:', response.data)
+      
+      emit('success') // 1. 发出“成功”信号，给父组件听
+      handleClose()   // 2. 调用现有的关闭方法，它会重置表单并发出“关闭”信号
+      
+    } else {
+      // 可选：处理后端返回业务错误的情况
+      const errorMsg = response?.message || '创建失败，但服务器未返回明确错误'
+      console.error(errorMsg)
+      error.value = errorMsg
+    }
+  } catch (err: any) {
+    console.error('创建成果失败:', err)
+    console.error('错误详情:', {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status
+    })
+    error.value = err.message || '创建成果失败'
+    
+    // 显示错误提示
+    alert('创建失败：' + error.value)
+  }
 }
 
 // 重置表单
 const resetForm = () => {
   formData.value = {
     type: props.type || 'PORTFOLIO',
-    title: props.initialData?.title || '',
-    description: props.initialData?.description || '',
-    date: props.initialData?.date || '',
-    tags: Array.isArray(props.initialData?.tags) ? props.initialData?.tags.join(',') : '',
-    portfolioUrl: props.initialData?.portfolioUrl || '',
-    competitionName: props.initialData?.competitionName || '',
-    awardLevel: props.initialData?.awardLevel || '',
-    issuer: props.initialData?.issuer || '',
-    publicationType: props.initialData?.publicationType || '',
-    publicationVenue: props.initialData?.publicationVenue || '',
-    authors: Array.isArray(props.initialData?.authors) ? props.initialData?.authors.join(',') : '',
-    attachments: props.initialData?.attachments || []
+    title: '',
+    description: '',
+    date: '',
+    tags: '',
+    portfolioUrl: '',
+    competitionName: '',
+    awardLevel: '',
+    issuer: '',
+    publicationType: '',
+    publicationVenue: '',
+    authors: '',
+    attachments: [],
+    coverImage: null,
+    researchFile: null
   }
+  error.value = ''
 }
 
 // 关闭模态框
@@ -292,7 +525,12 @@ const handleClose = () => {
           <!-- 文件上传 -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">附件</label>
-            <ResourceUploader @uploaded="handleFileUploaded" />
+            <ResourceUploader 
+              :type="formData.type"
+              :achievementId="currentAchievementId"
+              @uploaded="handleFileUploaded" 
+              @upload-error="handleUploadError"
+            />
           </div>
           
           <!-- 提交按钮 -->

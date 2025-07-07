@@ -1,9 +1,9 @@
 // 我自己留着测的
-//const API_BASE_URL =  'http://localhost:8081/api'
+const API_BASE_URL =  'http://localhost:8081/api'
 
 import axios from 'axios'
 
-const API_BASE_URL =  'http://192.168.58.28:8081/api'
+//const API_BASE_URL =  'http://192.168.58.28:8081/api'
 
 let token = ''
 export function setToken(t: string) {

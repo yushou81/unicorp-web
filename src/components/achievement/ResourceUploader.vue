@@ -80,21 +80,34 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { researchApi, portfolioApi, competitionAwardApi } from '@/lib/api/achievement'
 
 interface Props {
   allowedTypes?: string[]
   maxSize?: number // 单位：字节
   multiple?: boolean
+  type?: 'PORTFOLIO' | 'AWARD' | 'RESEARCH' // 添加成果类型
+  achievementId?: number // 添加成果ID
+}
+
+interface FileInfo {
+  id: number
+  resourceName: string
+  resourceUrl: string
+  resourceType: string
+  uploadTime: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   allowedTypes: () => ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'],
   maxSize: 10 * 1024 * 1024, // 默认10MB
-  multiple: false
+  multiple: true, // 默认支持多文件上传
+  type: undefined,
+  achievementId: undefined
 })
 
 const emit = defineEmits<{
-  (e: 'upload-success', files: File[]): void
+  (e: 'uploaded', fileInfo: FileInfo): void
   (e: 'upload-error', error: Error): void
 }>()
 
@@ -102,6 +115,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const isDragging = ref(false)
 const files = ref<File[]>([])
 const uploading = ref(false)
+const error = ref('')
 
 const triggerFileInput = () => {
   fileInput.value?.click()
@@ -135,6 +149,31 @@ const addFiles = (newFiles: File[]) => {
   } else {
     files.value = [...files.value, ...validFiles]
   }
+
+  // 如果没有 achievementId，说明是在创建成果时上传文件
+  if (!props.achievementId) {
+    validFiles.forEach(file => {
+      const isImage = file.type.startsWith('image/')
+      console.log('立即处理文件:', file.name, '是否为图片:', isImage)
+      
+      if (props.type === 'RESEARCH') {
+        // 科研成果的文件处理
+        if (isImage) {
+          console.log('发送科研成果封面图片事件')
+          emit('uploaded', { file, type: 'cover' })
+        } else {
+          console.log('发送研究文件事件')
+          emit('uploaded', { file, type: 'research' })
+        }
+      } else if (props.type === 'PORTFOLIO') {
+        // 作品集的文件处理
+        if (isImage) {
+          console.log('发送作品集封面图片事件')
+          emit('uploaded', { file, type: 'cover' })
+        }
+      }
+    })
+  }
 }
 
 const removeFile = (index: number) => {
@@ -142,12 +181,73 @@ const removeFile = (index: number) => {
 }
 
 const uploadFiles = async () => {
+  if (files.value.length === 0) return
+  
+  uploading.value = true
+  error.value = ''
+  
   try {
-    uploading.value = true
-    // TODO: 实现文件上传逻辑
-    emit('upload-success', files.value)
-  } catch (error) {
-    emit('upload-error', error as Error)
+    // 如果没有achievementId，说明是在创建成果时上传文件
+    if (!props.achievementId) {
+      console.log('准备处理文件上传，文件列表:', files.value.map(f => ({
+        name: f.name,
+        type: f.type,
+        size: f.size
+      })))
+      
+      files.value.forEach(file => {
+        // 判断是否为图片文件
+        const isImage = file.type.startsWith('image/')
+        console.log('处理文件:', file.name, '是否为图片:', isImage)
+        
+        if (props.type === 'RESEARCH') {
+          if (isImage) {
+            console.log('发送封面图片事件')
+            emit('uploaded', { file, type: 'cover' })
+          } else {
+            console.log('发送研究文件事件')
+            emit('uploaded', { file, type: 'research' })
+          }
+        }
+      })
+      // 清空文件列表
+      files.value = []
+      uploading.value = false
+      return
+    }
+
+    // 如果有achievementId，按原来的逻辑处理
+    const uploadPromises = files.value.map(async (file) => {
+      let response
+      if (props.type === 'RESEARCH') {
+        const isImage = file.type.startsWith('image/')
+        if (isImage) {
+          response = await researchApi.uploadResearchCover(props.achievementId!, file)
+          emit('uploaded', { file, type: 'cover' })
+        } else {
+          response = await researchApi.uploadResearchFile(props.achievementId!, file)
+          emit('uploaded', { file, type: 'research' })
+        }
+      } else if (props.type === 'PORTFOLIO') {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('resourceType', file.type.startsWith('image/') ? 'IMAGE' : 'DOCUMENT')
+        response = await portfolioApi.uploadPortfolioResource(props.achievementId!, formData)
+        emit('uploaded', response?.data)
+      } else if (props.type === 'AWARD') {
+        response = await competitionAwardApi.uploadCertificate(props.achievementId!, file)
+        emit('uploaded', response?.data)
+      }
+      return response?.data
+    })
+
+    const results = await Promise.all(uploadPromises)
+    // 清空文件列表
+    files.value = []
+  } catch (err: any) {
+    console.error('文件上传失败:', err)
+    error.value = err.message || '文件上传失败'
+    emit('upload-error', err)
   } finally {
     uploading.value = false
   }

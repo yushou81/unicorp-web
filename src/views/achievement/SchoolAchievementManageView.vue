@@ -456,7 +456,7 @@ const fetchStatistics = async () => {
         researchCount: orgStats.data.totalResearch,
         visitCount: orgStats.data.totalStudents || 0,
         verifiedRate: orgStats.data.totalAwards > 0 
-          ? `${Math.round((orgStats.data.totalVerifiedAchievements / orgStats.data.totalAwards) * 100)}%` 
+          ? `${Math.round((orgStats.data.totalVerifiedAchievements / (orgStats.data.totalAwards +  orgStats.data.totalResearch)) * 100)}%` 
           : 'NaN%'
       }
 

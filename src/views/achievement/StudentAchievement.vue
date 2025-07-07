@@ -176,14 +176,52 @@ const handleAdd = () => {
   showModal.value = true
 }
 
+// 处理弹窗提交
+const handleModalSubmit = async (data: any) => {
+  loading.value = true
+  try {
+    switch (data.type) {
+      case 'PORTFOLIO':
+        // 转换为 FormData
+        const portfolioFormData = new FormData()
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined) {
+            if (Array.isArray(value)) {
+              value.forEach(item => portfolioFormData.append(key, item))
+            } else {
+              portfolioFormData.append(key, value)
+            }
+          }
+        })
+        await portfolioApi.createPortfolioItem(portfolioFormData)
+        break
+      case 'AWARD':
+        // 直接使用 JSON 数据
+        await competitionAwardApi.createAward(data)
+        break
+      case 'RESEARCH':
+        // API 内部会处理 FormData 转换
+        await researchApi.createResearch(data)
+        break
+    }
+    handleModalSuccess()
+  } catch (err: any) {
+    console.error('创建成果失败:', err)
+    error.value = err.message || '创建成果失败'
+  } finally {
+    loading.value = false
+  }
+}
+
 // 处理弹窗关闭
 const handleModalClose = () => {
   showModal.value = false
   currentType.value = null
 }
 
-// 处理弹窗提交成功
+// 处理成功提交
 const handleModalSuccess = () => {
+  alert('成果创建成功！')
   showModal.value = false
   currentType.value = null
   fetchAchievements() // 刷新列表
@@ -259,10 +297,10 @@ fetchAchievements()
           <svg class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
           </svg>
-          <span class="font-medium">认证获奖</span>
+          <span class="font-medium">认证获奖与科研</span>
         </div>
         <div class="text-3xl font-bold text-purple-700 mb-1">{{ overview?.verifiedCount || 0 }}</div>
-        <div class="text-sm text-purple-600">已认证获奖</div>
+        <div class="text-sm text-purple-600">已认证</div>
       </div>
     </div>
 
@@ -280,7 +318,7 @@ fetchAchievements()
         </select>
         
         <select 
-          v-if="filters.type === 'AWARD'"
+          v-if="filters.type === 'AWARD' || filters.type === 'RESEARCH'"
           v-model="filters.status" 
           class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
@@ -325,9 +363,9 @@ fetchAchievements()
             </div>
           </div>
           
-          <!-- 状态标签 - 只在获奖类型显示 -->
+          <!-- 状态标签 - 在获奖和科研类型显示 -->
           <div 
-            v-if="achievement.type === 'AWARD'"
+            v-if="achievement.type === 'AWARD' || achievement.type === 'RESEARCH'"
             class="absolute top-3 right-3 px-2.5 py-1.5 rounded-full text-xs font-medium"
             :class="{
               'bg-green-100 text-green-800': achievement.status === 'VERIFIED',
@@ -344,7 +382,7 @@ fetchAchievements()
           <div class="mb-2 flex items-start justify-between">
             <h3 class="text-lg font-semibold text-gray-900 line-clamp-2">{{ achievement.title }}</h3>
             <span 
-              class="px-2 py-1 text-xs rounded-md"
+              class="px-2 py-1 text-xs rounded-md inline-block min-w-[48px] text-center"
               :class="{
                 'bg-blue-50 text-blue-700': achievement.type === 'PORTFOLIO',
                 'bg-purple-50 text-purple-700': achievement.type === 'AWARD',
