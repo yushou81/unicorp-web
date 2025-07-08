@@ -182,45 +182,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 详情弹窗 -->
-    <div v-if="showDetailsDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
-          <div class="flex justify-between items-start">
-            <h3 class="text-lg font-medium text-gray-900">成果详情</h3>
-            <button
-              @click="showDetailsDialog = false"
-              class="text-gray-400 hover:text-gray-500"
-            >
-              <XMarkIcon class="w-5 h-5" />
-            </button>
-          </div>
-          <div class="mt-4 space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">标题</label>
-              <p class="mt-1">{{ selectedAchievement?.title }}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">描述</label>
-              <p class="mt-1">{{ selectedAchievement?.description }}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">类型</label>
-              <p class="mt-1">{{ selectedAchievement?.type === 'award' ? '竞赛获奖' : selectedAchievement?.type === 'research' ? '科研成果' : '作品集' }}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">创建时间</label>
-              <p class="mt-1">{{ selectedAchievement?.createdAt }}</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">状态</label>
-              <p class="mt-1">{{ selectedAchievement?.verifyStatus === 'verified' ? '已认证' : selectedAchievement?.verifyStatus === 'pending' ? '待认证' : '已拒绝' }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -246,8 +207,7 @@ import {
   DocumentTextIcon,
   CheckBadgeIcon,
   ClockIcon,
-  ChartBarIcon,
-  XMarkIcon
+  ChartBarIcon
 } from '@heroicons/vue/24/outline'
 import { apiRequest } from '@/lib/api/apiClient'
 import { getAllSchools, getAllEnterprises } from '@/lib/api/organization'
@@ -323,8 +283,6 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const totalItems = ref(0)
 const searchQuery = ref('')
-const showDetailsDialog = ref(false)
-const selectedAchievement = ref<Achievement | null>(null)
 const achievements = ref<Achievement[]>([])
 
 // 统计数据
@@ -617,8 +575,22 @@ const verifyAchievement = async (id: number, isVerified: boolean) => {
 
 // 查看详情
 const viewDetails = (achievement: Achievement) => {
-  selectedAchievement.value = achievement;
-  showDetailsDialog.value = true;
+  let path = ''
+  switch (achievement.type) {
+    case 'award':
+      path = `/achievement/award/${achievement.id}`
+      break
+    case 'research':
+      path = `/achievement/research/${achievement.id}`
+      break
+    case 'portfolio':
+      path = `/achievement/portfolio/${achievement.id}`
+      break
+    default:
+      console.error('Unknown achievement type:', achievement.type)
+      return
+  }
+  router.push(path)
 }
 
 // 刷新数据

@@ -580,30 +580,39 @@ const closeVerifyModal = () => {
   }
 }
 
+// 提交审核
 const submitVerify = async () => {
   if (!currentItem.value) return
-  
+
+  loading.value = true
+  // error.value = '' // Assuming error state is not used in this component
   try {
-    const data = {
-      isVerified: verifyForm.value.status === AchievementStatus.VERIFIED,
-      comment: verifyForm.value.comment
+    const verifyData = {
+      status: verifyForm.value.status,
+      // comment: verifyForm.value.comment, // 移除此字段
     }
 
-    switch (currentItem.value.type) {
-      case AchievementType.AWARD:
-        await competitionAwardApi.verifyAward(currentItem.value.id, data)
-        break
-      case AchievementType.RESEARCH:
-        await researchApi.verifyResearch(currentItem.value.id, data)
-        break
+    const id = currentItem.value.id
+    const type = currentItem.value.type
+
+    if (type === AchievementType.AWARD) {
+      const awardData: VerifyAwardDTO = { isVerified: verifyData.status === AchievementStatus.VERIFIED }
+      await competitionAwardApi.verifyAward(id, awardData)
+    } else if (type === AchievementType.RESEARCH) {
+      const researchData: VerifyResearchDTO = { isVerified: verifyData.status === AchievementStatus.VERIFIED }
+      await researchApi.verifyResearch(id, researchData)
+    } else {
       // 作品暂无认证接口，因为API权限中没有提供
+      console.warn('作品类型暂无认证接口')
     }
 
     closeVerifyModal()
-    fetchAchievements()
+    await fetchUnverifiedAchievements() // 审核成功后刷新列表
     fetchStatistics()
   } catch (error) {
     console.error('审核失败:', error)
+  } finally {
+    loading.value = false
   }
 }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { portfolioApi, competitionAwardApi, researchApi } from '@/lib/api/achievement'
 import type { StudentAchievementOverviewVO, ApiResponse, PortfolioItemVO, CompetitionAwardVO, ResearchVO } from '@/lib/api/achievement'
 import { apiRequest } from '@/lib/api/apiClient'
@@ -19,12 +19,16 @@ interface Achievement {
   organizationName?: string
   verifyStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED'
   likeCount?: number
+  isPublic?: boolean // Added for portfolio items
 }
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
+const error = ref<string | null>(null)
 const achievements = ref<Achievement[]>([])
 const overview = ref<StudentAchievementOverviewVO | null>(null)
+const editData = ref<any>(null)
 
 // 筛选条件
 const filters = ref({
@@ -63,13 +67,14 @@ const fetchAchievements = async () => {
         title: item.title,
         description: item.description,
         type: 'PORTFOLIO' as const,
-        status: 'PENDING' as const,
+        status: 'VERIFIED' as const, // Portfolios don't have verification, default to a non-blocking status
+        isPublic: item.isPublic,
         coverImageUrl: item.coverImageUrl,
         createdAt: item.createdAt,
         studentId: item.userId,
         studentName: item.userName,
         organizationName: item.organizationName,
-        verifyStatus: 'PENDING' as const,
+        verifyStatus: 'VERIFIED' as const, // Corresponds to status
         likeCount: item.likeCount
       })),
       ...awards.data.map((item: CompetitionAwardVO) => ({
@@ -166,6 +171,7 @@ const handleAchievementAction = {
     }
   },
   edit: (achievement: Achievement) => {
+    editData.value = achievement
     currentType.value = achievement.type
     showModal.value = true
   }
@@ -173,6 +179,8 @@ const handleAchievementAction = {
 
 // 处理添加成果
 const handleAdd = () => {
+  editData.value = null
+  currentType.value = 'PORTFOLIO' // Default to portfolio, user can change in modal
   showModal.value = true
 }
 
@@ -181,33 +189,96 @@ const handleModalSubmit = async (data: any) => {
   loading.value = true
   try {
     switch (data.type) {
-      case 'PORTFOLIO':
-        // 转换为 FormData
-        const portfolioFormData = new FormData()
-        Object.entries(data).forEach(([key, value]) => {
-          if (value !== undefined) {
-            if (Array.isArray(value)) {
-              value.forEach(item => portfolioFormData.append(key, item))
-            } else {
-              portfolioFormData.append(key, value)
+      case 'PORTFOLIO': {
+        const formData = new FormData()
+        
+        // Explicitly add only PORTFOLIO-related fields
+        formData.append('title', data.title)
+        formData.append('description', data.description)
+        
+        // Handle optional fields
+        if (data.tags) {
+            const tags = data.tags.split(',').map((t: string) => t.trim()).filter(Boolean);
+            if(tags.length > 0){
+                tags.forEach((tag: string) => formData.append('tags', tag));
             }
-          }
-        })
-        await portfolioApi.createPortfolioItem(portfolioFormData)
+        }
+        if (data.portfolioUrl) {
+          formData.append('projectUrl', data.portfolioUrl)
+        }
+        
+        // Always include isPublic, assuming it's required
+        formData.append('isPublic', String(data.isPublic ?? true))
+        
+        // Handle the file upload: if a new file is present, add it.
+        // If it's an update and no new file, do NOT add the key at all.
+        // The backend should interpret the absence of the field as "no change to the file".
+        if (data.coverImage instanceof File && data.coverImage.size > 0) {
+          formData.append('coverImage', data.coverImage, data.coverImage.name)
+        }
+
+        // --- DIAGNOSTIC LOG ---
+        console.log(`[Parent] Preparing to submit PORTFOLIO. Is Edit: ${!!data.id}.`)
+        console.log('--- FormData Content ---')
+        for (const [key, value] of formData.entries()) { console.log(`${key}:`, value) }
+        console.log('------------------------')
+        // --- END LOG ---
+
+        if (data.id) {
+          await portfolioApi.updatePortfolioItem(data.id, formData)
+        } else {
+          await portfolioApi.createPortfolioItem(formData)
+        }
         break
-      case 'AWARD':
-        // 直接使用 JSON 数据
-        await competitionAwardApi.createAward(data)
+      }
+      case 'AWARD': {
+        const awardData = {
+          competitionName: data.competitionName,
+          awardLevel: data.awardLevel,
+          awardDate: data.date,
+          description: data.description,
+          isPublic: true,
+          organizer: data.issuer,
+        }
+        if (data.id) {
+          await competitionAwardApi.updateAward(data.id, awardData)
+        } else {
+          await competitionAwardApi.createAward(awardData)
+        }
         break
-      case 'RESEARCH':
-        // API 内部会处理 FormData 转换
-        await researchApi.createResearch(data)
+      }
+      case 'RESEARCH': {
+        const researchData = {
+          title: data.title,
+          type: data.publicationType,
+          authors: data.authors,
+          publicationDate: data.date,
+          abstract: data.description,
+          description: data.description,
+          isPublic: true,
+          coverImage: data.coverImage,
+          file: data.researchFile
+        }
+
+        if (data.id) {
+          await researchApi.updateResearch(data.id, researchData)
+        } else {
+          const researchFormData = new FormData()
+          Object.entries(researchData).forEach(([key, value]) => {
+            if (value instanceof File) {
+              researchFormData.append(key, value)
+            } else if (value) {
+              researchFormData.append(key, String(value))
+            }
+          })
+          await researchApi.createResearch(researchFormData)
+        }
         break
+      }
     }
     handleModalSuccess()
   } catch (err: any) {
-    console.error('创建成果失败:', err)
-    error.value = err.message || '创建成果失败'
+    console.error('操作失败:', err)
   } finally {
     loading.value = false
   }
@@ -217,19 +288,58 @@ const handleModalSubmit = async (data: any) => {
 const handleModalClose = () => {
   showModal.value = false
   currentType.value = null
+  // 清理路由中的查询参数
+  router.replace({ query: {} })
 }
 
 // 处理成功提交
 const handleModalSuccess = () => {
-  alert('成果创建成功！')
+  alert('操作成功！')
   showModal.value = false
   currentType.value = null
+  editData.value = null // 清除编辑数据
   fetchAchievements() // 刷新列表
+  // 清理路由中的查询参数
+  router.replace({ query: {} })
 }
 
-// 初始化
-fetchOverview()
-fetchAchievements()
+// 检查是否是编辑模式
+const checkEditMode = async () => {
+  if (route.query.edit === 'true' && route.query.id) {
+    const type = route.query.type
+    const id = Number(route.query.id)
+    
+    loading.value = true
+    try {
+      let response
+      if (type === 'PORTFOLIO') {
+        response = await portfolioApi.getPortfolioItemDetail(id)
+        currentType.value = 'PORTFOLIO'
+      } else if (type === 'AWARD') {
+        response = await competitionAwardApi.getAwardDetail(id)
+        currentType.value = 'AWARD'
+      } else if (type === 'RESEARCH') {
+        response = await researchApi.getResearchById(id)
+        currentType.value = 'RESEARCH'
+      }
+      
+      if (response) {
+        editData.value = response.data
+        showModal.value = true
+      }
+    } catch (error) {
+      console.error('获取编辑数据失败:', error)
+    } finally {
+      loading.value = false
+    }
+  }
+}
+
+onMounted(() => {
+  fetchOverview()
+  fetchAchievements()
+  checkEditMode()
+})
 </script>
 
 <template>
@@ -375,6 +485,15 @@ fetchAchievements()
           >
             {{ getStatusText(achievement.status) }}
           </div>
+
+          <!-- 公开状态标签 - 仅在作品类型显示 -->
+          <div
+            v-if="achievement.type === 'PORTFOLIO'"
+            class="absolute top-3 right-3 px-2.5 py-1.5 rounded-full text-xs font-medium"
+            :class="achievement.isPublic ? 'bg-blue-100 text-blue-800' : 'bg-blue-200 text-blue-900'"
+          >
+            {{ achievement.isPublic ? '公开' : '私有' }}
+          </div>
         </div>
 
         <!-- 成果卡片内容 -->
@@ -436,8 +555,9 @@ fetchAchievements()
       v-if="showModal"
       :show="showModal"
       :type="currentType"
+      :initial-data="editData"
       @close="handleModalClose"
-      @success="handleModalSuccess"
+      @submit="handleModalSubmit"
     />
   </div>
 </template>

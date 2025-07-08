@@ -577,7 +577,7 @@ export const portfolioApi = {
 
   // 点赞作品
   likeAchievement(id: number) {
-    return apiRequest<ApiResponse<void>>(`/v1/achievements/${id}/like`, {
+    return apiRequest<ApiResponse<void>>(`/v1/portfolio/items/${id}/like`, {
       method: 'POST'
     })
   },

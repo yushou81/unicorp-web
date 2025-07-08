@@ -13,10 +13,10 @@
         <span 
           :class="[
             'px-2 py-1 text-xs font-medium rounded-full',
-            portfolio.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            portfolio.isPublic ? 'bg-blue-100 text-blue-800' : 'bg-purple-50 text-purple-400'
           ]"
         >
-          {{ portfolio.isVerified ? '已认证' : '待认证' }}
+          {{ portfolio.isPublic ? '公开' : '私有' }}
         </span>
       </div>
       <p class="text-sm text-gray-500 line-clamp-2">{{ portfolio.description }}</p>
@@ -43,7 +43,7 @@ interface Portfolio {
   title: string
   description: string
   coverImage?: string
-  isVerified: boolean
+  isPublic: boolean
   createdAt: string
   views: number
   tags: string[]

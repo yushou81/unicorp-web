@@ -566,8 +566,8 @@
     try {
       let response
       const verifyData = {
-        isVerified: verifyForm.value.isVerified,
-        comment: verifyForm.value.comment
+        isVerified: verifyForm.value.isVerified
+        // comment: verifyForm.value.comment // Removed as per backend DTO
       }
 
       switch (selectedAchievement.value.type) {

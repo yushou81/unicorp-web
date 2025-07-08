@@ -155,6 +155,18 @@
                   <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ achievement.description }}</p>
                 </div>
               </div>
+               <div class="mt-8 border-t pt-6">
+                <button 
+                  @click="likeAchievement" 
+                  :disabled="isLiked"
+                  class="w-full max-w-xs mx-auto flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 18.331V10h3.53a2 2 0 011.831 1.189L14 15.331V10zM7 21a2 2 0 01-2-2v-7a2 2 0 012-2h2.086a2 2 0 011.664.89l.812 1.22A2 2 0 0013.086 10H7z" />
+                  </svg>
+                  {{ isLiked ? '已点赞' : '点赞此成果' }}
+                </button>
+              </div>
               
               <!-- 作品类型特定内容 -->
               <div v-if="achievement.type === 'portfolio'" class="mb-10">
@@ -240,7 +252,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div class="mb-4">
                     <p class="text-sm font-medium text-gray-600 mb-1">类型</p>
-                    <p>{{ getResearchTypeText(achievement.type) }}</p>
+                    <p>{{ getResearchTypeText(achievement.researchType) }}</p>
                   </div>
                   
                   <div class="mb-4">
@@ -253,9 +265,9 @@
                     <p>{{ formatDate(achievement.publicationDate) }}</p>
                   </div>
                   
-                  <div class="mb-4">
-                    <p class="text-sm font-medium text-gray-600 mb-1">发表单位/出版社</p>
-                    <p>{{ achievement.publisher || '未提供' }}</p>
+                  <div v-if="achievement.publisher" class="mb-4">
+                    <p class="text-sm font-medium text-gray-600 mb-1">发表机构/期刊</p>
+                    <p>{{ achievement.publisher }}</p>
                   </div>
                 </div>
               </div>
@@ -326,48 +338,6 @@
                 </div>
               </div>
             </div>
-            
-            <!-- 评价表单 -->
-            <div class="bg-white rounded-lg shadow-sm p-8">
-              <h2 class="text-xl font-bold text-gray-800 mb-6">评价此成果</h2>
-              
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">评分</label>
-                <div class="flex">
-                  <template v-for="i in 5" :key="i">
-                    <svg 
-                      @click="rating = i" 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      class="h-8 w-8 cursor-pointer" 
-                      :class="rating >= i ? 'text-yellow-400' : 'text-gray-300'"
-                      viewBox="0 0 20 20" 
-                      fill="currentColor"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  </template>
-                </div>
-              </div>
-              
-              <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">评价内容</label>
-                <textarea 
-                  v-model="comment" 
-                  rows="3" 
-                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="写下您对这个成果的评价..."
-                ></textarea>
-              </div>
-              
-              <button 
-                @click="submitComment" 
-                class="px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                :disabled="!rating || !comment"
-                :class="{ 'opacity-50 cursor-not-allowed': !rating || !comment }"
-              >
-                提交评价
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -379,14 +349,11 @@
   import { useRoute, useRouter } from 'vue-router'
   import Navbar from '@/components/layout/Navbar.vue'
   import { 
-    competitionAwardApi, 
     portfolioApi, 
+    competitionAwardApi, 
     researchApi,
-    type CompetitionAwardVO,
-    type PortfolioItemVO,
-    type ResearchVO,
     type AchievementType
-  } from '@/lib/api/achievement'
+  } from '@/lib/api/achievement';
 
   const route = useRoute()
   const router = useRouter()
@@ -396,19 +363,13 @@
   const isFavorited = ref(false)
   const rating = ref(0)
   const comment = ref('')
+  const isLiked = ref(false);
 
   // 学生能力标签（实际应该来自后端）
-  const studentTags = ref([
-    '项目管理',
-    '前端开发',
-    '团队协作',
-    '算法设计',
-    '数据分析',
-    '创新思维'
-  ])
+  const studentTags = ref(['UI/UX 设计', 'Vue.js', '产品思维', '项目管理']); // 示例
   
   // 获取成果ID和类型
-  const achievementId = computed(() => route.params.id as string)
+  const achievementId = computed(() => Number(route.params.id));
   const achievementType = computed(() => route.params.type as AchievementType)
   
   // 获取成果详情
@@ -417,7 +378,7 @@
     error.value = ''
     
     try {
-      const id = parseInt(achievementId.value)
+      const id = achievementId.value
       if (!id) {
         error.value = '无效的成果ID'
         return
@@ -486,6 +447,22 @@
       alert('操作失败，请稍后重试')
     }
   }
+
+  const likeAchievement = async () => {
+    if (isLiked.value || !achievementId.value) return;
+    try {
+      await portfolioApi.likeAchievement(achievementId.value);
+      isLiked.value = true;
+      if (achievement.value) {
+        achievement.value.likeCount = (achievement.value.likeCount || 0) + 1;
+      }
+      // 可以添加一个提示，例如使用 alert 或更复杂的通知组件
+      alert('点赞成功！');
+    } catch (err) {
+      console.error('点赞失败:', err);
+      alert('点赞失败，请稍后再试。');
+    }
+  };
   
   // 联系学生
   const contactStudent = () => {
@@ -529,7 +506,7 @@
     const typeMap = {
       'portfolio': '作品',
       'award': '获奖',
-      'research': '科研成果'
+      'research': '科研'
     }
     return typeMap[type] || '其他'
   }
@@ -546,14 +523,14 @@
   
   // 获取科研成果类型显示文本
   const getResearchTypeText = (type: string) => {
-    const typeMap = {
+    const typeMap: Record<string, string> = {
       'paper': '论文',
       'patent': '专利',
       'book': '著作',
       'other': '其他'
-    }
-    return typeMap[type] || '其他'
-  }
+    };
+    return typeMap[type] || '其他';
+  };
   
   // 格式化日期
   const formatDate = (dateString: string) => {
