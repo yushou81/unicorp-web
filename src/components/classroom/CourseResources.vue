@@ -89,17 +89,15 @@
         
         <div class="flex space-x-2">
           <!-- 直接超链接下载 -->
-          <a
-            :href="getDownloadUrl(resource.id)"
-            target="_blank"
+          <button
+            @click="downloadResource(resource.id, resource.title)"
             class="text-blue-600 hover:text-blue-800 p-1 flex items-center"
             title="下载"
-            download
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-          </a>
+          </button>
           
           <button 
             v-if="isTeacher && (resource.uploaderId === currentUserId || isResourceManager)"
@@ -539,7 +537,54 @@ const deleteResource = async () => {
 
 // 获取资源下载链接
 const getDownloadUrl = (resourceId: number) => {
-  return getResourceDownloadUrl(resourceId)
+  const token = localStorage.getItem('token') || ''
+  const baseUrl = getResourceDownloadUrl(resourceId)
+  return token ? `${baseUrl}?token=${token}` : baseUrl
+}
+
+// 下载资源
+const downloadResource = async (resourceId: number, title?: string) => {
+  try {
+    const token = localStorage.getItem('token') || ''
+    const url = `http://192.168.58.74:8081/api/v1/course-resources/download/${resourceId}`
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`下载失败: ${response.status}`)
+    }
+    
+    // 获取文件名
+    const contentDisposition = response.headers.get('content-disposition')
+    let filename = title || `resource_${resourceId}`
+    
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '')
+      }
+    }
+    
+    // 创建blob并下载
+    const blob = await response.blob()
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(downloadUrl)
+    
+  } catch (error) {
+    console.error('下载资源错误:', error)
+    alert('下载失败，请稍后再试')
+  }
 }
 
 // 格式化文件大小

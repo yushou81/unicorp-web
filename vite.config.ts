@@ -13,25 +13,15 @@ export default defineConfig({
     },
   },
   server: {
-
-    //port: 3031,
-
-    port: 3000, // 建议使用 3000、5173 等常用前端开发端口
-
+    port: 8082,
     open: true,
-    //host: '0.0.0.0',
+    host: '0.0.0.0',
     proxy: {
-      // 代理配置保持不变，因为后端仍然在 8081 端口
       '/api': {
-
-        //target: 'http://192.168.58.17:8081',
-        //target:'http://localhost:8081',
-
-        target: 'http://127.0.0.1:8081',
-
+        target: 'http:// 192.168.1.2:8081',
         changeOrigin: true,
         ws: true,
       },
     },
   },
-})
+}) 

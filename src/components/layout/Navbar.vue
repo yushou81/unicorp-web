@@ -20,6 +20,11 @@
         <router-link :to="getDashboardRoute()" class="hover:text-blue-600 transition">我的</router-link>
       </nav>
       <div class="flex items-center space-x-2">
+        <router-link to="/ai-assistant" class="mr-3 text-gray-600 hover:text-blue-600 transition">
+          <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+            <span class="text-blue-600 font-bold">?</span>
+          </div>
+        </router-link>
         <div v-if="isLoggedIn" class="flex items-center space-x-3">
           <div class="flex items-center">
             <img :src="userAvatar" class="w-8 h-8 rounded-full border border-gray-200" alt="avatar" />

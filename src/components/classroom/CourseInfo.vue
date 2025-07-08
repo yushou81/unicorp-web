@@ -75,13 +75,27 @@
           </div>
         </div>
         
-        <div class="flex items-center mb-6">
-          <span 
-            :class="courseTypeClass" 
-            class="text-xs px-2 py-1 rounded-full mr-2"
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center">
+            <span 
+              :class="courseTypeClass" 
+              class="text-xs px-2 py-1 rounded-full mr-2"
+            >
+              {{ courseTypeText }}
+            </span>
+          </div>
+          
+          <!-- 学生列表按钮 - 仅教师和企业导师可见 -->
+          <button 
+            v-if="canViewStudents"
+            @click="$emit('view-students')"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors flex items-center"
           >
-            {{ courseTypeText }}
-          </span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            查看学生列表
+          </button>
         </div>
         
         <slot name="actions"></slot>
@@ -106,6 +120,11 @@ const courseImages = [
 
 const props = defineProps<{
   course: DualTeacherCourseVO
+  canViewStudents?: boolean
+}>()
+
+const emit = defineEmits<{
+  'view-students': []
 }>()
 
 // 获取课程封面图

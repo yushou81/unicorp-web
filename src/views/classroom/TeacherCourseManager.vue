@@ -248,7 +248,8 @@ import {
   DualTeacherCourseVO,
   CourseResourceDTO,
   uploadResource,
-  getCourseStudents
+  getCourseStudents,
+  initializeCourseProgressForAllStudents
 } from '@/lib/api/classroom'
 
 const router = useRouter()
@@ -431,12 +432,28 @@ async function saveCourse() {
   
   savingCourse.value = true
   try {
+    let createdCourseId: number | null = null
+    
     if (isEditingCourse.value && currentCourseId.value) {
       await updateCourse(currentCourseId.value, courseForm.value)
       alert('课程更新成功')
     } else {
-      await createCourse(courseForm.value)
-      alert('课程创建成功')
+      const createResponse = await createCourse(courseForm.value)
+      if (createResponse.code === 200 && createResponse.data) {
+        createdCourseId = createResponse.data.id
+        alert('课程创建成功')
+        
+        // 如果是新创建的课程，批量初始化所有学生的学习进度
+        if (createdCourseId) {
+          try {
+            await initializeCourseProgressForAllStudents(createdCourseId)
+            console.log('批量初始化学生进度成功')
+          } catch (initError: any) {
+            console.warn('批量初始化学生进度失败:', initError)
+            // 不阻止课程创建成功，只记录警告
+          }
+        }
+      }
     }
     
     showCourseDialog.value = false

@@ -22,133 +22,140 @@
           <span class="text-gray-700">课程详情</span>
         </div>
         
-        <!-- 课程标题区域 -->
-        <CourseInfo :course="course">
-          <template #actions>
-            <div class="flex space-x-4">
-              <CourseEnrollButton 
-                :course="course" 
-                :is-enrolled="isEnrolled"
-                @enroll="handleEnrollSuccess"
-                @cancel="handleCancelSuccess"
-                @error="handleEnrollError"
-              />
-              <button class="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                分享
-              </button>
-            </div>
-          </template>
-        </CourseInfo>
-        
-        <!-- 课程详情和教师信息 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          <!-- 左侧：课程详情 -->
-          <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h2 class="text-xl font-bold text-gray-900 mb-4">课程介绍</h2>
-              <div class="prose max-w-none text-gray-700">
-                <p>{{ course.description }}</p>
-              </div>
-            </div>
-            
-            <!-- 课程大纲 -->
-            <CourseChapters 
-              :course-id="Number(route.params.id)"
-              :is-teacher="isTeacher"
-              :is-student="isStudent"
-              :student-id="studentId"
-            />
-            
-            <!-- 课程资源 -->
-            <CourseResources 
-              :course-id="Number(route.params.id)"
-              :is-teacher="isTeacher"
-              :current-user-id="appStore.user?.id"
-              :is-resource-manager="isTeacher || isMentor"
-            />
-            
-            <!-- 课程评价 -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-              <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-gray-900">课程评价</h2>
-                <router-link 
-                  v-if="isTeacher || isAdmin"
-                  :to="`/classroom/${route.params.id}/ratings`"
-                  class="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  评价管理
-                </router-link>
-              </div>
-              <CourseRating 
-                :course-id="Number(route.params.id)"
-                :ratings="courseRatings"
-                :can-rate="canRate"
-                :has-rated="hasUserRated"
-                @submit-success="handleRatingSuccess"
-                @error="handleRatingError"
-                @update-ratings="handleRatingsUpdate"
-              />
-            </div>
-          </div>
-          
-          <!-- 右侧：教师信息 -->
-          <div class="lg:col-span-1">
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h2 class="text-xl font-bold text-gray-900 mb-4">讲师信息</h2>
-              <div class="flex items-center mb-4">
-                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
-                  {{ course.teacherName ? course.teacherName.substring(0, 1) : '' }}
-                </div>
-                <div>
-                  <div class="font-medium text-gray-900">{{ course.teacherName }}</div>
-                  <div class="text-sm text-gray-500">高校教师</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h2 class="text-xl font-bold text-gray-900 mb-4">企业导师信息</h2>
-              <div class="flex items-center mb-4">
-                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mr-4 text-gray-600 text-xl">
-                  {{ course.mentorName ? course.mentorName.substring(0, 1) : '' }}
-                </div>
-                <div>
-                  <div class="font-medium text-gray-900">{{ course.mentorName }}</div>
-                  <div class="text-sm text-gray-500">{{ course.enterpriseName }}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-6">
-              <h2 class="text-xl font-bold text-gray-900 mb-4">课程信息</h2>
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <div class="text-gray-600">课程状态</div>
-                  <div class="font-medium">{{ getStatusText(course.status) }}</div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="text-gray-600">已报名/总名额</div>
-                  <div class="font-medium">{{ course.enrolledCount }}/{{ course.maxStudents }}</div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="text-gray-600">授课方式</div>
-                  <div class="font-medium">{{ getModeText(course.courseType) }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 新增：教师可见的查看学生名单按钮 -->
-        <div v-if="isTeacher && course && course.teacherId === appStore.user?.id" class="bg-white rounded-lg shadow-sm p-6 mt-6">
-          <button @click="openStudentList" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-            查看学生名单
+        <!-- Tab栏 -->
+        <div class="flex border-b mb-6">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            @click="activeTab = tab.key"
+            :class="[
+              'px-6 py-2 -mb-px font-medium transition',
+              activeTab === tab.key
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-500 hover:text-blue-600'
+            ]"
+          >
+            {{ tab.label }}
           </button>
+        </div>
+        <!-- Tab内容区 -->
+        <div>
+          <!-- 课程教师视角 -->
+          <div v-if="isCourseTeacher">
+            <div v-if="activeTab === 'info'">
+              <!-- 课程信息内容（原有课程信息卡片、教师/导师信息等） -->
+              <CourseInfo 
+                :course="course" 
+                :can-view-students="true"
+                @view-students="openStudentList"
+              />
+            </div>
+            <div v-else-if="activeTab === 'chapters'">
+              <CourseChapters
+                :course-id="Number(route.params.id)"
+                :is-teacher="canManageChapters"
+                :is-student="false"
+                :student-id="null"
+                :is-enrolled="false"
+              />
+            </div>
+            <div v-else-if="activeTab === 'attendance'">
+              <CourseAttendanceManager :course-id="Number(route.params.id)" :user-role="appStore.user?.role" />
+            </div>
+            <div v-else-if="activeTab === 'progress'">
+              <LearningProgressManager :course-id="Number(route.params.id)" />
+            </div>
+            <div v-else-if="activeTab === 'resources'">
+              <CourseResources :course-id="Number(route.params.id)" :is-teacher="true" :current-user-id="appStore.user?.id" :is-resource-manager="true" />
+            </div>
+            <div v-else-if="activeTab === 'rating'">
+              <CourseRating :course-id="Number(route.params.id)" :ratings="courseRatings" :can-rate="canRate" :has-rated="hasUserRated" @submit-success="handleRatingSuccess" @success="handleRatingSuccessMsg" @error="handleRatingError" @update-ratings="handleRatingsUpdate" />
+            </div>
+            <div v-else-if="activeTab === 'discussion'">
+              <CourseDiscussion :course-id="Number(route.params.id)" :can-post="Boolean(appStore.user)" :current-user-id="appStore.user?.id" />
+              <CourseQuestion :course-id="Number(route.params.id)" :can-ask="false" :can-answer="true" :current-user-id="appStore.user?.id" :user-role="appStore.user?.role" />
+            </div>
+          </div>
+          <!-- 企业导师视角 -->
+          <div v-else-if="isMentor">
+            <div v-if="activeTab === 'info'">
+              <CourseInfo 
+                :course="course" 
+                :can-view-students="true"
+                @view-students="openStudentList"
+              />
+            </div>
+            <div v-else-if="activeTab === 'chapters'">
+              <CourseChapters
+                :course-id="Number(route.params.id)"
+                :is-teacher="false"
+                :is-student="false"
+                :student-id="null"
+                :is-enrolled="false"
+              />
+            </div>
+            <div v-else-if="activeTab === 'rating'">
+              <CourseRating :course-id="Number(route.params.id)" :ratings="courseRatings" :can-rate="canRate" :has-rated="hasUserRated" @submit-success="handleRatingSuccess" @success="handleRatingSuccessMsg" @error="handleRatingError" @update-ratings="handleRatingsUpdate" />
+            </div>
+            <div v-else-if="activeTab === 'discussion'">
+              <CourseDiscussion :course-id="Number(route.params.id)" :can-post="Boolean(appStore.user)" :current-user-id="appStore.user?.id" />
+              <CourseQuestion :course-id="Number(route.params.id)" :can-ask="false" :can-answer="true" :current-user-id="appStore.user?.id" :user-role="appStore.user?.role" />
+            </div>
+          </div>
+          <!-- 学生视角 -->
+          <div v-else>
+            <div v-if="activeTab === 'info'">
+              <CourseInfo 
+                :course="course" 
+                :can-view-students="false"
+              />
+              <!-- 学生报名按钮 -->
+              <div class="mt-6">
+                <CourseEnrollButton
+                  :course="course"
+                  :is-enrolled="isEnrolled"
+                  @enroll="handleEnrollSuccess"
+                  @cancel="handleCancelSuccess"
+                  @error="handleEnrollError"
+                />
+              </div>
+            </div>
+            <div v-else-if="activeTab === 'chapters'">
+              <CourseChapters
+                :course-id="Number(route.params.id)"
+                :is-student="isStudent"
+                :student-id="appStore.user?.id"
+                :is-enrolled="isEnrolled"
+              />
+              <!-- 未报名学生提示 -->
+              <div v-if="!isEnrolled" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center">
+                  <svg class="h-5 w-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <p class="text-blue-700">
+                    报名课程后即可查看完整章节内容、课程资源、参与讨论和查看学习进度。
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div v-else-if="activeTab === 'progress'">
+              <StudentProgressView
+                :course-id="Number(route.params.id)"
+                :student-id="appStore.user?.id"
+              />
+            </div>
+            <div v-else-if="activeTab === 'resources'">
+              <CourseResources :course-id="Number(route.params.id)" :is-teacher="false" :current-user-id="appStore.user?.id" :is-resource-manager="false" />
+            </div>
+            <div v-else-if="activeTab === 'rating'">
+              <CourseRating :course-id="Number(route.params.id)" :ratings="courseRatings" :can-rate="canRate" :has-rated="hasUserRated" @submit-success="handleRatingSuccess" @success="handleRatingSuccessMsg" @error="handleRatingError" @update-ratings="handleRatingsUpdate" />
+            </div>
+            <div v-else-if="activeTab === 'discussion'">
+              <CourseDiscussion :course-id="Number(route.params.id)" :can-post="Boolean(appStore.user)" :current-user-id="appStore.user?.id" />
+              <CourseQuestion :course-id="Number(route.params.id)" :can-ask="true" :can-answer="false" :current-user-id="appStore.user?.id" :user-role="appStore.user?.role" />
+            </div>
+          </div>
         </div>
       </template>
     </div>
@@ -212,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 // @ts-ignore
 import { useToast } from 'vue-toastification'
@@ -223,12 +230,19 @@ import CourseEnrollButton from '@/components/classroom/CourseEnrollButton.vue'
 import CourseChapters from '@/components/classroom/CourseChapters.vue'
 import CourseResources from '@/components/classroom/CourseResources.vue'
 import CourseRating from '@/components/classroom/CourseRating.vue'
+import CourseAttendanceManager from '@/components/classroom/CourseAttendanceManager.vue'
+import CourseDiscussion from '@/components/classroom/CourseDiscussion.vue'
+import CourseQuestion from '@/components/classroom/CourseQuestion.vue'
 import { 
   getCourseById, 
   getResourcesByCourseId,
   getChaptersByCourseId,
   getRatingsByCourseId,
   hasStudentRated,
+  getCourseProgressStatistics,
+  getStudentProgressInCourse,
+  checkStudentEnrollment,
+  getStudentEnrolledCourses,
   DualTeacherCourseVO, 
   CourseStatus, 
   CourseType,
@@ -238,11 +252,49 @@ import {
   getCourseStudents
 } from '@/lib/api/classroom'
 import { useAppStore } from '@/stores/app'
+import LearningProgressManager from '@/components/classroom/LearningProgressManager.vue'
+import StudentProgressView from '@/components/classroom/StudentProgressView.vue'
 
+const appStore = useAppStore()
 const route = useRoute()
 const toast = useToast()
-const appStore = useAppStore()
 
+// 1. Tab栏定义
+const teacherTabs = [
+  { key: 'info', label: '课程信息' },
+  { key: 'chapters', label: '章节管理' },
+  { key: 'attendance', label: '出勤管理' },
+  { key: 'progress', label: '学习进度' },
+  { key: 'resources', label: '课程资源' },
+  { key: 'rating', label: '评价' },
+  { key: 'discussion', label: '讨论/问答' }
+]
+
+const mentorTabs = [
+  { key: 'info', label: '课程信息' },
+  { key: 'chapters', label: '章节' },
+  { key: 'rating', label: '评价' },
+  { key: 'discussion', label: '讨论/问答' }
+]
+
+// 未报名学生的标签页
+const unenrolledStudentTabs = [
+  { key: 'info', label: '课程信息' },
+  { key: 'chapters', label: '章节' },
+  { key: 'rating', label: '评价' }
+]
+
+// 已报名学生的标签页
+const enrolledStudentTabs = [
+  { key: 'info', label: '课程信息' },
+  { key: 'chapters', label: '章节' },
+  { key: 'progress', label: '我的进度' },
+  { key: 'resources', label: '课程资源' },
+  { key: 'rating', label: '评价' },
+  { key: 'discussion', label: '讨论/问答' }
+]
+
+// 2. 数据声明
 const loading = ref(true)
 const error = ref('')
 const course = ref<DualTeacherCourseVO | null>(null)
@@ -259,23 +311,64 @@ const students = ref<any[]>([])
 const studentLoading = ref(false)
 const studentError = ref('')
 
-// 用户角色判断
-const isTeacher = computed(() => {
-  const user = appStore.user as any
-  return user && user.role && (user.role.toUpperCase() === 'TEACHER' || user.role.toUpperCase() === 'SCH_ADMIN')
+// 学习进度概览相关
+const courseStats = ref<any>(null)
+const courseStatsLoading = ref(false)
+const studentCourseProgress = ref<any>(null)
+const studentProgressLoading = ref(false)
+
+// 3. 计算属性
+const isStudent = computed(() => appStore.user?.role === 'STUDENT')
+
+// 判断当前用户是否是该课程的教师
+const isCourseTeacher = computed(() => {
+  const role = appStore.user?.role?.toUpperCase()
+  const userId = appStore.user?.id
+  return role === 'TEACHER' && userId === course.value?.teacherId
 })
 
-const isStudent = computed(() => {
-  const user = appStore.user as any
-  return user && user.role && user.role.toUpperCase() === 'STUDENT'
-})
-
+// 判断当前用户是否是企业导师
 const isMentor = computed(() => {
-  const user = appStore.user as any
-  return user && user.role && (user.role.toUpperCase() === 'MENTOR' || user.role.toUpperCase() === 'EN_TEACHER')
+  const role = appStore.user?.role?.toUpperCase()
+  return role === 'MENTOR' || role === 'EN_TEACHER'
 })
 
-// 判断用户是否为管理员
+// 区分真正的教师和企业导师
+const canManageChapters = computed(() => {
+  return isCourseTeacher.value
+})
+
+const tabs = computed(() => {
+  if (isCourseTeacher.value) {
+    return teacherTabs
+  } else if (isMentor.value) {
+    return mentorTabs
+  } else {
+    // 学生根据报名状态显示不同标签页
+    return isEnrolled.value ? enrolledStudentTabs : unenrolledStudentTabs
+  }
+})
+
+const activeTab = ref(tabs.value[0].key)
+
+// 保证 tabs 变化时 activeTab 也能自动切换到第一个
+watch(tabs, (newTabs) => {
+  if (!newTabs.find(tab => tab.key === activeTab.value)) {
+    activeTab.value = newTabs[0]?.key || ''
+  }
+})
+
+// user.id 相关API调用前判断
+const getUserId = computed(() => appStore.user?.id)
+
+// 示例：调用 hasStudentRated 前判断 userId
+const safeHasStudentRated = async (courseId: number) => {
+  const userId = getUserId.value
+  if (!userId) return false
+  return await hasStudentRated(courseId, userId)
+}
+
+// 用户角色判断
 const isAdmin = computed(() => {
   const user = appStore.user as any
   return user && user.role && (
@@ -294,11 +387,24 @@ const studentId = computed(() => {
 
 // 判断用户是否可以评价课程
 const canRate = computed(() => {
-  // 用户已登录、已报名、课程已结束、且未评价过
-  return Boolean(appStore.user) && 
-    isEnrolled.value && 
+  // 学生必须已报名且课程已结束且未评价
+  const canRateResult = Boolean(appStore.user) && 
     course.value?.status === CourseStatus.COMPLETED && 
-    !hasUserRated.value
+    !hasUserRated.value &&
+    (appStore.user?.role?.toUpperCase() !== 'STUDENT' || isEnrolled.value)
+  
+  // 调试信息
+  console.log('评价权限检查:', {
+    userLoggedIn: Boolean(appStore.user),
+    userRole: appStore.user?.role,
+    isEnrolled: isEnrolled.value,
+    courseStatus: course.value?.status,
+    courseCompleted: course.value?.status === CourseStatus.COMPLETED,
+    hasUserRated: hasUserRated.value,
+    canRate: canRateResult
+  })
+  
+  return canRateResult
 })
 
 // 获取课程详情
@@ -311,6 +417,37 @@ const fetchCourseDetail = async () => {
     const response = await getCourseById(courseId)
     course.value = response.data
     
+    // 检查用户是否已报名课程（仅学生调用）
+    if (appStore.user && appStore.user.role && appStore.user.role.toUpperCase() === 'STUDENT') {
+      try {
+        console.log('检查报名状态 - 用户ID:', appStore.user.id, '课程ID:', courseId)
+        
+        // 方法1：使用专门的检查接口
+        const enrollmentResponse = await checkStudentEnrollment(courseId, appStore.user.id)
+        console.log('报名状态检查结果:', enrollmentResponse)
+        
+        // 如果检查接口失败，尝试方法2：获取已报名课程列表
+        if (enrollmentResponse.code !== 200) {
+          console.log('检查接口失败，尝试获取已报名课程列表')
+          const enrolledCoursesResponse = await getStudentEnrolledCourses(1, 100)
+          if (enrolledCoursesResponse.code === 200 && enrolledCoursesResponse.data) {
+            const isEnrolledInList = enrolledCoursesResponse.data.records.some(course => course.id === courseId)
+            console.log('从已报名课程列表检查结果:', isEnrolledInList)
+            isEnrolled.value = isEnrolledInList
+          } else {
+            isEnrolled.value = false
+          }
+        } else {
+          isEnrolled.value = enrollmentResponse.data
+        }
+        
+        console.log('最终设置 isEnrolled:', isEnrolled.value)
+      } catch (err) {
+        console.error('检查用户报名状态失败:', err)
+        isEnrolled.value = false
+      }
+    }
+    
     // 获取课程资源
     fetchCourseResources(courseId)
     
@@ -320,14 +457,10 @@ const fetchCourseDetail = async () => {
     // 获取课程评价
     fetchCourseRatings(courseId)
     
-    // 检查用户是否已报名
-    // TODO: 实际项目中应该从API获取
-    isEnrolled.value = false
-    
     // 检查用户是否已评价过课程（仅学生调用）
     if (appStore.user && appStore.user.role && appStore.user.role.toUpperCase() === 'STUDENT') {
       try {
-        const ratedResponse = await hasStudentRated(courseId, appStore.user.id)
+        const ratedResponse = await safeHasStudentRated(courseId)
         hasUserRated.value = ratedResponse.data
       } catch (err) {
         console.error('检查用户是否已评价失败:', err)
@@ -380,10 +513,13 @@ const handleRatingSuccess = async () => {
   // 重新获取课程评价
   await fetchCourseRatings(Number(route.params.id))
 }
-
+// 处理评价成功提示
+const handleRatingSuccessMsg = (message: string) => {
+  toast.success(message)
+}
 // 处理评价错误
 const handleRatingError = (message: string) => {
-  showToast(message)
+  toast.error(message)
 }
 
 // 处理评价列表更新
@@ -440,10 +576,71 @@ const getModeText = (mode: CourseType) => {
   return modeTexts[mode] || '未知方式'
 }
 
+// 加载课程进度统计（教师端）
+const loadCourseStats = async () => {
+  if (!course.value?.id || !isCourseTeacher.value) return
+  courseStatsLoading.value = true
+  try {
+    const res = await getCourseProgressStatistics(course.value.id)
+    console.log('ClassroomDetailView 接收到的进度统计:', res);
+    if (res.code === 200) {
+      courseStats.value = res.data
+      console.log('ClassroomDetailView 设置的 courseStats:', courseStats.value)
+    } else {
+      courseStats.value = null
+    }
+  } catch (err) {
+    console.error('加载课程进度统计错误:', err);
+    courseStats.value = null
+  } finally {
+    courseStatsLoading.value = false
+  }
+}
+
+// 加载学生课程进度（学生端）
+const loadStudentCourseProgress = async () => {
+  if (!course.value?.id || !isStudent.value || !studentId.value) return
+  studentProgressLoading.value = true
+  try {
+    const res = await getStudentProgressInCourse(course.value.id, studentId.value)
+    if (res.code === 200) {
+      studentCourseProgress.value = res.data
+    } else {
+      studentCourseProgress.value = null
+    }
+  } catch (err) {
+    studentCourseProgress.value = null
+  } finally {
+    studentProgressLoading.value = false
+  }
+}
+
+// 刷新进度数据
+const refreshProgressData = async () => {
+  console.log('刷新进度数据')
+  if (isCourseTeacher.value) {
+    await loadCourseStats()
+  } else if (isStudent.value) {
+    await loadStudentCourseProgress()
+  }
+}
+
 // 页面加载时获取课程详情
 onMounted(() => {
   fetchCourseDetail()
 })
+
+// 监听课程数据变化，加载进度数据
+watch(course, (newCourse) => {
+  if (newCourse) {
+    // 加载进度数据
+    if (isCourseTeacher.value) {
+      loadCourseStats()
+    } else if (isStudent.value) {
+      loadStudentCourseProgress()
+    }
+  }
+}, { immediate: true })
 
 function openStudentList() {
   showStudentDialog.value = true

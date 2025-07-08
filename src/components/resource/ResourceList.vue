@@ -25,7 +25,6 @@
         v-for="resource in resources" 
         :key="resource.id"
         :resource="resource"
-        @collect="$emit('collect', $event)"
       />
     </div>
     
@@ -91,7 +90,7 @@ const props = defineProps<{
   totalPages: number;
 }>()
 
-const emit = defineEmits(['collect', 'page-change', 'sort'])
+const emit = defineEmits(['page-change', 'sort'])
 
 const sortOption = ref('latest')
 
