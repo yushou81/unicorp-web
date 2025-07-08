@@ -10,18 +10,12 @@ export function setToken(t: string) {
   token = t
 }
 
+export function getToken() {
+  return token
+}
+
 export async function apiRequest<T>(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`
-
-
-
-  //我写的，先留着
-  // let headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) }
-  // if (!(options.body instanceof FormData)) {
-  //   headers['Content-Type'] = 'application/json'
-  // }
-
-
   
   // 初始化headers
   let headers: Record<string, string> = {}
@@ -30,14 +24,15 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   if (options.headers !== undefined) {
     headers = Object.assign({}, options.headers) as Record<string, string>
   } else {
-    // 否则设置默认的Content-Type，但如果是FormData则不设置
-    if (!(options.body instanceof FormData)) {
+    // 只有有body时才加Content-Type
+    if (!(options.body instanceof FormData) && options.body !== undefined) {
       headers['Content-Type'] = 'application/json'
     }
   }
   
-  // 添加认证token
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  // 自动获取token：优先用setToken设置的token，没有则用localStorage的token
+  let realToken = token || localStorage.getItem('token') || ''
+  if (realToken) headers['Authorization'] = `Bearer ${realToken}`
 
   // 调试输出
   console.log('[apiRequest] 请求:', {
@@ -49,17 +44,12 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
   let response, rawText, data
   try {
-
-    //未带时间戳的，可能没用，先留着
-    //response = await fetch(url, { ...options, headers, body: options.body })
-
     // 添加时间戳，避免缓存
     const urlWithTimestamp = url.includes('?') 
       ? `${url}&_t=${Date.now()}` 
       : `${url}?_t=${Date.now()}`
     
     response = await fetch(urlWithTimestamp, { ...options, headers })
-
     rawText = await response.text()
     
     // 对于 204 No Content 状态码，不需要解析 JSON

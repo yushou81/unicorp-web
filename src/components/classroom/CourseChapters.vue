@@ -142,7 +142,7 @@
           </div>
         </div>
         
-        <div v-if="chapter.isPublished || isTeacher" class="mt-2 flex">
+        <div v-if="(chapter.isPublished || isTeacher) && (!isStudent || isEnrolled)" class="mt-2 flex">
           <button 
             @click="viewChapter(chapter)" 
             class="text-blue-600 text-sm hover:text-blue-800 transition-colors flex items-center"
@@ -152,6 +152,16 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>
+        </div>
+        
+        <!-- 未报名学生提示 -->
+        <div v-if="isStudent && !isEnrolled && chapter.isPublished" class="mt-2">
+          <div class="text-sm text-gray-500 flex items-center">
+            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            需要报名后才能学习此章节
+          </div>
         </div>
       </div>
     </div>
@@ -240,8 +250,10 @@ import {
   updateChapter, 
   deleteChapter as deleteChapterApi,
   updateChapterPublishStatus,
-  updateChapterSequence,
+  reorderChapters,
   getStudentProgressInCourse,
+  getCourseStudents,
+  initializeChapterProgress,
   CourseChapterVO,
   LearningProgressVO
 } from '@/lib/api/classroom'
@@ -263,11 +275,15 @@ const props = defineProps({
   studentId: {
     type: Number,
     default: null
+  },
+  isEnrolled: {
+    type: Boolean,
+    default: false
   }
 })
 
 // 事件
-const emit = defineEmits(['chapter-saved', 'chapter-deleted', 'chapter-updated'])
+const emit = defineEmits(['chapter-saved', 'chapter-deleted', 'chapter-updated', 'progress-refresh'])
 
 // 状态
 const router = useRouter()
@@ -290,7 +306,14 @@ const loadChapters = async () => {
   try {
     const res = await getChaptersByCourseId(props.courseId)
     if (res.code === 200) {
-      chapters.value = res.data
+      // 根据用户角色过滤章节
+      if (props.isStudent) {
+        // 学生只能看到已发布的章节
+        chapters.value = res.data.filter(chapter => chapter.isPublished)
+      } else {
+        // 教师和管理员可以看到所有章节
+        chapters.value = res.data
+      }
       
       // 如果是学生，加载学习进度
       if (props.isStudent && props.studentId) {
@@ -433,10 +456,8 @@ const deleteChapter = async () => {
 const togglePublishStatus = async (chapter: CourseChapterVO) => {
   loading.value = true
   error.value = ''
-  
   try {
     const res = await updateChapterPublishStatus(chapter.id, !chapter.isPublished)
-    
     if (res.code === 200) {
       // 更新本地章节状态
       const index = chapters.value.findIndex(c => c.id === chapter.id)
@@ -446,8 +467,41 @@ const togglePublishStatus = async (chapter: CourseChapterVO) => {
           isPublished: !chapter.isPublished
         }
       }
-      
       emit('chapter-updated', chapters.value[index])
+      // 如果是发布操作，自动初始化该章节所有学生进度
+      console.log('章节发布状态变更:', {
+        chapterId: chapter.id,
+        oldStatus: chapter.isPublished,
+        newStatus: !chapter.isPublished,
+        willInitialize: !chapter.isPublished
+      })
+      
+      if (!chapter.isPublished) { // 当前未发布，即将要发布
+        try {
+          console.log('开始初始化章节进度:', chapter.id)
+          // 获取课程的所有学生
+          const studentsRes = await getCourseStudents(props.courseId)
+          if (studentsRes.code === 200 && studentsRes.data) {
+            const students = studentsRes.data
+            console.log('课程学生数量:', students.length)
+            
+            // 直接调用初始化接口
+            try {
+              console.log('调用章节初始化接口:', chapter.id)
+              await initializeChapterProgress(chapter.id)
+              console.log('章节初始化成功')
+            } catch (initErr) {
+              console.warn('章节初始化失败:', initErr)
+            }
+          }
+          console.log('章节发布完成，学生进度将在后端自动初始化')
+          
+          // 通知父组件刷新进度数据
+          emit('progress-refresh')
+        } catch (initErr) {
+          console.warn('获取学生列表失败:', initErr)
+        }
+      }
     } else {
       error.value = res.message || '更新章节状态失败'
     }
@@ -472,16 +526,20 @@ const moveChapter = async (chapter: CourseChapterVO, direction: 'up' | 'down') =
   error.value = ''
   
   try {
-    // 计算新的序号
-    const newSequence = chapters.value[newIndex].sequence
+    // 创建新的章节顺序数组
+    const chapterOrders = chapters.value.map((c, index) => ({
+      chapterId: c.id,
+      sequence: index + 1
+    }))
     
-    const res = await updateChapterSequence(chapter.id, newSequence)
+    // 交换两个章节的顺序
+    const temp = chapterOrders[currentIndex].sequence
+    chapterOrders[currentIndex].sequence = chapterOrders[newIndex].sequence
+    chapterOrders[newIndex].sequence = temp
+    
+    const res = await reorderChapters(props.courseId, chapterOrders)
     
     if (res.code === 200) {
-      // 本地更新章节顺序，先移除后插入到新位置
-      const chapterToMove = { ...chapters.value[currentIndex] }
-      chapterToMove.sequence = newSequence
-      
       // 重新加载章节以保证顺序正确
       await loadChapters()
     } else {

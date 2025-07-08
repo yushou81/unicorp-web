@@ -1,47 +1,274 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
-    <div class="container mx-auto px-4 max-w-2xl">
-      <div class="bg-white rounded-xl shadow p-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">经费管理</h2>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
+      <div class="container mx-auto px-4">
+        <!-- 返回按钮 -->
         <div class="mb-6">
-          <h3 class="font-semibold mb-2">经费申请</h3>
-          <form @submit.prevent="onApply">
-            <div class="mb-2">
-              <input v-model="amount" type="number" min="0" required class="w-full px-3 py-2 border rounded" placeholder="申请金额（元）" />
-            </div>
-            <div class="mb-2">
-              <textarea v-model="reason" required class="w-full px-3 py-2 border rounded" placeholder="申请理由"></textarea>
-            </div>
-            <button type="submit" class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">提交申请</button>
-          </form>
+          <button
+            @click="router.back()"
+            class="inline-flex items-center text-blue-600 hover:bg-blue-50 hover:text-blue-800 active:bg-blue-100 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-2 py-1 rounded-md select-none"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            返回
+          </button>
         </div>
-        <div class="mb-6">
-          <h3 class="font-semibold mb-2">经费使用记录</h3>
-          <ul class="text-sm text-gray-700 space-y-1">
-            <li v-for="record in fundRecords" :key="record.id">
-              <span class="text-gray-500">{{ record.date }}</span> - {{ record.amount }}元 - {{ record.status }}
-            </li>
-          </ul>
+  
+        <!-- 标题 -->
+        <h2 class="text-3xl font-bold text-gray-900 mb-10 text-center">{{ project.title }}项目经费管理</h2>
+  
+        <!-- 项目信息 -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+              <div class="text-2xl font-bold text-blue-600">¥{{ project.budget || 0 }}</div>
+              <div class="text-sm text-gray-600">总预算</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+              <div class="text-2xl font-bold text-green-600">¥{{ approvedAmount }}</div>
+              <div class="text-sm text-gray-600">已拨款</div>
+            </div>
+            <div class="text-center p-4 bg-orange-50 rounded-lg">
+              <div class="text-2xl font-bold text-orange-600">¥{{ totalBudget - approvedAmount }}</div>
+              <div class="text-sm text-gray-600">未拨款</div>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3 class="font-semibold mb-2">经费统计</h3>
-          <div class="text-gray-700">总申请：{{ totalApply }}元 | 已审批：{{ totalApproved }}元</div>
+  
+        <!-- 操作按钮 -->
+        <div class="flex justify-between items-center mb-6">
+          <div class="flex space-x-2">
+            <button
+              v-for="status in statusOptions"
+              :key="status.value"
+              @click="selectStatus(status.value)"
+              :class="selectedStatus === status.value ? activeBtn : inactiveBtn"
+            >
+              {{ status.label }}
+            </button>
+          </div>
+        </div>
+  
+        <!-- 经费记录表格 -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <table class="min-w-full">
+            <thead>
+              <tr class="bg-gray-100 text-gray-700 text-base">
+                <th class="px-4 py-2 text-center">申请时间</th>
+                <th class="px-4 py-2 text-center">金额</th>
+                <th class="px-4 py-2 text-center">用途</th>
+                <th class="px-4 py-2 text-center">状态</th>
+                <th v-if="selectedStatus === 'approved'" class="px-4 py-2 text-center">同意时间</th>
+                <th v-if="selectedStatus === 'rejected'" class="px-4 py-2 text-center">拒绝时间</th>
+                <th v-if="selectedStatus === 'pending'" class="px-4 py-2 text-center">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="record in filteredRecords" :key="record.fundId" class="border-b hover:bg-gray-50">
+                <td class="px-4 py-3 text-center">{{ formatDate(record.createTime) }}</td>
+                <td class="px-4 py-3 font-medium text-center">¥{{ record.amount }}</td>
+                <td class="px-4 py-3 text-center">
+                  <button @click="showFundDetail(record)" class="text-blue-600 hover:underline">详情</button>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <span :class="getStatusClass(record.status)">
+                    {{ getStatusText(record.status) }}
+                  </span>
+                </td>
+                <td v-if="selectedStatus === 'approved'" class="px-4 py-3 text-center">{{ formatDate(record.approvedTime) }}</td>
+                <td v-if="selectedStatus === 'rejected'" class="px-4 py-3 text-center">{{ formatDate(record.rejectedTime) }}</td>
+                <td v-if="selectedStatus === 'pending'" class="px-4 py-3 text-center">
+                  <div class="flex justify-center space-x-2">
+                    <button
+                      v-if="record.status === 'pending' && canReview"
+                      @click="confirmReview(record.fundId, 'approved')"
+                      class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 text-center"
+                    >
+                      同意
+                    </button>
+                    <button
+                      v-if="record.status === 'pending' && canReview"
+                      @click="confirmReview(record.fundId, 'rejected')"
+                      class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 text-center"
+                    >
+                      拒绝
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="filteredRecords.length === 0">
+                <td :colspan="selectedStatus === 'approved' || selectedStatus === 'rejected' ? 6 : 7" class="text-center text-gray-400 py-8">暂无经费记录</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  
+      <!-- 经费详情弹窗 -->
+      <div v-if="showDetailModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 min-w-[400px] max-w-[90vw]">
+          <h3 class="text-lg font-bold mb-4 text-center">用途详情</h3>
+          <div class="space-y-4">
+            <div>
+              
+              <p class="text-gray-700 ">{{ selectedRecord.purpose }}</p>
+            </div>
+          </div>
+          <div class="flex justify-end mt-6">
+            <button @click="showDetailModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+              关闭
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</template>
-<script setup lang="ts">
-import { ref } from 'vue'
-const amount = ref('')
-const reason = ref('')
-const fundRecords = [
-  { id: 1, date: '2024-06-01', amount: 50000, status: '已审批' },
-  { id: 2, date: '2024-06-10', amount: 20000, status: '待审批' }
-]
-const totalApply = 70000
-const totalApproved = 50000
-function onApply() {
-  alert('经费申请已提交，等待审批！')
-}
-</script> 
+  </template>
+  
+  <script setup lang="ts">
+  import { ref, computed, onMounted } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useAppStore } from '@/stores/app'
+  import { getProject, getProjectFundList, reviewFund, applyForFund } from '@/lib/api/project'
+  
+  const route = useRoute()
+  const router = useRouter()
+  const appStore = useAppStore()
+  
+  // 数据
+  const project = ref<any>({})
+  const fundRecords = ref<any[]>([])
+  const selectedStatus = ref('pending')
+  const showFundModal = ref(false)
+  const showDetailModal = ref(false)
+  const selectedRecord = ref<any>({})
+  const isSubmitting = ref(false)
+  
+  // 表单数据
+  const fundForm = ref({
+    amount: '',
+    purpose: '',
+    attachments: [] as string[]
+  })
+  
+  // 状态选项
+  const statusOptions = [
+    { value: 'pending', label: '待审核' },
+    { value: 'approved', label: '已通过' },
+    { value: 'rejected', label: '已拒绝' }
+  ]
+  
+  const activeBtn = 'px-3 py-1 rounded-md bg-blue-500 text-white font-semibold shadow'
+  const inactiveBtn = 'px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-blue-200 shadow'
+  
+  // 计算属性
+  const filteredRecords = computed(() => {
+    if (!selectedStatus.value) return fundRecords.value
+    return fundRecords.value.filter(record => record.status === selectedStatus.value)
+  })
+  
+  const approvedAmount = computed(() => {
+    return fundRecords.value
+      .filter(record => record.status === 'approved')
+      .reduce((sum, record) => sum + (Number(record.amount) || 0), 0)
+  })
+  
+  const totalBudget = computed(() => project.value.budget || 0)
+  
+  const canReview = computed(() => {
+    const role = (appStore.user?.role || '').toUpperCase()
+    return ['ADMIN', 'FINANCE', 'SCH_ADMIN', 'EN_ADMIN'].includes(role)
+  })
+  
+  // 方法
+  async function fetchProjectDetail() {
+    try {
+      const projectId = Number(route.params.id)
+      const response = await getProject(projectId)
+      project.value = response.data
+    } catch (error) {
+      project.value = {}
+    }
+  }
+  
+  async function fetchFundRecords() {
+    try {
+      const projectId = Number(route.params.id)
+      const response = await getProjectFundList(projectId)
+      fundRecords.value = response.data || []
+    } catch (error) {
+      fundRecords.value = []
+    }
+  }
+  
+  function selectStatus(status: string) {
+    selectedStatus.value = status
+  }
+  
+  function getStatusClass(status: string): string {
+    const statusMap: Record<string, string> = {
+      pending: 'text-yellow-600 bg-yellow-100 px-2 py-1 rounded text-xs',
+      approved: 'text-green-600 bg-green-100 px-2 py-1 rounded text-xs',
+      rejected: 'text-red-600 bg-red-100 px-2 py-1 rounded text-xs'
+    }
+    return statusMap[status] || 'text-gray-600 bg-gray-100 px-2 py-1 rounded text-xs'
+  }
+  
+  function getStatusText(status: string): string {
+    const statusMap: Record<string, string> = {
+      pending: '待审核',
+      approved: '已通过',
+      rejected: '已拒绝'
+    }
+    return statusMap[status] || '未知'
+  }
+  
+  function formatDate(dateString: string): string {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  }
+  
+  function handleFileUpload(event: Event) {
+    const target = event.target as HTMLInputElement
+    const files = target.files
+    
+    if (files) {
+      Array.from(files).forEach(file => {
+        // 这里应上传文件到服务器，获取URL后再添加
+        const fileUrl = `http://example.com/uploads/${file.name}`
+        fundForm.value.attachments.push(fileUrl)
+      })
+    }
+  }
+  
+  
+  
+  async function reviewFundHandler(fundId: number, status: string) {
+    try {
+      const projectId = Number(route.params.id)
+      await reviewFund(projectId, fundId, { status })
+      await fetchFundRecords()
+    } catch (error) {
+      console.error('审核失败:', error)
+    }
+  }
+  
+  function showFundDetail(record: any) {
+    selectedRecord.value = record
+    showDetailModal.value = true
+  }
+  
+  // 新增：操作前确认
+  function confirmReview(fundId: number, status: string) {
+    const action = status === 'approved' ? '同意' : '拒绝'
+    if (window.confirm(`是否确认${action}该经费申请？`)) {
+      reviewFundHandler(fundId, status)
+    }
+  }
+  
+  onMounted(async () => {
+    await fetchProjectDetail()
+    await fetchFundRecords()
+  })
+  </script>

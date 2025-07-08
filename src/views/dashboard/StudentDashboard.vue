@@ -29,75 +29,203 @@
     
     <!-- 主内容 -->
     <div v-else class="container mx-auto px-4 py-8">
-      <!-- 个人资料区域 -->
-      <div class="bg-white rounded-xl shadow-sm mb-8 hover-card">
-        <!-- 顶部信息区 -->
-        <div class="relative">
-          <!-- 封面背景 -->
-          <div class="h-40 w-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-xl"></div>
-          
-          <!-- 头像和基本信息 -->
-          <div class="flex flex-col md:flex-row px-6 py-4">
-            <div class="flex flex-col items-center md:items-start -mt-16 md:-mt-12">
-              <div class="relative group avatar-hover">
-                <img 
-                  :src="userAvatar" 
-                  class="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover" 
-                  alt="用户头像" 
-                />
-                <div 
-                  @click="onEditProfileClick"
-                  class="absolute inset-0 rounded-full bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-200"
-                >
-                  <span class="text-white text-sm">更换头像</span>
+      <!-- 个人信息卡片 -->
+      <UserProfileInfo
+        :avatar="userAvatar"
+        :name="user.nickname"
+        :role="roleText"
+        :organization="user.school"
+        :phone="user.phone"
+        :email="user.email"
+        :editable="true"
+        :verified="user.verified"
+        :onEdit="onEditProfileClick"
+      />
+      <!-- Tab栏 -->
+      <DashboardTabs :tabs="tabList" :activeTab="activeTab" @change="val => activeTab = val" />
+      <div class="mt-6">
+        <div v-if="activeTab === 'record'">
+          <!-- 求职记录tab内容 -->
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <h2 class="text-xl font-bold mb-6">我的岗位申请记录</h2>
+            <div v-if="applicationsLoading" class="text-center py-10">加载中...</div>
+            <div v-else>
+              <div v-if="applications.length === 0" class="text-gray-400 text-center py-8">暂无岗位申请记录</div>
+              <div v-else class="overflow-x-auto rounded-lg shadow">
+                <table class="min-w-full bg-white rounded-lg">
+                  <thead>
+                    <tr class="bg-indigo-50">
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">岗位名称</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">公司</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">状态</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">申请时间</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">简历ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in applications" :key="item.applicationId" class="hover:bg-indigo-50 transition">
+                      <td class="px-6 py-4 font-medium text-gray-900">{{ item.jobInfo?.jobTitle || '未知岗位' }}</td>
+                      <td class="px-6 py-4">{{ item.jobInfo?.organizationName || '-' }}</td>
+                      <td class="px-6 py-4">
+                        <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold"
+                          :class="getStatusColor(item.status)">
+                          {{ formatApplicationStatus(item.status) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">{{ formatDate(item.appliedAt) }}</td>
+                      <td class="px-6 py-4">{{ item.resumeId }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="flex justify-between items-center mt-6">
+                <span>共 {{ applicationsTotal }} 条</span>
+                <div>
+                  <button
+                    :disabled="applicationsPage === 1"
+                    @click="changeApplicationsPage(applicationsPage-1)"
+                    class="px-3 py-1 rounded bg-gray-200 text-gray-700 mr-2 disabled:opacity-50"
+                  >上一页</button>
+                  <span class="mx-2">第 {{ applicationsPage }} / {{ applicationsPages }} 页</span>
+                  <button
+                    :disabled="applicationsPage === applicationsPages"
+                    @click="changeApplicationsPage(applicationsPage+1)"
+                    class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2 disabled:opacity-50"
+                  >下一页</button>
                 </div>
-              </div>
-              
-              <div class="mt-4 md:mt-6 flex flex-col items-center md:items-start">
-                <div class="flex items-center flex-wrap justify-center md:justify-start">
-                  <h1 class="text-2xl font-bold text-gray-900">{{ user.nickname }}</h1>
-                  <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">{{ roleText }}</span>
-                  <span v-if="user.verified" class="ml-2 mt-1 md:mt-0 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">已认证</span>
-                </div>
-                <p class="text-gray-500 mt-1">{{ user.school || '未绑定学校' }}</p>
-              </div>
-            </div>
-            
-            <div class="ml-0 md:ml-auto mt-6 md:mt-0 flex flex-col md:flex-row items-center gap-3">
-              <div class="flex flex-col items-center md:items-end">
-                <div class="text-gray-600 text-sm">{{ user.email }}</div>
-                <div class="text-gray-600 text-sm">{{ user.phone }}</div>
-              </div>
-              <div class="flex gap-2 mt-3 md:mt-0">
-                <button 
-                  @click="onEditProfileClick" 
-                  class="px-4 py-2 rounded-full bg-blue-50 text-blue-600 font-medium hover:bg-blue-100 transition flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
-                  编辑资料
-                </button>
-                <button 
-                  @click="showResumeDialog = true" 
-                  class="px-4 py-2 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
-                  </svg>
-                  我的简历
-                </button>
               </div>
             </div>
           </div>
-          
-          <!-- 导航标签栏 -->
-          <div class="px-6 pt-2 pb-0 border-b relative">
-            <!-- 移动端菜单按钮 -->
-            <button 
-              @click="toggleMobileMenu" 
-              class="md:hidden absolute right-4 top-2 text-gray-500 hover:text-gray-700"
+        </div>
+        <div v-else-if="activeTab === 'study'">
+          <!-- 学习记录tab内容 -->
+          <!-- ... existing code ... -->
+        </div>
+        <div v-else-if="activeTab === 'course'">
+          <!-- 课程管理tab内容 -->
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <h2 class="text-xl font-bold mb-6">我已报名的课程</h2>
+            <div v-if="enrolledCoursesLoading" class="text-center py-10">加载中...</div>
+            <div v-else>
+              <div v-if="enrolledCourses.length === 0" class="text-gray-400 text-center py-8">暂无已报名课程</div>
+              <div v-else class="overflow-x-auto rounded-lg shadow">
+                <table class="min-w-full bg-white rounded-lg">
+                  <thead>
+                    <tr class="bg-indigo-50">
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">课程名称</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">授课教师</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">企业导师</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">时间</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">状态</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in enrolledCourses" :key="item.id" class="hover:bg-indigo-50 transition">
+                      <td class="px-6 py-4 font-medium text-gray-900">{{ item.title }}</td>
+                      <td class="px-6 py-4">{{ item.teacherName }}</td>
+                      <td class="px-6 py-4">{{ item.mentorName }}</td>
+                      <td class="px-6 py-4">{{ new Date(item.scheduledTime).toLocaleString() }}</td>
+                      <td class="px-6 py-4">
+                        <span
+                          :class="{
+                            'bg-green-100 text-green-800': item.status === 'open',
+                            'bg-blue-100 text-blue-800': item.status === 'in_progress',
+                            'bg-gray-100 text-gray-800': item.status === 'planning',
+                            'bg-purple-100 text-purple-800': item.status === 'completed',
+                            'bg-red-100 text-red-800': item.status === 'cancelled'
+                          }"
+                          class="px-2 py-1 rounded text-xs font-semibold"
+                        >
+                          {{ statusText(item.status) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">
+                        <router-link
+                          :to="`/classroom/${item.id}`"
+                          class="inline-block px-4 py-1 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700 transition"
+                        >详情</router-link>
+                        <button
+                          class="inline-block px-4 py-1 rounded bg-red-500 text-white text-sm hover:bg-red-600 transition ml-2"
+                          @click="onCancelEnrollment(item.id)"
+                          :disabled="cancelingId === item.id"
+                        >
+                          <span v-if="cancelingId === item.id">取消中...</span>
+                          <span v-else>取消报名</span>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!-- 分页控件 -->
+              <div class="flex justify-between items-center mt-6">
+                <span>共 {{ enrolledCoursesTotal }} 条</span>
+                <div>
+                  <button
+                    :disabled="enrolledCoursesPage === 1"
+                    @click="changeEnrolledCoursesPage(enrolledCoursesPage-1)"
+                    class="px-3 py-1 rounded bg-gray-200 text-gray-700 mr-2 disabled:opacity-50"
+                  >上一页</button>
+                  <span class="mx-2">第 {{ enrolledCoursesPage }} / {{ enrolledCoursesPages }} 页</span>
+                  <button
+                    :disabled="enrolledCoursesPage === enrolledCoursesPages"
+                    @click="changeEnrolledCoursesPage(enrolledCoursesPage+1)"
+                    class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2 disabled:opacity-50"
+                  >下一页</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="activeTab === 'resume'">
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <h2 class="text-xl font-bold mb-6">我的简历</h2>
+            <div v-if="resumes.length === 0" class="text-center p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 mb-6">
+              <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <p class="text-gray-600">您还没有创建简历</p>
+              <button @click="showResumeDialog = true" class="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">开始创建简历</button>
+            </div>
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div v-for="resume in resumes" :key="resume.id" class="p-5 border rounded-lg shadow hover:shadow-lg transition bg-white flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="font-bold text-lg text-blue-700">{{ resume.major || '未设置专业' }}</div>
+                    <span class="px-2 py-1 rounded text-xs font-semibold bg-indigo-100 text-indigo-700">{{ resume.educationLevel }}</span>
+                  </div>
+                  <div class="text-sm text-gray-500 mb-2">更新时间: {{ resume.updatedAt ? new Date(resume.updatedAt).toLocaleString() : '未知' }}</div>
+                  <div class="text-gray-700 line-clamp-2 mb-2">{{ resume.achievements || '暂无成就描述' }}</div>
+                </div>
+                <div class="flex space-x-2 mt-2">
+                  <button v-if="resume.resumeUrl" @click="window.open(resume.resumeUrl, '_blank')" class="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs">预览</button>
+                  <button @click="onDeleteResume(resume.id)" class="px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs">删除</button>
+                </div>
+              </div>
+            </div>
+            <button @click="showResumeDialog = true" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              新建简历
+            </button>
+          </div>
+          <ResumeManager v-model:visible="showResumeDialog" :resumes="resumes" @resume-updated="onResumeUpdated" />
+        </div>
+        <div v-else-if="activeTab === 'chat'">
+          <ChatPanel :myUserId="myUserId" :myAvatar="userAvatar" />
+        </div>
+        <div v-else-if="activeTab === 'bookings'">
+          <!-- 我的预约tab内容 -->
+          <div class="bg-white rounded-xl shadow-sm p-8">
+            <h2 class="text-xl font-bold mb-6">我的设备预约</h2>
+            <p class="text-gray-600 mb-6">查看您的所有设备预约申请记录和状态</p>
+            <router-link 
+              to="/dashboard/my-bookings" 
+              class="inline-block px-6 py-3 rounded bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
             >
+<<<<<<< HEAD
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
               </svg>
@@ -412,6 +540,10 @@
                 </router-link>
               </div>
             </div>
+=======
+              查看我的预约
+            </router-link>
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
           </div>
         </div>
       </div>
@@ -511,9 +643,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 简历管理对话框 -->
-    <ResumeManager v-model:visible="showResumeDialog" :resumes="resumes" @resume-updated="onResumeUpdated" />
     
     <!-- Toast提示组件 -->
     <div 
@@ -522,47 +651,6 @@
       :class="{'opacity-0 translate-y-2': toast.hiding, 'opacity-100 translate-y-0': !toast.hiding}"
     >
       {{ toast.message }}
-    </div>
-
-    <!-- Tab内容区 -->
-    <div v-if="activeTab === 'home'">
-      <!-- 原主页内容区域 -->
-      <!-- ... existing code ... -->
-    </div>
-    <div v-else-if="activeTab === 'record'" class="bg-white rounded-xl shadow-sm p-8 mt-8">
-      <h2 class="text-xl font-bold mb-6">我的岗位申请记录</h2>
-      <div v-if="applicationsLoading" class="text-center py-10">加载中...</div>
-      <div v-else>
-        <table class="w-full text-left mb-4">
-          <thead>
-            <tr>
-              <th>岗位名称</th>
-              <th>公司</th>
-              <th>状态</th>
-              <th>申请时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in applications" :key="item.id">
-              <td>{{ item.jobTitle }}</td>
-              <td>{{ item.companyName }}</td>
-              <td>{{ formatApplicationStatus(item.status) }}</td>
-              <td>{{ formatDate(item.appliedAt) }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="flex justify-between items-center">
-          <span>共 {{ applicationsTotal }} 条</span>
-          <div>
-            <button :disabled="applicationsPage === 1" @click="changeApplicationsPage(applicationsPage-1)">上一页</button>
-            <span class="mx-2">第 {{ applicationsPage }} / {{ applicationsPages }} 页</span>
-            <button :disabled="applicationsPage === applicationsPages" @click="changeApplicationsPage(applicationsPage+1)">下一页</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div v-if="activeTab === 'chat'">
-      <ChatPanel :myUserId="myUserId" :myAvatar="userAvatar" />
     </div>
   </div>
 </template>
@@ -583,6 +671,9 @@ import ResumeManager from '@/components/resume/ResumeManager.vue'
 import { apiRequest } from '@/lib/api/apiClient'
 import { getChatSessions, getSessionMessages, sendChatMessage } from '@/lib/api/chat'
 import ChatPanel from '@/components/chat/ChatPanel.vue'
+import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
+import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
+import { getStudentEnrolledCourses, cancelEnrollment } from '@/lib/api/classroom'
 
 // 定义API响应类型
 interface ApiResponse<T> {
@@ -1218,6 +1309,9 @@ watch(activeTab, (val) => {
   if (val === 'record') {
     fetchApplications()
   }
+  if (val === 'resume') {
+    fetchResumes()
+  }
 })
 
 async function fetchApplications() {
@@ -1312,6 +1406,88 @@ watch(activeTab, (val) => {
     fetchChatSessions()
   }
 })
+
+const tabList = [
+  { label: '求职记录', value: 'record' },
+  { label: '学习记录', value: 'study' },
+  { label: '课程管理', value: 'course' },
+  { label: '我的简历', value: 'resume' },
+  { label: '聊天', value: 'chat' },
+  { label: '我的预约', value: 'bookings' }
+]
+
+const enrolledCourses = ref<any[]>([])
+const enrolledCoursesLoading = ref(false)
+const enrolledCoursesPage = ref(1)
+const enrolledCoursesSize = ref(10)
+const enrolledCoursesTotal = ref(0)
+const enrolledCoursesPages = ref(1)
+
+watch(activeTab, (val) => {
+  if (val === 'course') {
+    fetchEnrolledCourses()
+  }
+})
+
+async function fetchEnrolledCourses() {
+  enrolledCoursesLoading.value = true
+  try {
+    const res = await getStudentEnrolledCourses(enrolledCoursesPage.value, enrolledCoursesSize.value)
+    if (res.code === 200 && res.data) {
+      enrolledCourses.value = res.data.records
+      enrolledCoursesTotal.value = res.data.total
+      enrolledCoursesPages.value = res.data.pages
+    }
+  } finally {
+    enrolledCoursesLoading.value = false
+  }
+}
+function changeEnrolledCoursesPage(newPage: number) {
+  enrolledCoursesPage.value = newPage
+  fetchEnrolledCourses()
+}
+function statusText(status: string) {
+  const map: Record<string, string> = {
+    planning: '筹备中',
+    open: '开放报名',
+    in_progress: '进行中',
+    completed: '已结束',
+    cancelled: '已取消'
+  }
+  return map[status] || status
+}
+
+function onDeleteResume(resumeId) {
+  if (!resumeId) return
+  if (confirm('确定要删除这份简历吗？此操作不可恢复。')) {
+    deleteMyResume(resumeId).then(() => {
+      fetchResumes()
+      showToast('简历删除成功')
+    }).catch(e => {
+      showToast('删除失败：' + (e.message || '未知错误'))
+    })
+  }
+}
+
+const cancelingId = ref<number | null>(null)
+
+async function onCancelEnrollment(courseId: number) {
+  if (!confirm('确定要取消报名该课程吗？')) return
+  cancelingId.value = courseId
+  try {
+    const res = await cancelEnrollment(courseId)
+    if (res.code === 200) {
+      await fetchEnrolledCourses()
+      showToast('取消报名成功')
+    } else {
+      showToast(res.message || '取消报名失败')
+    }
+  } catch (e: any) {
+    showToast(e.message || '取消报名失败')
+  } finally {
+    cancelingId.value = null
+  }
+}
 </script>
 
 <style scoped>
