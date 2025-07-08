@@ -15,9 +15,9 @@
       </div>
       <!-- 标题 -->
       <h2 class="text-3xl font-bold text-gray-900 mb-10 text-center">{{ project.title }}项目经费详情</h2>
-      <!-- 项目信息 -->
-      <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- 项目信息卡片 -->
+      <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="text-center p-4 bg-blue-50 rounded-lg">
             <div class="text-2xl font-bold text-blue-600">¥{{ project.budget || 0 }}</div>
             <div class="text-sm text-gray-600">总预算</div>
@@ -25,10 +25,6 @@
           <div class="text-center p-4 bg-green-50 rounded-lg">
             <div class="text-2xl font-bold text-green-600">¥{{ approvedAmount }}</div>
             <div class="text-sm text-gray-600">已拨款</div>
-          </div>
-          <div class="text-center p-4 bg-orange-50 rounded-lg">
-            <div class="text-2xl font-bold text-orange-600">¥{{ totalBudget - approvedAmount }}</div>
-            <div class="text-sm text-gray-600">未拨款</div>
           </div>
         </div>
       </div>
@@ -40,12 +36,13 @@
             :key="status.value"
             @click="selectStatus(status.value)"
             :class="selectedStatus === status.value ? activeBtn : inactiveBtn"
+            class="transition"
           >
             {{ status.label }}
           </button>
         </div>
       </div>
-      <!-- 经费记录表格 -->
+      <!-- 经费记录表格卡片 -->
       <div class="bg-white rounded-2xl shadow-lg p-6">
         <table class="min-w-full">
           <thead>
@@ -56,6 +53,7 @@
               <th class="px-4 py-2 text-center">状态</th>
               <th v-if="selectedStatus === 'approved'" class="px-4 py-2 text-center">同意时间</th>
               <th v-if="selectedStatus === 'rejected'" class="px-4 py-2 text-center">拒绝时间</th>
+              <th class="px-2 py-1">附件</th>
             </tr>
           </thead>
           <tbody>
@@ -72,28 +70,51 @@
               </td>
               <td v-if="selectedStatus === 'approved'" class="px-4 py-3 text-center">{{ formatDate(record.approvedTime) }}</td>
               <td v-if="selectedStatus === 'rejected'" class="px-4 py-3 text-center">{{ formatDate(record.rejectedTime) }}</td>
+              <td class="px-2 py-1 text-center">
+                <button
+                  @click="showFundAttachments(record)"
+                  class="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 hover:text-blue-800 transition"
+                >
+                  查看附件
+                </button>
+              </td>
             </tr>
             <tr v-if="filteredRecords.length === 0">
-              <td :colspan="selectedStatus === 'approved' || selectedStatus === 'rejected' ? 6 : 5" class="text-center text-gray-400 py-8">暂无经费记录</td>
+              <td :colspan="selectedStatus === 'approved' || selectedStatus === 'rejected' ? 7 : 6" class="text-center text-gray-400 py-8">暂无经费记录</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <!-- 经费详情弹窗 -->
+    <!-- 经费详情弹窗美化 -->
     <div v-if="showDetailModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-6 min-w-[400px] max-w-[90vw]">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 min-w-[400px] max-w-[90vw] animate-fade-in">
         <h3 class="text-lg font-bold mb-4 text-center">用途详情</h3>
         <div class="space-y-4">
           <div>
-            
             <p class="text-gray-700">{{ selectedRecord.purpose }}</p>
           </div>
         </div>
         <div class="flex justify-end mt-6">
-          <button @click="showDetailModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-            关闭
-          </button>
+          <button @click="showDetailModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-full hover:bg-gray-400 shadow">关闭</button>
+        </div>
+      </div>
+    </div>
+    <!-- 附件弹窗美化 -->
+    <div v-if="showAttachmentDialog" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-96 animate-fade-in">
+        <div class="font-bold text-lg mb-2 text-left">附件</div>
+        <div v-if="currentAttachments.length === 0" class="text-gray-500">无</div>
+        <ul v-else>
+          <li v-for="(url, idx) in currentAttachments" :key="url" class="mb-2 flex items-center">
+            <span class="truncate max-w-[200px] select-all" :title="getOriginalName(idx)">
+              {{ getOriginalName(idx) }}
+            </span>
+            <button @click="handleDownloadFile(url, idx)" class="ml-2 text-blue-600 underline">下载</button>
+          </li>
+        </ul>
+        <div class="flex justify-end mt-4">
+          <button @click="showAttachmentDialog = false" class="px-4 py-2 bg-blue-500 text-white rounded-full shadow">关闭</button>
         </div>
       </div>
     </div>
@@ -104,6 +125,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getProject, getProjectFundList } from '@/lib/api/project'
+import { downloadFile } from '@/lib/api/file'
 
 const route = useRoute()
 const router = useRouter()
@@ -114,6 +136,9 @@ const fundRecords = ref<any[]>([])
 const selectedStatus = ref('pending')
 const showDetailModal = ref(false)
 const selectedRecord = ref<any>({})
+const showAttachmentDialog = ref(false)
+const currentAttachments = ref<string[]>([])
+const currentOriginalNames = ref<string[]>([])
 
 // 状态选项
 const statusOptions = [
@@ -192,6 +217,43 @@ function formatDate(dateString: string): string {
 function showFundDetail(record: any) {
   selectedRecord.value = record
   showDetailModal.value = true
+}
+
+function showFundAttachments(record: any) {
+  currentAttachments.value = Array.isArray(record.attachments) ? record.attachments : []
+  if (Array.isArray(record.originalName)) {
+    currentOriginalNames.value = record.originalName
+  } else if (typeof record.originalName === 'string') {
+    currentOriginalNames.value = record.originalName.split(',')
+  } else {
+    currentOriginalNames.value = []
+  }
+  showAttachmentDialog.value = true
+}
+
+function getOriginalName(idx: number) {
+  return currentOriginalNames.value[idx] || getFileName(currentAttachments.value[idx])
+}
+
+function getFileName(url: string) {
+  return url?.split('/').pop() || '附件'
+}
+
+async function handleDownloadFile(fileUrl: string, idx?: number) {
+  let filename = getOriginalName(idx || 0)
+  const fileKey = fileUrl.split('/').pop() || ''
+  try {
+    const blob = await downloadFile(fileKey)
+    const link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(link.href)
+  } catch (err) {
+    alert('下载失败')
+  }
 }
 
 onMounted(async () => {

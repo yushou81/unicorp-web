@@ -17,6 +17,7 @@ export interface Project {
   createdAt?: string
   updatedAt?: string
   projectName?: string
+  originalName?: string[]
 }
 
 export interface ProjectListResponse {
@@ -132,8 +133,13 @@ export function reviewApplication(projectId: number, applicationId: number, data
 }
 
 
-export function getMyProjectApplications() {
-  return apiRequest('/v1/projects/application/my-applications')
+export function getMyProjectApplications(params: { page?: number; pageSize?: number; status?: string } = {}) {
+  const query = new URLSearchParams();
+  if (params.page !== undefined) query.append('page', String(params.page));
+  if (params.pageSize !== undefined) query.append('pageSize', String(params.pageSize));
+  if (params.status) query.append('status', params.status);
+  const queryString = query.toString() ? `?${query.toString()}` : '';
+  return apiRequest(`/v1/projects/application/my-applications${queryString}`);
 }
 
 

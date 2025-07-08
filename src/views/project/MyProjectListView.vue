@@ -1,53 +1,53 @@
 <template>
     <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
       <div class="container mx-auto px-4">
-        <!-- 返回按钮 -->
-        <div class="mb-6">
-          <button
-            @click="router.back()"
-            class="inline-flex items-center text-blue-600 hover:bg-blue-50 hover:text-blue-800 active:bg-blue-100 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-2 py-1 rounded-md select-none"
-          >
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            返回
-          </button>
-        </div>
+    <!-- 返回按钮 -->
+    <div class="mb-6">
+        <button
+          @click="router.back()"
+          class="inline-flex items-center text-blue-600 hover:bg-blue-100 hover:text-blue-800 active:bg-blue-200 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-3 py-1.5 rounded-lg shadow-sm select-none"
+        >
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          返回
+        </button>
+      </div>
   
         <!-- 标题 -->
-        <h2 class="text-3xl font-bold text-gray-900 mb-10 text-center">我的项目管理</h2>
+        <h2 class="text-4xl font-extrabold text-gray-900 mb-8 text-center tracking-tight">我的项目管理</h2>
   
         <!-- 搜索框 -->
-        <div class="flex justify-center mb-6">
+        <div class="flex flex-col sm:flex-row justify-center items-center mb-8 gap-2">
           <input
             v-model="keyword"
             @keyup.enter="onSearch"
             type="text"
             placeholder="请输入项目名称/项目编号"
-            class="flex-1 max-w-2xl border border-blue-400 rounded-l-lg px-4 py-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+            class="flex-1 max-w-2xl border border-blue-300 rounded-l-lg rounded-r-lg sm:rounded-r-none px-4 py-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base shadow-sm"
           />
           <button
             @click="onSearch"
-            class="px-8 py-3 rounded-r-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base"
+            class="px-8 py-3 rounded-lg sm:rounded-l-none bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold hover:from-blue-600 hover:to-indigo-600 transition text-base shadow-md"
           >
             查找项目
           </button>
         </div>
   
         <!-- 筛选栏 -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">按条件筛选项目</h2>
-          <div class="space-y-4">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-10 border border-blue-100">
+          <h2 class="text-2xl font-bold text-gray-900 mb-6">按条件筛选项目</h2>
+          <div class="space-y-6">
             <!-- 项目状态 -->
             <div class="flex items-center flex-wrap overflow-x-auto">
               <span class="mr-4 font-medium whitespace-nowrap">项目状态：</span>
-              <div class="flex space-x-2">
+              <div class="flex flex-wrap gap-2">
                 <button
                   v-for="item in statusOptions"
                   :key="item.value"
                   @click="selectFilter(item.value)"
-                  :class="isSelected(item.value) ? activeBtn : inactiveBtn"
-                  class="mb-2"
+                  :class="isSelected(item.value) ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-blue-100'"
+                  class="px-5 py-2 rounded-full font-semibold transition mb-2 border border-transparent hover:border-blue-300"
                 >
                   {{ item.label }}
                 </button>
@@ -56,159 +56,148 @@
           </div>
         </div>
   
-
-  
-  
         <!-- 项目表格 -->
-        <div class="bg-white rounded-2xl shadow-lg p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 border border-blue-100">
           <table class="min-w-full">
             <thead>
-              <tr class="bg-gray-100 text-gray-700 text-base">
-                <th class="px-4 py-2">项目名称</th>
-                <th class="px-4 py-2">发起方</th>
-                <th class="px-4 py-2">项目领域</th>
-                <th class="px-4 py-2">状态</th>
-                <th class="px-4 py-2">联系方式</th>
-                <th class="px-4 py-2">操作</th>
+              <tr class="bg-blue-50 text-blue-800 text-base">
+                <th class="px-4 py-3 font-semibold">项目名称</th>
+                <th class="px-4 py-3 font-semibold">发起方</th>
+                <th class="px-4 py-3 font-semibold">项目领域</th>
+                <th class="px-4 py-3 font-semibold">状态</th>
+                <th class="px-4 py-3 font-semibold">联系方式</th>
+                <th class="px-4 py-3 font-semibold">操作</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="project in projects" :key="project.projectId" class="border-b hover:bg-blue-50 transition">
-                <td class="px-4 py-2 text-center">
-                  <router-link :to="`/project/detail/${project.projectId}`" class="text-blue-600 hover:text-blue-800 font-medium">
+              <tr v-for="project in projects" :key="project.projectId" class="border-b last:border-b-0 hover:bg-blue-50 transition">
+                <td class="px-4 py-3 text-center">
+                  <router-link :to="`/project/detail/${project.projectId}`" class="text-blue-600 hover:text-blue-800 font-bold underline underline-offset-2">
                     {{ project.title }}
                   </router-link>
                 </td>
-                <td class="px-4 py-2 text-center">
-                  <span class="text-blue-600">{{ project.organizationName || '-' }}</span>
+                <td class="px-4 py-3 text-center">
+                  <span class="text-blue-600 font-medium">{{ project.organizationName || '-' }}</span>
                 </td>
-                <td class="px-4 py-2 text-center">{{ project.field || '-' }}</td>
-                <td class="px-4 py-2 text-center">
+                <td class="px-4 py-3 text-center">{{ project.field || '-' }}</td>
+                <td class="px-4 py-3 text-center">
                   <span :class="getStatusClass(project.status)">
                     {{ getStatusText(project.status) }}
                   </span>
                 </td>
-                <td class="px-4 py-2 text-center">{{ project.contact }}</td>
-                <td class="px-4 py-2 text-center">
+                <td class="px-4 py-3 text-center">{{ project.contact }}</td>
+                <td class="px-4 py-3 text-center">
                   <router-link :to="`/project/detail/${project.projectId}`">
-                    <button class="px-2 py-1 rounded-md bg-blue-500 text-white text-xs mr-1 shadow hover:bg-blue-600 transition">
+                    <button class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold mr-1 shadow hover:from-blue-600 hover:to-indigo-600 transition">
                       查看详情
                     </button>
                   </router-link>
                   <!-- draft: 编辑、取消 -->
-                  <button v-if="project.status === 'draft'" @click="editProject(project.projectId)" class="px-2 py-1 rounded-md bg-yellow-500 text-white text-xs mr-1 shadow hover:bg-yellow-600 transition">编辑</button>
-                  <button v-if="project.status === 'draft'" @click="cancelProject(project.projectId)" class="px-2 py-1 rounded-md bg-orange-500 text-white text-xs shadow hover:bg-orange-600 transition">取消</button>
+                  <button v-if="project.status === 'draft'" @click="editProject(project.projectId)" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-semibold mr-1 shadow hover:from-yellow-500 hover:to-yellow-600 transition">编辑</button>
+                  <button v-if="project.status === 'draft'" @click="cancelProject(project.projectId)" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-400 to-orange-500 text-white text-xs font-semibold shadow hover:from-orange-500 hover:to-orange-600 transition">取消</button>
                   <!-- pending: 查看申请、取消 -->
-                  <button v-if="project.status === 'pending'" @click="cancelProject(project.projectId)" class="px-2 py-1 rounded-md bg-orange-500 text-white text-xs shadow hover:bg-orange-600 transition">取消</button>
+                  <button v-if="project.status === 'pending'" @click="cancelProject(project.projectId)" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-400 to-orange-500 text-white text-xs font-semibold shadow hover:from-orange-500 hover:to-orange-600 transition">取消</button>
                   <!-- active: 查看申请、终止 -->
-                  <button v-if="project.status === 'active'" @click="viewApplication(project.projectId)" class="px-2 py-1 rounded-md bg-indigo-500 text-white text-xs mr-1 shadow hover:bg-indigo-600 transition">查看申请</button>
-                  
+                  <button v-if="project.status === 'active'" @click="viewApplication(project.projectId)" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-xs font-semibold mr-1 shadow hover:from-indigo-600 hover:to-blue-600 transition">查看申请</button>
                   <!-- matched: 合同相关按钮 -->
                   <template v-if="project.status === 'matched'">
                     <!-- 合同全部被拒绝 -->
                     <template v-if="allContractsRejected(project.projectId)">
                       <button
                         @click="startContract(project.projectId)"
-                        class="px-2 py-1 rounded-md bg-blue-500 text-white text-xs shadow hover:bg-blue-600 transition"
+                        class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold shadow hover:from-blue-600 hover:to-indigo-600 transition"
                       >重新发起合同</button>
                       <button
                         @click="terminateProject(project.projectId)"
-                        class="px-2 py-1 rounded-md bg-red-500 text-white text-xs shadow hover:bg-red-600 transition ml-1"
+                        class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold shadow hover:from-red-600 hover:to-pink-600 transition ml-1"
                       >终止</button>
                     </template>
                     <!-- 有已签署合同 -->
                     <template v-else-if="hasApprovedContract(project.projectId)">
                       <template v-if="applyFinishMap[String(project.projectId)]">
                         <span
-                          class="px-2 py-1 rounded-md bg-gray-400 text-white text-xs shadow cursor-pointer"
+                          class="px-3 py-1.5 rounded-lg bg-gray-400 text-white text-xs font-semibold shadow cursor-pointer"
                           @click="refreshProjects"
                         >已申请结项</span>
                       </template>
                       <template v-else>
                         <button
                           @click="onApplyFinish(project.projectId)"
-                          class="px-2 py-1 rounded-md bg-purple-600 text-white text-xs shadow hover:bg-purple-700 transition"
+                          class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-semibold shadow hover:from-purple-600 hover:to-indigo-600 transition"
                         >申请结项</button>
                         <button
                           @click="openFundApplyDialog(project.projectId)"
-                          class="px-2 py-1 rounded-md bg-green-800 text-white text-xs shadow hover:bg-green-900 transition ml-1"
+                          class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-800 to-emerald-600 text-white text-xs font-semibold shadow hover:from-green-900 hover:to-emerald-700 transition ml-1"
                         >经费申请</button>
                         <router-link :to="`/project/${project.projectId}/fund-readonly`">
                           <button
-                            class="px-2 py-1 rounded-md bg-blue-400 text-white text-xs shadow hover:bg-blue-500 transition ml-1"
+                            class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-400 to-indigo-400 text-white text-xs font-semibold shadow hover:from-blue-500 hover:to-indigo-500 transition ml-1"
                           >经费申请详情</button>
                         </router-link>
                       </template>
                     </template>
                     <!-- 有待签署合同 -->
                     <template v-else-if="hasPendingContract(project.projectId)">
-                      <span class="px-2 py-1 rounded-md bg-yellow-100 text-yellow-700 text-xs shadow">等待对方签署</span>
+                      <span class="px-3 py-1.5 rounded-lg bg-yellow-100 text-yellow-700 text-xs font-semibold shadow">等待对方签署</span>
                       <button
                         @click="terminateProject(project.projectId)"
-                        class="px-2 py-1 rounded-md bg-red-500 text-white text-xs shadow hover:bg-red-600 transition ml-1"
+                        class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold shadow hover:from-red-600 hover:to-pink-600 transition ml-1"
                       >终止</button>
                     </template>
                     <!-- 没有合同 -->
                     <template v-else>
                       <button
                         @click="startContract(project.projectId)"
-                        class="px-2 py-1 rounded-md bg-blue-500 text-white text-xs shadow hover:bg-blue-600 transition"
+                        class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold shadow hover:from-blue-600 hover:to-indigo-600 transition"
                       >发起合同</button>
                       <button
                         @click="terminateProject(project.projectId)"
-                        class="px-2 py-1 rounded-md bg-red-500 text-white text-xs shadow hover:bg-red-600 transition ml-1"
+                        class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold shadow hover:from-red-600 hover:to-pink-600 transition ml-1"
                       >终止</button>
                     </template>
                   </template>
-                  
                   <!-- rejected: 查看拒绝缘由 -->
-                  <button v-if="project.status === 'rejected'" @click="viewReason(project)" class="px-2 py-1 rounded-md bg-gray-400 text-white text-xs shadow hover:bg-gray-500 transition">查看原因</button>
+                  <button v-if="project.status === 'rejected'" @click="viewReason(project)" class="px-3 py-1.5 rounded-lg bg-gray-400 text-white text-xs font-semibold shadow hover:bg-gray-500 transition">查看原因</button>
                   <!-- canceled: 查看取消原因 -->
-                  <button v-if="project.status === 'canceled'" @click="viewReason(project)" class="px-2 py-1 rounded-md bg-gray-400 text-white text-xs shadow hover:bg-gray-500 transition">查看原因</button>
+                  <button v-if="project.status === 'canceled'" @click="viewReason(project)" class="px-3 py-1.5 rounded-lg bg-gray-400 text-white text-xs font-semibold shadow hover:bg-gray-500 transition">查看原因</button>
                   <!-- terminated: 查看终止原因 -->
-                  <button v-if="project.status === 'terminated'" @click="viewReason(project)" class="px-2 py-1 rounded-md bg-gray-400 text-white text-xs shadow hover:bg-gray-500 transition">查看原因</button>
+                  <button v-if="project.status === 'terminated'" @click="viewReason(project)" class="px-3 py-1.5 rounded-lg bg-gray-400 text-white text-xs font-semibold shadow hover:bg-gray-500 transition">查看原因</button>
                   <!-- 申请合作按钮保留 -->
                   <button 
                     v-if="canApply(project)"
                     @click="applyProject(project.projectId)" 
-                    class="px-2 py-1 rounded-md bg-green-500 text-white text-xs shadow hover:bg-green-600 transition"
+                    class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-semibold shadow hover:from-green-600 hover:to-emerald-600 transition"
                   >
                     申请合作
                   </button>
                 </td>
               </tr>
               <tr v-if="projects.length === 0">
-                <td colspan="6" class="text-center text-gray-400 py-6">暂无项目</td>
+                <td colspan="6" class="text-center text-gray-400 py-8 text-lg">暂无项目</td>
               </tr>
             </tbody>
           </table>
         </div>
   
         <!-- 分页 -->
-        <div class="flex justify-center mt-6">
+        <div class="flex justify-center mt-8 gap-2">
           <button
             :disabled="currentPage === 1"
             @click="changePage(currentPage - 1)"
-            class="px-3 py-1 mx-1 rounded bg-gray-200 disabled:opacity-50"
+            class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold shadow disabled:opacity-50"
           >
             上一页
           </button>
-          <span class="mx-2">第 {{ currentPage }} / {{ Math.ceil(total / pageSize) }} 页</span>
+          <span class="mx-2 text-base font-medium">第 {{ currentPage }} / {{ Math.ceil(total / pageSize) }} 页</span>
           <button
             :disabled="currentPage === Math.ceil(total / pageSize)"
             @click="changePage(currentPage + 1)"
-            class="px-3 py-1 mx-1 rounded bg-gray-200 disabled:opacity-50"
+            class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold shadow disabled:opacity-50"
           >
             下一页
           </button>
         </div>
       </div>
-  
-     
-  
-      
-  
-  
   
       <!-- 查看原因弹窗 -->
       <div v-if="reasonViewDialogVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
@@ -316,8 +305,8 @@
             </div>
             <div v-else class="space-y-2">
               <div v-if="uploadFileUrls.length > 0" class="mb-2">
-                <div v-for="(url, idx) in uploadFileUrls" :key="url" class="flex items-center text-xs mb-1">
-                  <span class="truncate max-w-[180px] select-all" :title="url">{{ url.split('/').pop() }}</span>
+                <div v-for="(file, idx) in uploadFileUrls" :key="idx" class="flex items-center text-xs mb-1">
+                  <span class="truncate max-w-[180px] select-all" :title="file.name">{{ file.name }}</span>
                   <button @click="removeUploadFile(idx)" class="ml-2 text-red-500 hover:underline" title="移除">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -387,8 +376,8 @@
               <label for="fund-upload" class="cursor-pointer text-blue-600 hover:underline">上传附件</label>
               <div v-if="fundUploading" class="text-xs text-gray-400 mt-1">上传中...</div>
               <div v-if="fundAttachments.length > 0" class="mt-2 space-y-1">
-                <div v-for="(url, idx) in fundAttachments" :key="url" class="flex items-center text-xs">
-                  <span class="truncate max-w-[180px] select-all" :title="url">{{ url.split('/').pop() }}</span>
+                <div v-for="(file, idx) in fundAttachments" :key="file.url" class="flex items-center text-xs">
+                  <span class="truncate max-w-[180px] select-all" :title="file.name">{{ file.name }}</span>
                   <button @click="removeFundAttachment(idx)" class="ml-2 text-red-500 hover:underline" title="移除">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -520,7 +509,7 @@
   
   // 合同上传相关
   const showUploadContractDialog = ref(false)
-  const uploadFileUrls = ref<string[]>([])
+  const uploadFileUrls = ref<{ name: string; url: string }[]>([])
   const uploadRemark = ref('')
   
   // 有效合同相关
@@ -538,7 +527,7 @@
   const fundApplyProjectId = ref<number | null>(null)
   const fundAmount = ref('')
   const fundPurpose = ref('')
-  const fundAttachments = ref<string[]>([])
+  const fundAttachments = ref<{ name: string; url: string }[]>([])
   const fundRemark = ref('')
   const fundUploading = ref(false)
   
@@ -792,7 +781,7 @@
       try {
         const res: any = await uploadFile(formData)
         const url = res.data.url || res.data.file_url
-        if (url) uploadFileUrls.value.push(url)
+        if (url) uploadFileUrls.value.push({ name: files[i].name, url })
       } catch (err) {
         alert('文件上传失败: ' + files[i].name)
       }
@@ -822,7 +811,7 @@
     // 3. 上传合同
     await createContract(pendingProjectId.value, {
       contractName,
-      contractUrl: uploadFileUrls.value.join(','),
+      contractUrl: uploadFileUrls.value.map(f => f.url).join(','),
       receiverId,
       remark: uploadRemark.value
     })
@@ -968,7 +957,7 @@
       try {
         const res: any = await uploadFile(formData)
         const url = res.data.url || res.data.file_url
-        if (url) fundAttachments.value.push(url)
+        if (url) fundAttachments.value.push({ name: files[i].name, url })
       } catch (err) {
         alert('文件上传失败: ' + files[i].name)
       }
@@ -1003,7 +992,7 @@
       await applyForFund(fundApplyProjectId.value, {
         amount: fundAmount.value,
         purpose: fundPurpose.value,
-        attachments: fundAttachments.value,
+        attachments: fundAttachments.value.map(f => f.url),
         remark: fundRemark.value
       })
       alert('经费申请已提交')
@@ -1078,3 +1067,13 @@
     fetchProjects()
   })
   </script>
+
+<style scoped>
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fade-in {
+  animation: fade-in 0.25s cubic-bezier(.4,0,.2,1);
+}
+</style>

@@ -284,6 +284,12 @@ const router = createRouter({
       path: '/location-picker-test',
       name: 'location-picker-test',
       component: () => import('@/views/LocationPickerTest.vue')
+    },
+    {
+      path: '/project/dock',
+      name: 'project-dock',
+      component: () => import('@/views/project/ProjectDockView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
