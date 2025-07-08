@@ -451,9 +451,6 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-<<<<<<< HEAD
-  next()
-=======
   // 检查项目合作管理相关路由的权限
   if (to.path.startsWith('/project/')) {
     const user = appStore.user as any
@@ -479,7 +476,6 @@ router.beforeEach(async (to, from, next) => {
   } else {
     next()
   }
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 })
 
 export default router 
