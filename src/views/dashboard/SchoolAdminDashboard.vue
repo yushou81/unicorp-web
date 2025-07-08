@@ -123,6 +123,16 @@
           <span class="text-lg font-bold text-green-800 mb-1">项目审核</span>
           <span class="text-sm text-green-500">管理和审核项目申请</span>
         </div>
+        <div
+          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
+          @click="router.push('/achievement/school')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <span class="text-lg font-bold text-green-800 mb-1">成果管理</span>
+          <span class="text-sm text-green-500">管理学校成果展示</span>
+        </div>
       </div>
       
       <!-- 双师课堂管理界面 -->
@@ -333,228 +343,6 @@
                 查看全部预约 →
               </router-link>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- 课程创建/编辑对话框 -->
-    <div v-if="showCourseDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl">
-        <h2 class="text-xl font-bold mb-4">{{ isEditingCourse ? '编辑课程' : '创建新课程' }}</h2>
-        <form @submit.prevent="saveCourse">
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">课程标题</label>
-            <input v-model="courseForm.title" required class="w-full px-3 py-2 border rounded" placeholder="请输入课程标题" />
-          </div>
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">课程描述</label>
-            <textarea v-model="courseForm.description" rows="3" class="w-full px-3 py-2 border rounded" placeholder="请输入课程描述"></textarea>
-          </div>
-          
-          <!-- 企业导师搜索部分 -->
-          <div class="mb-5 border-b pb-5">
-            <label class="block text-gray-700 mb-1">企业导师</label>
-            
-            <div v-if="selectedMentor" class="flex items-center justify-between bg-blue-50 p-3 rounded mb-2">
-              <div>
-                <div class="font-semibold">{{ selectedMentor.name }}</div>
-                <div class="text-xs text-gray-500">导师ID: {{ selectedMentor.id }}</div>
-              </div>
-              <button 
-                type="button" 
-                @click="clearSelectedMentor" 
-                class="text-red-600 text-sm hover:text-red-800"
-              >
-                移除
-              </button>
-            </div>
-            
-            <div v-else>
-              <div class="flex mb-2">
-                <input 
-                  v-model="mentorSearchKeyword" 
-                  class="flex-1 px-3 py-2 border rounded-l" 
-                  placeholder="输入导师邮箱或手机号查询" 
-                />
-                <button 
-                  type="button" 
-                  @click="searchMentor" 
-                  :disabled="mentorSearching" 
-                  class="px-4 py-2 bg-blue-600 text-white rounded-r hover:bg-blue-700 transition"
-                >
-                  {{ mentorSearching ? '查询中...' : '查询' }}
-                </button>
-              </div>
-              
-              <div v-if="mentorSearchResults.length > 0" class="border rounded mt-2 max-h-40 overflow-y-auto">
-                <div 
-                  v-for="mentor in mentorSearchResults" 
-                  :key="mentor.id"
-                  class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-0"
-                  @click="selectMentor(mentor)"
-                >
-                  <div class="font-medium">{{ mentor.nickname || mentor.account }}</div>
-                  <div class="text-xs text-gray-500">
-                    {{ mentor.email || '无邮箱' }} | {{ mentor.phone || '无手机号' }}
-                  </div>
-                </div>
-              </div>
-              
-              <div v-if="!selectedMentor" class="text-xs text-gray-500 mt-1">
-                必须选择一位企业导师进行双师课堂的创建
-              </div>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">课程时间</label>
-              <input v-model="courseForm.scheduledTime" type="datetime-local" required class="w-full px-3 py-2 border rounded" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">最大学生人数</label>
-              <input v-model="courseForm.maxStudents" type="number" min="1" class="w-full px-3 py-2 border rounded" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">课程地点</label>
-              <input v-model="courseForm.location" class="w-full px-3 py-2 border rounded" placeholder="请输入课程地点" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">课程类型</label>
-              <select v-model="courseForm.courseType" class="w-full px-3 py-2 border rounded">
-                <option value="online">线上</option>
-                <option value="offline">线下</option>
-                <option value="hybrid">混合</option>
-              </select>
-            </div>
-          </div>
-          <div class="flex justify-end space-x-2 mt-4">
-            <button type="button" @click="showCourseDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-            <button type="submit" class="px-4 py-1 rounded bg-blue-600 text-white">保存</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    
-    <!-- 资源上传对话框 -->
-    <div v-if="showResourceDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">上传课程资源</h2>
-        <form @submit.prevent="uploadCourseResource">
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">资源标题</label>
-            <input v-model="resourceForm.title" required class="w-full px-3 py-2 border rounded" placeholder="请输入资源标题" />
-          </div>
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">资源描述</label>
-            <textarea v-model="resourceForm.description" rows="2" class="w-full px-3 py-2 border rounded" placeholder="请输入资源描述"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">资源类型</label>
-            <select v-model="resourceForm.resourceType" class="w-full px-3 py-2 border rounded">
-              <option value="document">文档</option>
-              <option value="video">视频</option>
-              <option value="code">代码</option>
-              <option value="other">其他</option>
-            </select>
-          </div>
-          <div class="mb-5">
-            <label class="block text-gray-700 mb-1">选择文件</label>
-            <input
-              ref="resourceFileInput"
-              type="file"
-              @change="handleResourceFileChange"
-              class="w-full px-3 py-2 border rounded"
-              required
-            />
-          </div>
-          <div class="flex justify-end space-x-2">
-            <button type="button" @click="showResourceDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-            <button type="submit" :disabled="uploadingResource" class="px-4 py-1 rounded bg-blue-600 text-white">
-              {{ uploadingResource ? '上传中...' : '上传' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-    
-    <!-- 编辑个人资料弹窗（保持不变） -->
-    <div v-if="showProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md overflow-y-auto max-h-[80vh] relative">
-        <button @click="showProfileDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-purple-600 text-2xl font-bold focus:outline-none">×</button>
-        <h2 class="text-2xl font-bold mb-4 text-purple-700">编辑个人资料</h2>
-        <!-- 复用原有个人资料表单和修改密码表单 -->
-        <form @submit.prevent="onUpdateProfile">
-          <!-- 头像上传 -->
-          <div class="mb-5 flex flex-col items-center">
-            <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
-            <div class="flex items-center mt-2">
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                class="hidden"
-                @change="handleAvatarChange"
-              />
-              <button 
-                type="button" 
-                @click="fileInput?.click()"
-                class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
-              >
-                选择头像
-              </button>
-              <button 
-                v-if="avatarFile" 
-                type="button" 
-                @click="cancelAvatarUpload" 
-                class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
-              >
-                取消
-              </button>
-            </div>
-            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
-              {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
-            </p>
-          </div>
-
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">昵称</label>
-            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
-          </div>
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">邮箱</label>
-            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
-          </div>
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">手机号</label>
-            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
-          </div>
-          <div class="flex justify-end space-x-2 mt-4">
-            <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
-          </div>
-        </form>
-        <div class="mt-6 pt-4 border-t">
-          <h3 class="text-lg font-semibold mb-3">修改密码</h3>
-          <form @submit.prevent="onChangePassword">
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">原密码</label>
-              <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">新密码</label>
-              <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">确认新密码</label>
-              <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
-            </div>
-            <div class="flex justify-end space-x-2 mt-4">
-              <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-              <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '修改中...' : '修改密码' }}</button>
-            </div>
-          </form>
         </div>
       </div>
     </div>
@@ -659,7 +447,13 @@ import {
 import { getEquipmentBookings, reviewEquipmentBooking } from '@/lib/api/resource'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
+<<<<<<< HEAD
+import { achievementStatisticsApi } from '@/lib/api/achievement'
+import type { SchoolAchievementStatistics, StudentAchievementOverviewVO } from '@/lib/api/achievement'
+import { message } from 'ant-design-vue'
+=======
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 
 const school = ref({
   logo: 'https://randomuser.me/api/portraits/lego/2.jpg',
@@ -1358,6 +1152,52 @@ async function fetchRecentEquipmentBookings() {
   }
 }
 
+<<<<<<< HEAD
+// 成果统计数据
+const schoolStats = ref<SchoolAchievementStatistics>({
+  totalStudents: 0,
+  totalAchievements: 0,
+  totalVerifiedAchievements: 0,
+  portfolioCount: 0,
+  awardCount: 0,
+  researchCount: 0,
+  avgAchievementsPerStudent: 0,
+  verificationRate: 0
+})
+
+// 优秀学生列表
+const topStudents = ref<StudentAchievementOverviewVO[]>([])
+
+// 计算百分比
+const calculatePercentage = (part: number = 0, total: number = 0) => {
+  if (total === 0) return 0
+  return ((part / total) * 100).toFixed(1)
+}
+
+// 获取成果统计数据
+const fetchAchievementStats = async () => {
+  try {
+    const [statsRes, topStudentsRes] = await Promise.all([
+      achievementStatisticsApi.getSchoolStatistics(),
+      achievementStatisticsApi.getSchoolTopStudents(10)
+    ])
+    
+    if (statsRes.code === 0) {
+      schoolStats.value = statsRes.data
+    }
+    
+    if (topStudentsRes.code === 0) {
+      topStudents.value = topStudentsRes.data
+    }
+  } catch (error) {
+    message.error('获取成果统计数据失败')
+  }
+}
+
+onMounted(() => {
+  fetchAchievementStats()
+})
+=======
 function goToProjectAudit() {
   router.push('/project/audit')
 }
@@ -1365,4 +1205,5 @@ function goToProjectAudit() {
 const pendingProjectsCount = 0 // 这里可以通过接口获取真实数量
 const approvedProjectsCount = 0
 const rejectedProjectsCount = 0
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 </script> 

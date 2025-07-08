@@ -70,6 +70,87 @@
               </tr>
               </tbody>
             </table>
+<<<<<<< HEAD
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 编辑个人资料对话框 -->
+    <div v-if="showEditProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">编辑个人资料</h2>
+        <form @submit.prevent="onUpdateProfile">
+          <!-- 头像上传 -->
+          <div class="mb-5 flex flex-col items-center">
+            <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
+            <div class="flex items-center mt-2">
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleAvatarChange"
+              />
+              <button 
+                type="button" 
+                @click="fileInput?.click()"
+                class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
+              >
+                选择头像
+              </button>
+              <button 
+                v-if="avatarFile" 
+                type="button" 
+                @click="cancelAvatarUpload" 
+                class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
+              >
+                取消
+              </button>
+            </div>
+            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
+              {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
+            </p>
+          </div>
+
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">昵称</label>
+            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">邮箱</label>
+            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">手机号</label>
+            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
+          </div>
+          <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" @click="showEditProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
+          </div>
+        </form>
+        <div class="mt-6 pt-4 border-t">
+          <h3 class="text-lg font-semibold mb-3">修改密码</h3>
+          <form @submit.prevent="onChangePassword">
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">原密码</label>
+              <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">新密码</label>
+              <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
+            </div>
+            <div class="mb-3">
+              <label class="block text-gray-700 mb-1">确认新密码</label>
+              <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
+            </div>
+            <div class="flex justify-end space-x-2">
+              <button type="submit" :disabled="changePasswordLoading" class="px-4 py-1 rounded bg-green-600 text-white">{{ changePasswordLoading ? '修改中...' : '修改密码' }}</button>
+            </div>
+          </form>
+        </div>
+=======
             <div class="flex justify-end mt-4 space-x-2">
               <button :disabled="page === 1" @click="changePage(page-1)" class="px-3 py-1 rounded bg-gray-200 text-gray-700">上一页</button>
               <span class="px-2">第 {{ page }} 页 / 共 {{ totalPages }} 页</span>
@@ -353,6 +434,7 @@
             <div class="mb-2"><b>创建时间：</b>{{ new Date(detailCourse.createdAt).toLocaleString() }}</div>
           </div>
         </div>
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
       </div>
     </div>
   </div>
@@ -364,6 +446,27 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getMe, searchUser } from '@/lib/api/auth'
 import Navbar from '@/components/layout/Navbar.vue'
+<<<<<<< HEAD
+// 导入双师课堂相关API
+import { 
+  createCourse, 
+  updateCourse,
+  deleteCourse, 
+  updateCourseStatus, 
+  getTeacherCourses,
+  CourseStatus,
+  CourseType,
+  DualTeacherCourseDTO,
+  DualTeacherCourseVO,
+  CourseResourceDTO,
+  uploadResource,
+  deleteResource,
+  getResourcesByCourseId
+} from '@/lib/api/classroom'
+import { achievementStatisticsApi } from '@/lib/api/achievement'
+import type { SchoolAchievementStatistics, StudentAchievementOverviewVO } from '@/lib/api/achievement'
+import { message } from 'ant-design-vue'
+=======
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 import { createCourse, getTeacherCourses, updateCourse, deleteCourse, getCourseById, updateCourseStatus } from '@/lib/api/classroom'
@@ -397,6 +500,7 @@ interface ApiResponse<T = any> {
 }
 
 const router = useRouter()
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 
 const teacher = ref({
   avatar: 'https://randomuser.me/api/portraits/men/33.jpg',
@@ -408,6 +512,94 @@ const teacher = ref({
   company: ''
 })
 
+<<<<<<< HEAD
+const students = [
+  { id: 1, name: '王五', major: '计算机' },
+  { id: 2, name: '赵六', major: '人工智能' }
+]
+const projects = [
+  { id: 1, title: '智慧校园课题', date: '2024-06-01' },
+  { id: 2, title: 'AI创新实验', date: '2024-05-15' }
+]
+const resources = [
+  { id: 1, title: '教师教学资源', date: '2024-06-20' }
+]
+
+// 定义更具体的类型
+interface BlockDataItem {
+  id: number;
+  label: string;
+  extra?: string;
+}
+
+interface BlockItem {
+  title: string;
+  icon: any;
+  color: string;
+  data: BlockDataItem[] | string[];
+  empty: string;
+  footer: { text: string; link: string };
+}
+
+// 修改blocks的定义使用具体类型
+const blocks = ref<BlockItem[]>([
+  {
+    title: '双师课堂管理',
+    icon: UserGroupIcon,
+    color: 'text-blue-500',
+    data: [],
+    empty: '暂无课程',
+    footer: { text: '管理课程', link: '/classroom/manage' }
+  },
+  {
+    title: '项目管理',
+    icon: BriefcaseIcon,
+    color: 'text-green-500',
+    data: [
+      { id: 1, label: '智慧校园课题', extra: '进行中' }
+    ],
+    empty: '暂无项目',
+    footer: { text: '管理项目', link: '/teacher/projects' }
+  },
+  {
+    title: '学生成果查看',
+    icon: AcademicCapIcon,
+    color: 'text-indigo-500',
+    data: [
+      { id: 1, label: '全国大学生数学建模竞赛一等奖', extra: '张三' }
+    ],
+    empty: '暂无成果',
+    footer: { text: '查看全部成果', link: '/achievement/teacher' }
+  },
+  {
+    title: '资源上传',
+    icon: ArrowUpTrayIcon,
+    color: 'text-purple-500',
+    data: [],
+    empty: '暂无上传资源',
+    footer: { text: '上传资源', link: '/resource/upload' }
+  },
+  {
+    title: '学校信息浏览',
+    icon: AcademicCapIcon,
+    color: 'text-green-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部学校', link: '/school/list' }
+  },
+  {
+    title: '企业信息浏览',
+    icon: BuildingOffice2Icon,
+    color: 'text-yellow-600',
+    data: [],
+    empty: '点击下方进入',
+    footer: { text: '查看全部企业', link: '/company/list' }
+  }
+])
+
+const router = useRouter()
+=======
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 const appStore = useAppStore()
 const userInfo = computed(() => appStore.user as any || {})
 const userAvatar = computed(() => (userInfo.value?.avatar as string) || 'https://randomuser.me/api/portraits/men/33.jpg')
@@ -463,8 +655,14 @@ function statusText(status: string) {
 }
 
 onMounted(() => {
+<<<<<<< HEAD
+  fetchTeacherInfo()
+  fetchTeacherCourses()
+  fetchAchievementStats()
+=======
   fetchCourses()
   loadMyResources()
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 })
 
 function onEditProfileClick() {
@@ -688,4 +886,43 @@ async function confirmDelete(resource: ResourceVO) {
     alert('删除失败：' + (e.message || '未知错误'))
   }
 }
+<<<<<<< HEAD
+
+// 成果统计数据
+const schoolStats = ref<SchoolAchievementStatistics>({
+  totalStudents: 0,
+  totalAchievements: 0,
+  totalVerifiedAchievements: 0,
+  portfolioCount: 0,
+  awardCount: 0,
+  researchCount: 0,
+  avgAchievementsPerStudent: 0,
+  verificationRate: 0
+})
+
+// 优秀学生列表
+const topStudents = ref<StudentAchievementOverviewVO[]>([])
+
+// 获取成果统计数据
+const fetchAchievementStats = async () => {
+  try {
+    const [statsRes, topStudentsRes] = await Promise.all([
+      achievementStatisticsApi.getSchoolStatistics(),
+      achievementStatisticsApi.getSchoolTopStudents(5)
+    ])
+    
+    if (statsRes.code === 0) {
+      schoolStats.value = statsRes.data
+    }
+    
+    if (topStudentsRes.code === 0) {
+      topStudents.value = topStudentsRes.data
+    }
+  } catch (error) {
+    message.error('获取成果统计数据失败')
+  }
+}
+</script> 
+=======
 </script>
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
