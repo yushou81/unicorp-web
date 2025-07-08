@@ -54,110 +54,6 @@
     </div>
     
     <!-- 数据统计区 -->
-<<<<<<< HEAD
-    <div class="container mx-auto px-4 mb-8">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- 总体统计卡片 -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h3 class="text-lg font-medium text-gray-800 mb-4">成果总览</h3>
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">总学生数</span>
-              <span class="text-blue-600 font-semibold">{{ schoolStats.totalStudents || 0 }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">总成果数</span>
-              <span class="text-green-600 font-semibold">{{ schoolStats.totalAchievements || 0 }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">人均成果</span>
-              <span class="text-purple-600 font-semibold">{{ schoolStats.avgAchievementsPerStudent?.toFixed(1) || 0 }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 成果分布卡片 -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h3 class="text-lg font-medium text-gray-800 mb-4">成果分布</h3>
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">作品集</span>
-              <div>
-                <span class="text-blue-600 font-semibold">{{ schoolStats.portfolioCount || 0 }}</span>
-                <span class="text-gray-400 text-sm ml-2">({{ calculatePercentage(schoolStats.portfolioCount, schoolStats.totalAchievements) }}%)</span>
-              </div>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">获奖成果</span>
-              <div>
-                <span class="text-green-600 font-semibold">{{ schoolStats.awardCount || 0 }}</span>
-                <span class="text-gray-400 text-sm ml-2">({{ calculatePercentage(schoolStats.awardCount, schoolStats.totalAchievements) }}%)</span>
-              </div>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">科研成果</span>
-              <div>
-                <span class="text-purple-600 font-semibold">{{ schoolStats.researchCount || 0 }}</span>
-                <span class="text-gray-400 text-sm ml-2">({{ calculatePercentage(schoolStats.researchCount, schoolStats.totalAchievements) }}%)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 认证情况卡片 -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h3 class="text-lg font-medium text-gray-800 mb-4">认证情况</h3>
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">已认证成果</span>
-              <span class="text-green-600 font-semibold">{{ schoolStats.totalVerifiedAchievements || 0 }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">认证率</span>
-              <span class="text-blue-600 font-semibold">{{ ((schoolStats.verificationRate || 0) * 100).toFixed(1) }}%</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">待认证</span>
-              <span class="text-orange-600 font-semibold">{{ (schoolStats.totalAchievements || 0) - (schoolStats.totalVerifiedAchievements || 0) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 优秀学生展示区 -->
-    <div class="container mx-auto px-4 mb-8">
-      <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-medium text-gray-800 mb-6">优秀学生展示</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="student in topStudents" :key="student.userId" 
-               class="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
-            <div class="flex items-center">
-              <img :src="student.avatar" class="w-10 h-10 rounded-full mr-3" :alt="student.userName">
-              <div>
-                <div class="font-medium text-gray-900">{{ student.userName }}</div>
-                <div class="text-sm text-gray-500">{{ student.major || '未设置专业' }}</div>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="text-blue-600 font-semibold">{{ student.totalVerifiedCount || 0 }}</div>
-              <div class="text-xs text-gray-500">已认证成果</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-      <!-- 功能入口卡片区（保留原有的） -->
-      <div v-if="activeTab === 'users'" class="grid grid-cols-1 md:grid-cols-2 gap-8 my-12">
-        <div
-          class="group cursor-pointer bg-gradient-to-br from-blue-100 to-blue-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
-          @click="showUserDialog = true"
-        >
-          <UserGroupIcon class="w-12 h-12 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
-          <span class="text-lg font-bold text-blue-800 mb-1">用户列表</span>
-          <span class="text-sm text-blue-500">管理学校所有用户账号</span>
-=======
     <div class="container mx-auto px-4">
       <!-- 用户管理直接显示表格 -->
       <div v-if="activeTab === 'users'" class="bg-white rounded-xl shadow-lg p-8 my-6">
@@ -218,7 +114,6 @@
               <button @click="(teacherPage + 1) * teacherSize < teacherTotal && (teacherPage++, fetchTeachers())" :disabled="(teacherPage + 1) * teacherSize >= teacherTotal" class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2">下一页</button>
             </div>
           </div>
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
         </div>
         <div
           class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
@@ -552,13 +447,7 @@ import {
 import { getEquipmentBookings, reviewEquipmentBooking } from '@/lib/api/resource'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
-<<<<<<< HEAD
-import { achievementStatisticsApi } from '@/lib/api/achievement'
-import type { SchoolAchievementStatistics, StudentAchievementOverviewVO } from '@/lib/api/achievement'
-import { message } from 'ant-design-vue'
-=======
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 
 const school = ref({
   logo: 'https://randomuser.me/api/portraits/lego/2.jpg',
@@ -1257,52 +1146,6 @@ async function fetchRecentEquipmentBookings() {
   }
 }
 
-<<<<<<< HEAD
-// 成果统计数据
-const schoolStats = ref<SchoolAchievementStatistics>({
-  totalStudents: 0,
-  totalAchievements: 0,
-  totalVerifiedAchievements: 0,
-  portfolioCount: 0,
-  awardCount: 0,
-  researchCount: 0,
-  avgAchievementsPerStudent: 0,
-  verificationRate: 0
-})
-
-// 优秀学生列表
-const topStudents = ref<StudentAchievementOverviewVO[]>([])
-
-// 计算百分比
-const calculatePercentage = (part: number = 0, total: number = 0) => {
-  if (total === 0) return 0
-  return ((part / total) * 100).toFixed(1)
-}
-
-// 获取成果统计数据
-const fetchAchievementStats = async () => {
-  try {
-    const [statsRes, topStudentsRes] = await Promise.all([
-      achievementStatisticsApi.getSchoolStatistics(),
-      achievementStatisticsApi.getSchoolTopStudents(10)
-    ])
-    
-    if (statsRes.code === 0) {
-      schoolStats.value = statsRes.data
-    }
-    
-    if (topStudentsRes.code === 0) {
-      topStudents.value = topStudentsRes.data
-    }
-  } catch (error) {
-    message.error('获取成果统计数据失败')
-  }
-}
-
-onMounted(() => {
-  fetchAchievementStats()
-})
-=======
 function goToProjectAudit() {
   router.push('/project/audit')
 }
@@ -1310,5 +1153,4 @@ function goToProjectAudit() {
 const pendingProjectsCount = 0 // 这里可以通过接口获取真实数量
 const approvedProjectsCount = 0
 const rejectedProjectsCount = 0
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 </script> 

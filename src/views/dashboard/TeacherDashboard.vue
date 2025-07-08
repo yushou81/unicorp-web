@@ -1,157 +1,6 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
     <Navbar />
-<<<<<<< HEAD
-    
-    <div class="py-10">
-      <div class="container mx-auto px-4">
-        <div class="bg-white rounded-xl shadow-lg p-6 flex items-center mb-10">
-          <img :src="userAvatar" class="w-20 h-20 rounded-full border-2 border-blue-200 mr-6" alt="avatar" />
-          <div class="flex-1">
-            <div class="flex items-center mb-2">
-              <span class="text-2xl font-bold text-gray-900 mr-2">{{ teacher.name }}</span>
-              <span v-if="teacher.verified" class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 ml-2">已认证</span>
-            </div>
-            <div class="text-gray-500 text-sm mb-1">{{ teacher.email }}</div>
-            <div class="text-gray-500 text-sm">{{ teacher.phone }}</div>
-            <div class="text-gray-500 text-sm mt-1">所属学校：{{ teacher.school || '未绑定' }}</div>
-          </div>
-          <button @click="onEditProfileClick" class="px-4 py-1 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow">编辑资料</button>
-        </div>
-        
-        <!-- 添加创建课程按钮 -->
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold text-gray-800">我的双师课堂</h2>
-          <button 
-            @click="openCreateCourseDialog" 
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-            </svg>
-            创建新课程
-          </button>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-          <div v-for="(block, idx) in blocks" :key="idx" class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition-all duration-200 flex flex-col mb-2">
-            <div class="flex items-center mb-4">
-              <component :is="block.icon" class="w-7 h-7 mr-2" :class="block.color" />
-              <span class="font-semibold text-lg">{{ block.title }}</span>
-            </div>
-            <ul>
-              <li v-for="item in block.data" :key="typeof item === 'string' ? item : item.id" class="flex justify-between items-center mb-2 text-gray-700">
-                <span>{{ typeof item === 'string' ? item : item.label }}</span>
-                <span v-if="typeof item !== 'string' && item.extra" class="text-xs text-gray-400 ml-2">{{ item.extra }}</span>
-              </li>
-              <li v-if="block.data.length === 0" class="text-gray-400 text-sm">{{ block.empty }}</li>
-            </ul>
-            <div v-if="block.footer">
-              <router-link :to="block.footer.link" class="text-blue-600 hover:underline text-xs font-medium mt-2">{{ block.footer.text }}</router-link>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 快速审核成果 -->
-        <div class="mb-8">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">快速访问</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <router-link to="/classroom/manage" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <div>
-                <div class="font-medium">课程管理</div>
-                <div class="text-xs opacity-80">管理您的全部课程</div>
-              </div>
-            </router-link>
-            
-            <router-link to="/achievement/teacher" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <div class="font-medium">成果审核</div>
-                <div class="text-xs opacity-80">审核学生的成果展示</div>
-              </div>
-            </router-link>
-            
-            <router-link to="/teacher/projects" class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <div>
-                <div class="font-medium">项目管理</div>
-                <div class="text-xs opacity-80">管理您的项目</div>
-              </div>
-            </router-link>
-          </div>
-        </div>
-        
-        <!-- 成果统计区域 -->
-        <div class="mb-8">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">成果统计</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- 总体统计卡片 -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-              <h3 class="text-lg font-medium text-gray-800 mb-4">总体统计</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">总成果数</span>
-                  <span class="text-blue-600 font-semibold">{{ schoolStats.totalAchievements || 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">已认证成果</span>
-                  <span class="text-green-600 font-semibold">{{ schoolStats.totalVerifiedAchievements || 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">认证率</span>
-                  <span class="text-purple-600 font-semibold">{{ ((schoolStats.verificationRate || 0) * 100).toFixed(1) }}%</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 成果类型分布 -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-              <h3 class="text-lg font-medium text-gray-800 mb-4">成果类型分布</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">作品集</span>
-                  <span class="text-blue-600 font-semibold">{{ schoolStats.portfolioCount || 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">获奖成果</span>
-                  <span class="text-green-600 font-semibold">{{ schoolStats.awardCount || 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">科研成果</span>
-                  <span class="text-purple-600 font-semibold">{{ schoolStats.researchCount || 0 }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 优秀学生展示 -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-              <h3 class="text-lg font-medium text-gray-800 mb-4">优秀学生 TOP 5</h3>
-              <div class="space-y-3">
-                <div v-for="student in topStudents" :key="student.userId" class="flex justify-between items-center">
-                  <div class="flex items-center">
-                    <img :src="student.avatar" class="w-8 h-8 rounded-full mr-2" :alt="student.userName">
-                    <span class="text-gray-800">{{ student.userName }}</span>
-                  </div>
-                  <span class="text-blue-600 font-semibold">{{ student.totalVerifiedCount || 0 }} 个成果</span>
-                </div>
-                <div v-if="!topStudents.length" class="text-gray-500 text-center py-2">暂无数据</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 课程列表 -->
-        <div v-if="courseList.length > 0" class="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 class="text-xl font-semibold mb-4">我的全部课程</h2>
-          <div class="overflow-x-auto">
-=======
     <div class="container mx-auto px-4 py-8">
       <UserProfileInfo
           :avatar="userAvatar"
@@ -192,7 +41,6 @@
           <div v-if="loadingCourses" class="text-center py-8 text-gray-400">加载中...</div>
           <div v-else-if="courses.length === 0" class="text-center py-8 text-gray-400">暂无课程</div>
           <div v-else class="overflow-x-auto">
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
               <tr>
@@ -227,87 +75,6 @@
               </tr>
               </tbody>
             </table>
-<<<<<<< HEAD
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- 编辑个人资料对话框 -->
-    <div v-if="showEditProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-      <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">编辑个人资料</h2>
-        <form @submit.prevent="onUpdateProfile">
-          <!-- 头像上传 -->
-          <div class="mb-5 flex flex-col items-center">
-            <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2" alt="avatar" />
-            <div class="flex items-center mt-2">
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                class="hidden"
-                @change="handleAvatarChange"
-              />
-              <button 
-                type="button" 
-                @click="fileInput?.click()"
-                class="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition"
-              >
-                选择头像
-              </button>
-              <button 
-                v-if="avatarFile" 
-                type="button" 
-                @click="cancelAvatarUpload" 
-                class="px-3 py-1 rounded bg-red-100 text-red-600 text-sm hover:bg-red-200 transition ml-2"
-              >
-                取消
-              </button>
-            </div>
-            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
-              {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
-            </p>
-          </div>
-
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">昵称</label>
-            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
-          </div>
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">邮箱</label>
-            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
-          </div>
-          <div class="mb-3">
-            <label class="block text-gray-700 mb-1">手机号</label>
-            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
-          </div>
-          <div class="flex justify-end space-x-2 mt-4">
-            <button type="button" @click="showEditProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
-            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
-          </div>
-        </form>
-        <div class="mt-6 pt-4 border-t">
-          <h3 class="text-lg font-semibold mb-3">修改密码</h3>
-          <form @submit.prevent="onChangePassword">
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">原密码</label>
-              <input v-model="passwordChange.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">新密码</label>
-              <input v-model="passwordChange.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
-            </div>
-            <div class="mb-3">
-              <label class="block text-gray-700 mb-1">确认新密码</label>
-              <input v-model="passwordChange.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button type="submit" :disabled="changePasswordLoading" class="px-4 py-1 rounded bg-green-600 text-white">{{ changePasswordLoading ? '修改中...' : '修改密码' }}</button>
-            </div>
-          </form>
-        </div>
-=======
             <div class="flex justify-end mt-4 space-x-2">
               <button :disabled="page === 1" @click="changePage(page-1)" class="px-3 py-1 rounded bg-gray-200 text-gray-700">上一页</button>
               <span class="px-2">第 {{ page }} 页 / 共 {{ totalPages }} 页</span>
@@ -379,87 +146,6 @@
                 <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                 <span class="text-sm">技术文档</span>
               </div>
-              <div class="flex items-center">
-                <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
-                <span class="text-sm">数据集</span>
-              </div>
-              <div class="flex items-center">
-                <span class="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
-                <span class="text-sm">教学视频</span>
-              </div>
-              <div class="flex items-center">
-                <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
-                <span class="text-sm">实验指导</span>
-              </div>
-              <div class="flex items-center">
-                <span class="w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>
-                <span class="text-sm">专利文献</span>
-              </div>
-              <div class="flex items-center">
-                <span class="w-3 h-3 bg-pink-500 rounded-full mr-2"></span>
-                <span class="text-sm">案例分析</span>
-              </div>
-              <div class="flex items-center">
-                <span class="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>
-                <span class="text-sm">其他资源</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="bg-white rounded-lg border shadow-sm">
-            <div class="p-4 border-b flex justify-between items-center">
-              <h3 class="font-semibold text-gray-800">我上传的资源</h3>
-              <div class="flex space-x-2">
-                <input 
-                  type="text" 
-                  v-model="resourceKeyword" 
-                  placeholder="搜索资源" 
-                  class="px-3 py-1 text-sm border rounded-md"
-                />
-                <button 
-                  @click="loadMyResources" 
-                  class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-sm hover:bg-blue-200"
-                >
-                  搜索
-                </button>
-              </div>
-            </div>
-            
-            <div v-if="loadingResources" class="p-8 text-center text-gray-500">
-              <svg class="animate-spin h-8 w-8 mx-auto mb-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              加载中...
-            </div>
-            
-            <div v-else-if="myResources.length === 0" class="p-8 text-center text-gray-500">
-              暂无上传的资源
-            </div>
-            
-            <div v-else>
-              <div class="overflow-x-auto">
-                <table class="min-w-full">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">资源名称</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">上传时间</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">可见性</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200">
-                    <tr v-for="resource in myResources" :key="resource.id" class="hover:bg-gray-50">
-                      <td class="px-4 py-3">
-                        <router-link :to="`/resource/${resource.id}`" class="text-blue-600 hover:text-blue-800 font-medium">
-                          {{ resource.title }}
-                        </router-link>
-                      </td>
-                      <td class="px-4 py-3 text-gray-600">{{ resource.resourceType }}</td>
-                      <td class="px-4 py-3 text-gray-600">{{ new Date(resource.createdAt).toLocaleDateString() }}</td>
-                      <td class="px-4 py-3">
-                        <span 
                           :class="{
                             'bg-green-100 text-green-800': resource.visibility === 'public',
                             'bg-blue-100 text-blue-800': resource.visibility === 'organization_only',
@@ -591,7 +277,6 @@
             <div class="mb-2"><b>创建时间：</b>{{ new Date(detailCourse.createdAt).toLocaleString() }}</div>
           </div>
         </div>
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
       </div>
     </div>
   </div>
@@ -603,27 +288,6 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getMe, searchUser } from '@/lib/api/auth'
 import Navbar from '@/components/layout/Navbar.vue'
-<<<<<<< HEAD
-// 导入双师课堂相关API
-import { 
-  createCourse, 
-  updateCourse,
-  deleteCourse, 
-  updateCourseStatus, 
-  getTeacherCourses,
-  CourseStatus,
-  CourseType,
-  DualTeacherCourseDTO,
-  DualTeacherCourseVO,
-  CourseResourceDTO,
-  uploadResource,
-  deleteResource,
-  getResourcesByCourseId
-} from '@/lib/api/classroom'
-import { achievementStatisticsApi } from '@/lib/api/achievement'
-import type { SchoolAchievementStatistics, StudentAchievementOverviewVO } from '@/lib/api/achievement'
-import { message } from 'ant-design-vue'
-=======
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 import { createCourse, getTeacherCourses, updateCourse, deleteCourse, getCourseById, updateCourseStatus } from '@/lib/api/classroom'
@@ -657,7 +321,6 @@ interface ApiResponse<T = any> {
 }
 
 const router = useRouter()
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 
 const teacher = ref({
   avatar: 'https://randomuser.me/api/portraits/men/33.jpg',
@@ -669,94 +332,6 @@ const teacher = ref({
   company: ''
 })
 
-<<<<<<< HEAD
-const students = [
-  { id: 1, name: '王五', major: '计算机' },
-  { id: 2, name: '赵六', major: '人工智能' }
-]
-const projects = [
-  { id: 1, title: '智慧校园课题', date: '2024-06-01' },
-  { id: 2, title: 'AI创新实验', date: '2024-05-15' }
-]
-const resources = [
-  { id: 1, title: '教师教学资源', date: '2024-06-20' }
-]
-
-// 定义更具体的类型
-interface BlockDataItem {
-  id: number;
-  label: string;
-  extra?: string;
-}
-
-interface BlockItem {
-  title: string;
-  icon: any;
-  color: string;
-  data: BlockDataItem[] | string[];
-  empty: string;
-  footer: { text: string; link: string };
-}
-
-// 修改blocks的定义使用具体类型
-const blocks = ref<BlockItem[]>([
-  {
-    title: '双师课堂管理',
-    icon: UserGroupIcon,
-    color: 'text-blue-500',
-    data: [],
-    empty: '暂无课程',
-    footer: { text: '管理课程', link: '/classroom/manage' }
-  },
-  {
-    title: '项目管理',
-    icon: BriefcaseIcon,
-    color: 'text-green-500',
-    data: [
-      { id: 1, label: '智慧校园课题', extra: '进行中' }
-    ],
-    empty: '暂无项目',
-    footer: { text: '管理项目', link: '/teacher/projects' }
-  },
-  {
-    title: '学生成果查看',
-    icon: AcademicCapIcon,
-    color: 'text-indigo-500',
-    data: [
-      { id: 1, label: '全国大学生数学建模竞赛一等奖', extra: '张三' }
-    ],
-    empty: '暂无成果',
-    footer: { text: '查看全部成果', link: '/achievement/teacher' }
-  },
-  {
-    title: '资源上传',
-    icon: ArrowUpTrayIcon,
-    color: 'text-purple-500',
-    data: [],
-    empty: '暂无上传资源',
-    footer: { text: '上传资源', link: '/resource/upload' }
-  },
-  {
-    title: '学校信息浏览',
-    icon: AcademicCapIcon,
-    color: 'text-green-600',
-    data: [],
-    empty: '点击下方进入',
-    footer: { text: '查看全部学校', link: '/school/list' }
-  },
-  {
-    title: '企业信息浏览',
-    icon: BuildingOffice2Icon,
-    color: 'text-yellow-600',
-    data: [],
-    empty: '点击下方进入',
-    footer: { text: '查看全部企业', link: '/company/list' }
-  }
-])
-
-const router = useRouter()
-=======
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 const appStore = useAppStore()
 const userInfo = computed(() => appStore.user as any || {})
 const userAvatar = computed(() => (userInfo.value?.avatar as string) || 'https://randomuser.me/api/portraits/men/33.jpg')
@@ -812,14 +387,8 @@ function statusText(status: string) {
 }
 
 onMounted(() => {
-<<<<<<< HEAD
-  fetchTeacherInfo()
-  fetchTeacherCourses()
-  fetchAchievementStats()
-=======
   fetchCourses()
   loadMyResources()
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 })
 
 function onEditProfileClick() {
@@ -1043,43 +612,4 @@ async function confirmDelete(resource: ResourceVO) {
     alert('删除失败：' + (e.message || '未知错误'))
   }
 }
-<<<<<<< HEAD
-
-// 成果统计数据
-const schoolStats = ref<SchoolAchievementStatistics>({
-  totalStudents: 0,
-  totalAchievements: 0,
-  totalVerifiedAchievements: 0,
-  portfolioCount: 0,
-  awardCount: 0,
-  researchCount: 0,
-  avgAchievementsPerStudent: 0,
-  verificationRate: 0
-})
-
-// 优秀学生列表
-const topStudents = ref<StudentAchievementOverviewVO[]>([])
-
-// 获取成果统计数据
-const fetchAchievementStats = async () => {
-  try {
-    const [statsRes, topStudentsRes] = await Promise.all([
-      achievementStatisticsApi.getSchoolStatistics(),
-      achievementStatisticsApi.getSchoolTopStudents(5)
-    ])
-    
-    if (statsRes.code === 0) {
-      schoolStats.value = statsRes.data
-    }
-    
-    if (topStudentsRes.code === 0) {
-      topStudents.value = topStudentsRes.data
-    }
-  } catch (error) {
-    message.error('获取成果统计数据失败')
-  }
-}
-</script> 
-=======
 </script>
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
