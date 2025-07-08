@@ -16,7 +16,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import axios from 'axios'
+import { apiRequest } from '@/lib/api/apiClient'
 
 const props = defineProps({
   // 位置坐标 (经度,纬度)
@@ -79,10 +79,10 @@ const loadingMessage = ref('加载地图中...')
 const fetchLocationFromBackend = async () => {
   try {
     // 调用后端API获取位置信息
-    const locationResponse = await axios.get('/api/v1/map/location')
+    const locationResponse = await apiRequest('/v1/map/location')
     
-    if (locationResponse.data.code === 200 && locationResponse.data.data) {
-      const data = locationResponse.data.data
+    if (locationResponse.data) {
+      const data = locationResponse.data
       
       // 检查返回数据是否包含有效的经纬度
       if (data.latitude && data.longitude && 
@@ -132,10 +132,10 @@ const initMap = async () => {
     
     try {
       // 尝试获取JS脚本URL配置
-      const configResponse = await axios.get('/api/v1/map/config')
+      const configResponse = await apiRequest('/v1/map/config')
       
-      if (configResponse.data.code === 200 && configResponse.data.data?.jsUrl) {
-        scriptUrl = configResponse.data.data.jsUrl
+      if (configResponse.data?.jsUrl) {
+        scriptUrl = configResponse.data.jsUrl
       }
     } catch (e) {
       console.warn('获取地图配置失败，使用默认配置', e)
@@ -174,12 +174,11 @@ const initMap = async () => {
     
     try {
       // 尝试获取动态地图配置
-      const dynamicMapResponse = await axios.get('/api/v1/map/dynamicmap', {
-        params: mapParams
-      })
+      const queryParams = new URLSearchParams(mapParams).toString()
+      const dynamicMapResponse = await apiRequest(`/v1/map/dynamicmap?${queryParams}`)
       
-      if (dynamicMapResponse.data.code === 200 && dynamicMapResponse.data.data) {
-        mapConfig = dynamicMapResponse.data.data
+      if (dynamicMapResponse.data) {
+        mapConfig = dynamicMapResponse.data
       }
     } catch (e) {
       console.warn('获取动态地图配置失败，使用默认配置', e)

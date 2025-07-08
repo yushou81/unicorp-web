@@ -76,7 +76,7 @@
 import { ref } from 'vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import LocationMap from '@/components/map/LocationMap.vue'
-import axios from 'axios'
+import { apiRequest } from '@/lib/api/apiClient'
 
 // 地图状态
 const position = ref({ longitude: 104.06, latitude: 30.67 }) // 默认位置：成都
@@ -116,12 +116,10 @@ const searchLocation = async () => {
   loading.value = true
   try {
     // 调用位置搜索API
-    const response = await axios.get('/api/v1/map/search', {
-      params: { keyword: searchQuery.value }
-    })
+    const response = await apiRequest(`/v1/map/search?keyword=${encodeURIComponent(searchQuery.value)}`)
     
-    if (response.data.code === 200 && response.data.data) {
-      const location = response.data.data
+    if (response.data) {
+      const location = response.data
       
       // 更新位置和名称
       position.value = {

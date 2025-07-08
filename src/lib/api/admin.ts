@@ -204,3 +204,38 @@ export function getHierarchicalJobCategories() {
     method: 'GET'
   })
 }
+
+// 审计日志相关API
+// 分页查询审计日志
+export function getAuditLogs(params?: {
+  page?: number
+  size?: number
+  userId?: number
+  action?: string
+  startTime?: string
+  endTime?: string
+  status?: string
+}) {
+  const queryParams = new URLSearchParams()
+  if (params?.page !== undefined) queryParams.append('page', params.page.toString())
+  if (params?.size !== undefined) queryParams.append('size', params.size.toString())
+  if (params?.userId !== undefined) queryParams.append('userId', params.userId.toString())
+  if (params?.action) queryParams.append('action', params.action)
+  if (params?.startTime) queryParams.append('startTime', params.startTime)
+  if (params?.endTime) queryParams.append('endTime', params.endTime)
+  if (params?.status) queryParams.append('status', params.status)
+  
+  const queryString = queryParams.toString()
+  const url = queryString ? `/v1/admin/audit/logs?${queryString}` : '/v1/admin/audit/logs'
+  
+  return apiRequest(url, {
+    method: 'GET'
+  })
+}
+
+// 获取日志统计信息
+export function getAuditLogStatistics() {
+  return apiRequest('/v1/admin/audit/statistics', {
+    method: 'GET'
+  })
+}

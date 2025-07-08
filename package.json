@@ -19,6 +19,7 @@
     "clsx": "^2.1.1",
     "crypto-browserify": "^3.12.1",
     "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "lucide-vue-next": "^0.294.0",
     "pinia": "^2.1.7",
     "recharts": "^2.15.0",

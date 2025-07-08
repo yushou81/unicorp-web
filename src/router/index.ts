@@ -16,6 +16,7 @@ import AdminDashboard from '@/views/dashboard/AdminDashboard.vue'
 import MentorDashboard from '@/views/dashboard/MentorDashboard.vue'
 import SchoolAdminDashboard from '@/views/dashboard/SchoolAdminDashboard.vue'
 import LoginSuccessView from '@/views/LoginSuccessView.vue'
+import CommunityView from '@/views/CommunityView.vue'
 import { getMe } from '@/lib/api/auth'
 import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
@@ -110,7 +111,6 @@ const router = createRouter({
             return { name: 'student-dashboard' }
           case 'EN_ADMIN':
           case 'COMPANYADMIN':
-          case 'EN_ADMIN':
             return { name: 'company-dashboard' }
           case 'TEACHER':
             return { name: 'teacher-dashboard' }
@@ -175,7 +175,22 @@ const router = createRouter({
       name: 'learn',
       component: () => import('@/views/LearnView.vue')
     },
-
+    {
+      path: '/community',
+      name: 'community',
+      component: CommunityView
+    },
+    {
+      path: '/community/topic/:id',
+      name: 'topic-detail',
+      component: () => import('@/views/community/TopicDetailView.vue')
+    },
+    {
+      path: '/my-topics',
+      name: 'my-topics',
+      component: () => import('@/views/MyTopicsView.vue'),
+      meta: { requiresAuth: true }
+    },
     {
       path: '/resource',
       name: 'resource',
@@ -276,12 +291,19 @@ const router = createRouter({
     {
       path: '/logs',
       name: 'logs',
-      component: () => import('@/views/dashboard/OperationLogs.vue')
+      component: () => import('@/components/dashboard/AuditLogManager.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/accounts',
       name: 'accounts',
       component: () => import('@/views/dashboard/Accounts.vue')
+    },
+    {
+      path: '/community/admin/topics',
+      name: 'TopicAdminView',
+      component: () => import('@/views/community/TopicAdminView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/:pathMatch(.*)*',

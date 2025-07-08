@@ -1,4 +1,4 @@
-const API_BASE_URL =  'http://192.168.1.2:8081/api'
+const API_BASE_URL =  'http://192.168.58.63:8081/api'
 
 
 let token = ''
@@ -10,8 +10,26 @@ export function getToken() {
   return token
 }
 
-export async function apiRequest<T>(endpoint: string, options: RequestInit = {}) {
-  const url = `${API_BASE_URL}${endpoint}`
+export async function apiRequest<T>(endpoint: string, options: RequestInit & { params?: Record<string, any> } = {}) {
+  let url = `${API_BASE_URL}${endpoint}`
+  
+  // 处理 params 参数
+  if (options.params) {
+    console.log('[apiRequest] 原始 params:', options.params)
+    const searchParams = new URLSearchParams()
+    Object.entries(options.params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.append(key, String(value))
+      }
+    })
+    const queryString = searchParams.toString()
+    if (queryString) {
+      url += (url.includes('?') ? '&' : '?') + queryString
+    }
+    console.log('[apiRequest] 处理后的 URL:', url)
+    // 删除 params，避免传递给 fetch
+    delete (options as any).params
+  }
   
   // 初始化headers
   let headers: Record<string, string> = {}
@@ -92,6 +110,11 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     console.log(`[apiRequest] 分页数据: 当前页=${data.data.current}, 总页数=${data.data.pages}, 总记录数=${data.data.total}`)
   }
 
+  // 添加 success 字段
+  const result = {
+    ...data,
+    success: data?.code === 200
+  }
 
-  return data as T
+  return result as T
 } 

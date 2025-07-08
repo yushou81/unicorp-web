@@ -47,7 +47,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import axios from 'axios'
+import { apiRequest } from '@/lib/api/apiClient'
 
 const props = defineProps({
   initialPosition: {
@@ -87,10 +87,10 @@ const initMap = async () => {
     
     try {
       // 尝试获取JS脚本URL配置
-      const response = await axios.get('/api/v1/map/config')
+      const response = await apiRequest('/v1/map/config')
       
-      if (response.data.code === 200 && response.data.data?.jsUrl) {
-        jsUrl = response.data.data.jsUrl
+      if (response.data?.jsUrl) {
+        jsUrl = response.data.jsUrl
       }
     } catch (e) {
       console.warn('获取地图配置失败，使用默认配置', e)
@@ -259,19 +259,13 @@ const handleSearch = async () => {
   loadingMessage.value = '搜索中...'
   
   try {
-    const response = await axios.get('/api/v1/map/search', {
-      params: {
-        keyword: searchKeyword.value,
-        city: '全国'
-      }
-    })
+    const response = await apiRequest(`/v1/map/search?keyword=${encodeURIComponent(searchKeyword.value)}&city=全国`)
     
-    if (response.data.code === 200 && 
-        response.data.data && 
-        response.data.data.pois && 
-        response.data.data.pois.length > 0) {
+    if (response.data && 
+        response.data.pois && 
+        response.data.pois.length > 0) {
       
-      searchResults.value = response.data.data.pois
+      searchResults.value = response.data.pois
       emit('search-results', searchResults.value)
       
       console.log(`找到 ${searchResults.value.length} 个地点`)
@@ -343,15 +337,10 @@ const fetchAddressFromCoordinates = async (longitude, latitude) => {
   loadingMessage.value = '获取地址信息中...'
   
   try {
-    const response = await axios.get(`/api/v1/map/regeocode`, {
-      params: {
-        lon: longitude,
-        lat: latitude
-      }
-    })
+    const response = await apiRequest(`/v1/map/regeocode?lon=${longitude}&lat=${latitude}`)
     
-    if (response.data.code === 200 && response.data.data && response.data.data.regeocode) {
-      currentAddress.value = response.data.data.regeocode
+    if (response.data && response.data.regeocode) {
+      currentAddress.value = response.data.regeocode
       
       // 尝试自动调整到最近的POI点
       try {
@@ -387,20 +376,13 @@ const adjustToNearestPOI = async (longitude, latitude) => {
   
   try {
     // 调用后端API获取附近POI点
-    const response = await axios.get('/api/v1/map/nearby-poi', {
-      params: {
-        lon: longitude,
-        lat: latitude,
-        radius: 100
-      }
-    })
+    const response = await apiRequest(`/v1/map/nearby-poi?lon=${longitude}&lat=${latitude}&radius=100`)
     
-    if (response.data.code === 200 && 
-        response.data.data && 
-        response.data.data.pois && 
-        response.data.data.pois.length > 0) {
+    if (response.data && 
+        response.data.pois && 
+        response.data.pois.length > 0) {
       
-      const nearestPOI = response.data.data.pois[0]
+      const nearestPOI = response.data.pois[0]
       if (!nearestPOI.location || !nearestPOI.distance) return
       
       const poiDistance = parseInt(nearestPOI.distance) || 0

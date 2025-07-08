@@ -275,6 +275,8 @@
             </div>
           </div>
         </div>
+        <!-- 审计日志管理 -->
+        <AuditLogManager v-if="activeTab === 'audit'" />
         <!-- 新增/编辑岗位分类弹窗、删除弹窗、添加学校弹窗等保留原有弹窗逻辑 -->
         <div v-if="showAddJobCategoryDialog || showEditJobCategoryDialog">
           <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
@@ -358,6 +360,7 @@ import { getAllSchools, getAllEnterprises } from '@/lib/api/organization'
 import Navbar from '@/components/layout/Navbar.vue'
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
+import AuditLogManager from '@/components/dashboard/AuditLogManager.vue'
 
 const showAddSchoolDialog = ref(false)
 const newSchool = ref({
@@ -1088,7 +1091,8 @@ const tabList = [
   { label: '企业列表', value: 'enterprise' },
   { label: '学校列表', value: 'school' },
   { label: '账号管理', value: 'user' },
-  { label: '岗位分类管理', value: 'jobCategory' }
+  { label: '岗位分类管理', value: 'jobCategory' },
+  { label: '审计日志', value: 'audit' }
 ]
 const activeTab = ref('pending')
 </script> 
