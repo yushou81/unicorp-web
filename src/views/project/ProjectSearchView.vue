@@ -2,17 +2,7 @@
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
     <div class="container mx-auto px-4">
      <!-- 返回按钮 -->
-     <div class="mb-6">
-        <button
-          @click="router.back()"
-          class="inline-flex items-center text-blue-600 hover:bg-blue-100 hover:text-blue-800 active:bg-blue-200 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-3 py-1.5 rounded-lg shadow-sm select-none"
-        >
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          返回
-        </button>
-      </div>
+   
       <h2 class="text-4xl font-extrabold text-gray-900 mb-8 text-center tracking-tight">项目搜索与对接</h2>
       <!-- 搜索框 -->
       <div class="flex flex-col sm:flex-row justify-center items-center mb-8 gap-2">
@@ -72,7 +62,7 @@
                 <span class="text-green-700 bg-green-100 px-3 py-1 rounded-full text-xs font-semibold">进行中</span>
               </td>
               <td class="px-4 py-3 text-center">
-                <router-link :to="`/project/detail/${project.projectId}`">
+                <router-link :to="`/project/dock/detail/${project.projectId}`">
                   <button class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold mr-2 shadow hover:from-blue-600 hover:to-indigo-600 transition">查看详情</button>
                 </router-link>
                 <button

@@ -452,9 +452,49 @@ const router = createRouter({
     },
     {
       path: '/project/dock',
-      name: 'project-dock',
       component: () => import('@/views/project/ProjectDockView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          redirect: '/project/dock/search'
+        },
+        {
+          path: 'search',
+          name: 'project-dock-search',
+          component: () => import('@/views/project/ProjectSearchView.vue')
+        },
+        {
+          path: 'publish',
+          name: 'project-dock-publish',
+          component: () => import('@/views/project/ProjectPublishView.vue')
+        },
+        {
+          path: 'my',
+          name: 'project-dock-my',
+          component: () => import('@/views/project/MyProjectListView.vue')
+        },
+        {
+          path: 'apply',
+          name: 'project-dock-apply',
+          component: () => import('@/views/project/MyProjectApplicationView.vue')
+        },
+        {
+          path: 'detail/:projectId',
+          name: 'project-dock-detail',
+          component: () => import('@/views/project/ProjectDetailView.vue')
+        },
+        {
+          path: 'fund-readonly/:projectId',
+          name: 'project-dock-fund-readonly',
+          component: () => import('@/views/project/ProjectFundReadonlyView.vue')
+        },
+        {
+          path: 'edit/:projectId',
+          name: 'project-dock-edit',
+          component: () => import('@/views/project/ProjectEditView.vue')
+        }
+      ]
     }
   ]
 })

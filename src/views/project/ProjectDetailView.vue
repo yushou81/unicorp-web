@@ -1,73 +1,150 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
-      <div class="container mx-auto px-4">
-        <!-- 返回按钮 -->
-      <div class="mb-6">
-        <button
-          @click="router.back()"
-          class="inline-flex items-center text-blue-600 hover:bg-blue-50 hover:text-blue-800 active:bg-blue-100 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-2 py-1 rounded-md select-none"
-        >
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          返回
-        </button>
-      </div>
-  
-      <!-- 项目基本信息卡片 -->
-      <div v-if="currentTab === '基本信息'" class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-        <div class="flex flex-col md:flex-row justify-between items-start mb-6">
-          <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2 text-center md:text-left">{{ project.title }}</h1>
-            <div class="flex flex-wrap items-center space-x-4 text-sm text-gray-600">
-              <span>发起方：{{ project.initiatorType === 'school' ? '学校' : '企业' }}</span>
-              <span>项目领域：{{ project.field }}</span>
-            </div>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">项目描述</h3>
-            <p class="text-gray-700 whitespace-pre-line">{{ project.description }}</p>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-3">项目信息</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-600">预算：</span>
-                <span class="font-medium">{{ project.budget ? `¥${project.budget}` : '未设置' }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">联系方式：</span>
-                <span class="font-medium">{{ project.contact }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">创建时间：</span>
-                <span class="font-medium">{{ formatDate(project.createTime) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 附件区 -->
-        <div v-if="project.attachments && project.attachments.length > 0" class="mt-8">
-          <h3 class="text-lg font-semibold text-gray-900 mb-3">项目附件</h3>
-          <div class="flex flex-wrap gap-3">
-            <a
-              v-for="(file, index) in project.attachments"
-              :key="index"
-              href="javascript:void(0)"
-              @click.prevent="handleDownload(file, index)"
-              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-lg shadow hover:bg-blue-200 transition font-medium"
+  <div>
+    <template v-if="isDockMode">
+      <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
+        <div class="container mx-auto px-4">
+          <!-- 返回按钮 -->
+          <div class="mb-6">
+            <button
+              @click="router.back()"
+              class="inline-flex items-center text-blue-600 hover:bg-blue-50 hover:text-blue-800 active:bg-blue-100 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-2 py-1 rounded-md select-none"
             >
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
-              {{ project.originalName[index] }}
-            </a>
+              返回
+            </button>
+          </div>
+          <h1 class="text-4xl font-bold text-gray-900 mb-8 text-center md:text-center">{{ project.title }}项目详情</h1>
+          <!-- 项目基本信息卡片 -->
+          <div v-if="currentTab === '基本信息'" class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start mb-6">
+              <div>
+               
+                <div class="flex flex-wrap items-center space-x-4 text-sm text-gray-600">
+                  <span>发起方：{{ project.initiatorType === 'school' ? '学校' : '企业' }}</span>
+                  <span>项目领域：{{ project.field }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">项目描述</h3>
+                <p class="text-gray-700 whitespace-pre-line">{{ project.description }}</p>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">项目信息</h3>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">预算：</span>
+                    <span class="font-medium">{{ project.budget ? `¥${project.budget}` : '未设置' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">联系方式：</span>
+                    <span class="font-medium">{{ project.contact }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">创建时间：</span>
+                    <span class="font-medium">{{ formatDate(project.createTime) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 附件区 -->
+            <div v-if="project.attachments && project.attachments.length > 0" class="mt-8">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">项目附件</h3>
+              <div class="flex flex-wrap gap-3">
+                <a
+                  v-for="(file, index) in project.attachments"
+                  :key="index"
+                  href="javascript:void(0)"
+                  @click.prevent="handleDownload(file, index)"
+                  class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-lg shadow hover:bg-blue-200 transition font-medium"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  {{ project.originalName[index] }}
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
+    <template v-else>
+      <Navbar />
+      <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
+        <div class="container mx-auto px-4">
+          <!-- 返回按钮 -->
+          <div class="mb-6">
+            <button
+              @click="router.back()"
+              class="inline-flex items-center text-blue-600 hover:bg-blue-50 hover:text-blue-800 active:bg-blue-100 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-2 py-1 rounded-md select-none"
+            >
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              返回
+            </button>
+          </div>
+          <h1 class="text-4xl font-bold text-gray-900 mb-8 text-center md:text-center">{{ project.title }}项目详情</h1>
+          <!-- 项目基本信息卡片 -->
+          <div v-if="currentTab === '基本信息'" class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start mb-6">
+              <div>
+               
+                <div class="flex flex-wrap items-center space-x-4 text-sm text-gray-600">
+                  <span>发起方：{{ project.initiatorType === 'school' ? '学校' : '企业' }}</span>
+                  <span>项目领域：{{ project.field }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">项目描述</h3>
+                <p class="text-gray-700 whitespace-pre-line">{{ project.description }}</p>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">项目信息</h3>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">预算：</span>
+                    <span class="font-medium">{{ project.budget ? `¥${project.budget}` : '未设置' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">联系方式：</span>
+                    <span class="font-medium">{{ project.contact }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">创建时间：</span>
+                    <span class="font-medium">{{ formatDate(project.createTime) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 附件区 -->
+            <div v-if="project.attachments && project.attachments.length > 0" class="mt-8">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">项目附件</h3>
+              <div class="flex flex-wrap gap-3">
+                <a
+                  v-for="(file, index) in project.attachments"
+                  :key="index"
+                  href="javascript:void(0)"
+                  @click.prevent="handleDownload(file, index)"
+                  class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-lg shadow hover:bg-blue-200 transition font-medium"
+                >
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  {{ project.originalName[index] }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
   
@@ -77,6 +154,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { assignProjectPermission, getProject } from '@/lib/api/project'
 import { downloadFile } from '@/lib/api/file'
+import Navbar from '@/components/layout/Navbar.vue'
+
 
 const route = useRoute()
 const router = useRouter()
@@ -133,6 +212,8 @@ const usedBudget = computed(() => {
 const remainingBudget = computed(() => {
   return (project.value.budget || 0) - usedBudget.value
 })
+
+const isDockMode = computed(() => route.path.startsWith('/project/dock/'))
 
 // 方法
 async function fetchProjectDetail() {

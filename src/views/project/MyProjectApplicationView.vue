@@ -1,18 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
     <div class="container mx-auto px-4">
-      <!-- 返回按钮 -->
-      <div class="mb-6">
-        <button
-          @click="router.back()"
-          class="inline-flex items-center text-blue-600 hover:bg-blue-100 hover:text-blue-800 active:bg-blue-200 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-3 py-1.5 rounded-lg shadow-sm select-none"
-        >
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          返回
-        </button>
-      </div>
+      
       <h2 class="text-4xl font-extrabold text-gray-900 mb-8 text-center tracking-tight">我的项目申请</h2>
       <!-- 筛选 Tabs -->
       <div class="flex justify-center mb-8 gap-4">
@@ -60,7 +49,7 @@
                 <td class="px-4 py-3 text-center">
                   <div class="flex flex-row gap-1 justify-center items-center">
                     <router-link
-                      :to="`/project/detail/${item.projectId}`"
+                      :to="`/project/dock/detail/${item.projectId}`"
                     >
                       <button class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold shadow hover:from-blue-600 hover:to-indigo-600 transition">查看详情</button>
                     </router-link>

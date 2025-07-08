@@ -1,4 +1,5 @@
 <template>
+  <Navbar />
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
     <div class="container mx-auto px-4">
       <!-- 返回按钮 -->
@@ -234,6 +235,7 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getProjects, updateProjectStatus, getContracts, getProjectProgressList, closeProject } from '@/lib/api/project'
 import { downloadFile } from '@/lib/api/file'
+import Navbar from '@/components/layout/Navbar.vue'
 
 const router = useRouter()
 const appStore = useAppStore()

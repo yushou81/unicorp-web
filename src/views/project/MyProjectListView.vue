@@ -2,17 +2,7 @@
     <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
       <div class="container mx-auto px-4">
     <!-- 返回按钮 -->
-    <div class="mb-6">
-        <button
-          @click="router.back()"
-          class="inline-flex items-center text-blue-600 hover:bg-blue-100 hover:text-blue-800 active:bg-blue-200 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-3 py-1.5 rounded-lg shadow-sm select-none"
-        >
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          返回
-        </button>
-      </div>
+   
   
         <!-- 标题 -->
         <h2 class="text-4xl font-extrabold text-gray-900 mb-8 text-center tracking-tight">我的项目管理</h2>
@@ -87,7 +77,7 @@
                 </td>
                 <td class="px-4 py-3 text-center">{{ project.contact }}</td>
                 <td class="px-4 py-3 text-center">
-                  <router-link :to="`/project/detail/${project.projectId}`">
+                  <router-link :to="`/project/dock/detail/${project.projectId}`">
                     <button class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold mr-1 shadow hover:from-blue-600 hover:to-indigo-600 transition">
                       查看详情
                     </button>
@@ -129,7 +119,7 @@
                           @click="openFundApplyDialog(project.projectId)"
                           class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-800 to-emerald-600 text-white text-xs font-semibold shadow hover:from-green-900 hover:to-emerald-700 transition ml-1"
                         >经费申请</button>
-                        <router-link :to="`/project/${project.projectId}/fund-readonly`">
+                        <router-link :to="`/project/dock/fund-readonly/${project.projectId}`">
                           <button
                             class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-400 to-indigo-400 text-white text-xs font-semibold shadow hover:from-blue-500 hover:to-indigo-500 transition ml-1"
                           >经费申请详情</button>
@@ -653,7 +643,7 @@
   // 操作按钮相关方法（空实现，后续可补充具体逻辑）
   function editProject(projectId: number) {
     // 跳转到编辑页面
-    router.push(`/project/edit/${projectId}`)
+    router.push(`/project/dock/edit/${projectId}`)
   }
   function cancelProject(projectId: number) {
     currentAction.value = 'canceled'

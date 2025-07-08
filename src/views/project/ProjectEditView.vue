@@ -1,120 +1,143 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
-    <div class="container mx-auto px-4">
-      <!-- 返回按钮 -->
-      <div class="mb-6">
-        <button
-          @click="router.back()"
-          class="inline-flex items-center text-blue-600 hover:bg-blue-50 hover:text-blue-800 active:bg-blue-100 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-2 py-1 rounded-md select-none"
-        >
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          返回
-        </button>
-      </div>
+  <div>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-10">
+      <div class="container mx-auto px-4">
+        <div class="mb-6">
+          <button
+            @click="router.back()"
+            class="inline-flex items-center text-blue-600 hover:bg-blue-50 hover:text-blue-800 active:bg-blue-100 active:text-blue-900 active:scale-95 transition-all duration-200 text-sm font-medium px-2 py-1 rounded-md select-none"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            返回
+          </button>
+        </div>
 
-      <!-- 标题 -->
-      <h2 class="text-3xl font-bold text-gray-900 mb-10 text-center">编辑合作项目</h2>
+        <!-- 标题 -->
+        <h2 class="text-3xl font-bold text-gray-900 mb-10 text-center">编辑合作项目</h2>
 
-      <!-- 表单卡片 -->
-      <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10">
-        <form @submit.prevent="submitForm" class="space-y-8">
-          <!-- 项目名称 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              项目名称 <span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="form.title"
-              type="text"
-              class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
-              placeholder="请输入项目名称"
-            />
-          </div>
+        <!-- 表单卡片 -->
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10">
+          <form @submit.prevent="submitForm" class="space-y-8">
+            <!-- 项目名称 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                项目名称 <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="form.title"
+                type="text"
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
+                placeholder="请输入项目名称"
+              />
+            </div>
 
-          <!-- 项目描述 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              项目描述 <span class="text-red-500">*</span>
-            </label>
-            <textarea
-              v-model="form.description"
-              rows="6"
-              class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
-              placeholder="请详细描述项目内容、目标、技术要求等"
-            ></textarea>
-          </div>
+            <!-- 项目描述 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                项目描述 <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                v-model="form.description"
+                rows="6"
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
+                placeholder="请详细描述项目内容、目标、技术要求等"
+              ></textarea>
+            </div>
 
-          <!-- 项目领域 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              项目领域 <span class="text-red-500">*</span>
-            </label>
-            <select
-              v-model="form.field"
-              class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
-            >
-              <option value="">请选择项目领域</option>
-              <option value="智能制造">智能制造</option>
-              <option value="人工智能">人工智能</option>
-              <option value="大数据">大数据</option>
-              <option value="云计算">云计算</option>
-              <option value="物联网">物联网</option>
-              <option value="区块链">区块链</option>
-              <option value="新能源">新能源</option>
-              <option value="生物医药">生物医药</option>
-              <option value="其他">其他</option>
-            </select>
-          </div>
+            <!-- 项目领域 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                项目领域 <span class="text-red-500">*</span>
+              </label>
+              <select
+                v-model="form.field"
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
+              >
+                <option value="">请选择项目领域</option>
+                <option value="智能制造">智能制造</option>
+                <option value="人工智能">人工智能</option>
+                <option value="大数据">大数据</option>
+                <option value="云计算">云计算</option>
+                <option value="物联网">物联网</option>
+                <option value="区块链">区块链</option>
+                <option value="新能源">新能源</option>
+                <option value="生物医药">生物医药</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
 
-          <!-- 预算 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              项目预算（元）<span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="form.budget"
-              type="number"
-              min="0"
-              class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
-              placeholder="请输入项目预算金额"
-            />
-          </div>
+            <!-- 预算 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                项目预算（元）<span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="form.budget"
+                type="number"
+                min="0"
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
+                placeholder="请输入项目预算金额"
+              />
+            </div>
 
-          <!-- 联系方式 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              联系方式 <span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="form.contact"
-              type="text"
-              class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
-              placeholder="请输入联系人姓名和电话"
-            />
-          </div>
+            <!-- 联系方式 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                联系方式 <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="form.contact"
+                type="text"
+                class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
+                placeholder="请输入联系人姓名和电话"
+              />
+            </div>
 
-          <!-- 附件上传卡片 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              项目附件
-            </label>
-            <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gradient-to-r from-blue-50 to-indigo-50">
-              <!-- 现有附件列表 -->
-              <div v-if="existingAttachments.length > 0" class="mb-4">
-                <h4 class="text-sm font-medium text-gray-700 mb-2">现有附件：</h4>
-                <div class="space-y-2">
-                  <div v-for="(file, index) in existingAttachments" :key="`existing-${index}`" class="flex items-center justify-between p-2 bg-blue-50 rounded-lg shadow-sm">
+            <!-- 附件上传卡片 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                项目附件
+              </label>
+              <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gradient-to-r from-blue-50 to-indigo-50">
+                <!-- 现有附件列表 -->
+                <div v-if="existingAttachments.length > 0" class="mb-4">
+                  <h4 class="text-sm font-medium text-gray-700 mb-2">现有附件：</h4>
+                  <div class="space-y-2">
+                    <div v-for="(file, index) in existingAttachments" :key="`existing-${index}`" class="flex items-center justify-between p-2 bg-blue-50 rounded-lg shadow-sm">
+                      <div class="flex items-center">
+                        <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span class="text-sm text-gray-700">{{ originalName && originalName[index] ? originalName[index] : getFileNameFromUrl(file) }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        @click="removeExistingFile(index)"
+                        class="text-red-500 hover:text-red-700 rounded-full p-1 bg-white shadow"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 新上传文件列表 -->
+                <div v-if="form.attachments.length > 0" class="space-y-2">
+                  <h4 class="text-sm font-medium text-gray-700 mb-2">新上传文件：</h4>
+                  <div v-for="(file, index) in form.attachments" :key="`new-${index}`" class="flex items-center justify-between p-2 bg-gray-50 rounded-lg shadow-sm">
                     <div class="flex items-center">
-                      <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span class="text-sm text-gray-700">{{ originalName && originalName[index] ? originalName[index] : getFileNameFromUrl(file) }}</span>
+                      <span class="text-sm text-gray-700">{{ getFileName(file) }}</span>
                     </div>
                     <button
                       type="button"
-                      @click="removeExistingFile(index)"
+                      @click="removeFile(index)"
                       class="text-red-500 hover:text-red-700 rounded-full p-1 bg-white shadow"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -123,73 +146,51 @@
                     </button>
                   </div>
                 </div>
-              </div>
 
-              <!-- 新上传文件列表 -->
-              <div v-if="form.attachments.length > 0" class="space-y-2">
-                <h4 class="text-sm font-medium text-gray-700 mb-2">新上传文件：</h4>
-                <div v-for="(file, index) in form.attachments" :key="`new-${index}`" class="flex items-center justify-between p-2 bg-gray-50 rounded-lg shadow-sm">
-                  <div class="flex items-center">
-                    <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <span class="text-sm text-gray-700">{{ getFileName(file) }}</span>
-                  </div>
-                  <button
-                    type="button"
-                    @click="removeFile(index)"
-                    class="text-red-500 hover:text-red-700 rounded-full p-1 bg-white shadow"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                <!-- 上传按钮始终显示 -->
+                <div class="mt-2">
+                  <label for="file-upload" class="relative cursor-pointer bg-white rounded-lg font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 px-1 py-0.5 shadow">
+                    <span>继续添加文件</span>
+                    <input id="file-upload" name="file-upload" type="file" class="sr-only" @change="handleFileUpload" multiple />
+                  </label>
+                  <p class="text-xs text-gray-500 mt-1">支持 PDF, DOC, DOCX, JPG, PNG 格式，单个文件不超过 10MB</p>
                 </div>
               </div>
-
-              <!-- 上传按钮始终显示 -->
-              <div class="mt-2">
-                <label for="file-upload" class="relative cursor-pointer bg-white rounded-lg font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 px-1 py-0.5 shadow">
-                  <span>继续添加文件</span>
-                  <input id="file-upload" name="file-upload" type="file" class="sr-only" @change="handleFileUpload" multiple />
-                </label>
-                <p class="text-xs text-gray-500 mt-1">支持 PDF, DOC, DOCX, JPG, PNG 格式，单个文件不超过 10MB</p>
-              </div>
             </div>
-          </div>
 
-          <!-- 提交按钮区 -->
-          <div class="flex justify-end space-x-4 pt-6">
-            <router-link
-              :to="`/project/detail/${projectId}`"
-              class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition shadow"
-            >
-              取消
-            </router-link>
-            <button
-              type="button"
-              :disabled="isSubmitting"
-              class="px-6 py-3 bg-gray-400 text-white font-semibold rounded-xl hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition shadow"
-              @click="saveDraft"
-            >
-              {{ isSubmitting ? '保存中...' : '保存草稿' }}
-            </button>
-            <button
-              type="submit"
-              :disabled="isSubmitting"
-              class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow"
-            >
-              {{ isSubmitting ? '更新中...' : '更新项目' }}
-            </button>
-          </div>
-        </form>
+            <!-- 提交按钮区 -->
+            <div class="flex justify-end space-x-4 pt-6">
+              <router-link
+                :to="`/project/detail/${projectId}`"
+                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition shadow"
+              >
+                取消
+              </router-link>
+              <button
+                type="button"
+                :disabled="isSubmitting"
+                class="px-6 py-3 bg-gray-400 text-white font-semibold rounded-xl hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition shadow"
+                @click="saveDraft"
+              >
+                {{ isSubmitting ? '保存中...' : '保存草稿' }}
+              </button>
+              <button
+                type="submit"
+                :disabled="isSubmitting"
+                class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow"
+              >
+                {{ isSubmitting ? '更新中...' : '更新项目' }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { uploadFile, updateProject, getProject } from '@/lib/api/project'
@@ -198,6 +199,7 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const projectId = Number(route.params.projectId)
+const isDockMode = computed(() => route.path.startsWith('/project/dock/'))
 
 const form = ref({
   title: '',

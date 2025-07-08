@@ -7,12 +7,14 @@
       </div>
       <nav class="hidden md:flex space-x-6 text-gray-700 font-medium">
         <router-link to="/" class="hover:text-blue-600 transition">首页</router-link>
-        <router-link
+        <button
           v-if="isProjectDockRole"
-          to="javascript:void(0)"
-          class="hover:text-blue-600 transition"
-          @click.prevent="goProjectDock"
-        >项目对接</router-link>
+          @click="goProjectDock"
+          class="hover:text-blue-600 transition bg-transparent border-none cursor-pointer"
+          style="background:none;padding:0;font:inherit"
+        >
+          项目对接
+        </button>
         <router-link to="/job" class="hover:text-blue-600 transition">人才招聘</router-link>
         <router-link to="/classroom" class="hover:text-blue-600 transition">双师课堂</router-link>
         <router-link to="/community" class="hover:text-blue-600 transition">社区交流</router-link>
