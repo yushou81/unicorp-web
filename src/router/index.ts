@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
@@ -17,8 +17,20 @@ import MentorDashboard from '@/views/dashboard/MentorDashboard.vue'
 import SchoolAdminDashboard from '@/views/dashboard/SchoolAdminDashboard.vue'
 import LoginSuccessView from '@/views/LoginSuccessView.vue'
 import { getMe } from '@/lib/api/auth'
-import { setToken } from '@/lib/api/apiClient'
 import { useAppStore } from '@/stores/app'
+
+// 添加成果展示相关的组件导入
+import AchievementOverview from '@/views/achievement/StudentAchievement.vue'
+import TeacherVerifyView from '@/views/achievement/TeacherVerifyView.vue'
+import EnterpriseAchievementView from '@/views/achievement/EnterpriseAchievementView.vue'
+import SchoolAchievementManageView from '@/views/achievement/SchoolAchievementManageView.vue'
+import SchoolAchievementDetailView from '@/views/achievement/SchoolAchievementDetailView.vue'
+import AdminAchievementManageView from '@/views/achievement/AdminAchievementManageView.vue'
+
+// 成果详情页面
+const AwardDetailView = () => import('@/views/achievement/AwardDetailView.vue')
+const PortfolioDetailView = () => import('@/views/achievement/PortfolioDetailView.vue')
+const ResearchDetailView = () => import('@/views/achievement/ResearchDetailView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -229,7 +241,120 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/project/search',
+        path: '/logs',
+        name: 'logs',
+        component: () => import('@/views/dashboard/OperationLogs.vue')
+      },
+      {
+        path: '/accounts',
+        name: 'accounts',
+        component: () => import('@/views/dashboard/Accounts.vue')
+      },
+    
+    // 学校管理员路由
+    {
+      path: '/admin/school',
+      component: () => import('@/views/admin/AdminLayout.vue'),
+      meta: { requiresAuth: true, role: 'SCHOOL_ADMIN' },
+      children: [
+        {
+          path: '',
+          redirect: { name: 'SchoolAchievementManage' }
+        }
+        // 成果管理相关路由已移至 /achievement/school
+      ]
+    },
+
+    // 成果展示相关路由
+    {
+      path: '/achievement',
+      component: () => import('@/views/achievement/AchievementLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          redirect: '/achievement/student'
+        },
+        {
+          path: 'student',
+          component: () => import('@/views/achievement/StudentAchievement.vue'),
+          meta: { role: ['STUDENT'] }
+        },
+        {
+          path: 'teacher',
+          component: () => import('@/views/achievement/TeacherVerifyView.vue'),
+          meta: { role: ['TEACHER', 'SCH_ADMIN', 'SCHOOLADMIN'] }
+        },
+        {
+          path: 'enterprise',
+          component: () => import('@/views/achievement/EnterpriseAchievementView.vue'),
+          meta: { role: ['EN_ADMIN', 'COMPANYADMIN','EN_TEACHER'] }
+        },
+        {
+          path: 'enterprise/portfolio/:id',
+          component: () => import('@/views/achievement/PortfolioDetailView.vue'),
+          meta: { role: ['EN_ADMIN', 'COMPANYADMIN','EN_TEACHER'] }
+        },
+        {
+          path: 'enterprise/award/:id',
+          component: () => import('@/views/achievement/AwardDetailView.vue'),
+          meta: { role: ['EN_ADMIN', 'COMPANYADMIN','EN_TEACHER'] }
+        },
+        {
+          path: 'enterprise/research/:id',
+          component: () => import('@/views/achievement/ResearchDetailView.vue'),
+          meta: { role: ['EN_ADMIN', 'COMPANYADMIN','EN_TEACHER'] }
+        },
+        {
+          path: 'school',
+          component: () => import('@/views/achievement/SchoolAchievementManageView.vue'),
+          meta: { role: ['SCH_ADMIN', 'SCHOOLADMIN', 'TEACHER'] }
+        },
+        {
+          path: 'admin',
+          component: () => import('@/views/achievement/AdminAchievementManageView.vue'),
+          meta: { role: ['SYSADMIN', 'ADMIN'] }
+        }
+      ]
+    },
+    {
+      path: '/achievement/award/:id',
+      name: 'award-detail',
+      component: AwardDetailView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/achievement/portfolio/:id',
+      name: 'portfolio-detail',
+      component: PortfolioDetailView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/achievement/research/:id',
+      name: 'research-detail',
+      component: ResearchDetailView,
+      meta: { requiresAuth: true }
+    },
+    // {
+    //   path: '/teacher/projects',
+    //   name: 'TeacherProjectManage',
+    //   component: () => import('@/views/project/TeacherProjectManageView.vue'),
+    //   meta: { requiresAuth: true, role: 'teacher' }
+    // },
+    {
+      path: '/project/audit',
+      name: 'project-audit',
+      component: () => import('@/views/project/ProjectAuditView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/my-project-applications',
+      name: 'MyProjectApplications',
+      component: () => import('@/views/project/MyProjectApplicationView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+          path: '/project/search',
       name: 'project-search',
       component: () => import('@/views/project/ProjectSearchView.vue'),
       meta: { requiresAuth: true }
@@ -260,34 +385,6 @@ const router = createRouter({
       name: 'equipment-bookings',
       component: () => import('@/views/resource/EquipmentBookingManageView.vue')
     },
-    // {
-    //   path: '/teacher/projects',
-    //   name: 'TeacherProjectManage',
-    //   component: () => import('@/views/project/TeacherProjectManageView.vue'),
-    //   meta: { requiresAuth: true, role: 'teacher' }
-    // },
-    {
-      path: '/project/audit',
-      name: 'project-audit',
-      component: () => import('@/views/project/ProjectAuditView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/my-project-applications',
-      name: 'MyProjectApplications',
-      component: () => import('@/views/project/MyProjectApplicationView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/logs',
-      name: 'logs',
-      component: () => import('@/views/dashboard/OperationLogs.vue')
-    },
-    {
-      path: '/accounts',
-      name: 'accounts',
-      component: () => import('@/views/dashboard/Accounts.vue')
-    },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -314,35 +411,49 @@ router.beforeEach(async (to, from, next) => {
   // 如果有token但没有用户信息，尝试获取用户信息
   if (token && !appStore.user) {
     try {
-      setToken(token)
       const userInfo = await getMe() as any
       if (userInfo && userInfo.data) {
         appStore.setUser(userInfo.data)
       }
     } catch (e) {
       console.error('获取用户信息失败:', e)
-      // 如果获取用户信息失败，可能是token过期，清除token
       localStorage.removeItem('token')
       appStore.logout()
+      next('/login')
+      return
     }
   }
   
-  // 检查管理员路由的权限
-  if (to.path === '/dashboard/admin') {
+  // 需要认证的路由
+  if (to.meta.requiresAuth && !appStore.user) {
+    next({ 
+      name: 'login',
+      query: { redirect: to.fullPath }
+    })
+    return
+  }
+  
+  // 检查角色权限
+  if (to.meta.role) {
     const user = appStore.user as any
     if (!user) {
       next('/login')
       return
     }
     
-    const allowedRoles = ['SYSADMIN', 'admin', 'ADMIN']
-    if (!allowedRoles.includes(user.role)) {
-      console.warn(`用户角色 ${user.role} 尝试访问管理员面板`)
+    const requiredRoles = Array.isArray(to.meta.role) ? to.meta.role : [to.meta.role]
+    const userRole = user.role.toUpperCase()
+    
+    if (!requiredRoles.some(role => role.toUpperCase() === userRole)) {
+      console.warn(`用户角色 ${userRole} 尝试访问需要 ${requiredRoles.join(',')} 角色的页面`)
       next('/')
       return
     }
   }
   
+<<<<<<< HEAD
+  next()
+=======
   // 检查项目合作管理相关路由的权限
   if (to.path.startsWith('/project/')) {
     const user = appStore.user as any
@@ -368,6 +479,7 @@ router.beforeEach(async (to, from, next) => {
   } else {
     next()
   }
+>>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 })
 
 export default router 

@@ -593,7 +593,7 @@ const blocks = ref<BlockItem[]>([
       { id: 1, label: 'AI创新项目论文', extra: '李四' }
     ],
     empty: '暂无成果',
-    footer: { text: '查看全部成果', link: '/achievements' }
+    footer: { text: '查看全部成果', link: '/achievement/enterprise' }
   },
   {
     title: '资源上传',

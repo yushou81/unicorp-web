@@ -11,7 +11,7 @@
         <router-link to="/job" class="hover:text-blue-600 transition">人才招聘</router-link>
         <router-link to="/classroom" class="hover:text-blue-600 transition">双师课堂</router-link>
         <router-link to="/resource" class="hover:text-blue-600 transition">资源共享</router-link>
-        <router-link to="/student/achievement" class="hover:text-blue-600 transition">成果展示</router-link>
+        <router-link :to="getAchievementRoute()" class="hover:text-blue-600 transition">成果展示</router-link>
         <router-link :to="getDashboardRoute()" class="hover:text-blue-600 transition">我的</router-link>
       </nav>
       <div class="flex items-center space-x-2">
@@ -71,15 +71,13 @@ const userAvatar = computed(() => {
 const getDashboardRoute = () => {
   if (!isLoggedIn.value) return '/login'
   
-  // 直接从store获取用户对象，避免类型转换问题
   const user = appStore.user as any || {}
   const role = (user.role || '').toUpperCase() // 统一转为大写处理
   
-  console.log('当前用户角色:', role, '原始值:', user.role) // 调试信息
+  console.log('当前用户角色:', role) // 调试信息
   
   switch (role) {
     case 'SYSADMIN':
-    case 'ADMIN':
       return '/dashboard/admin'
     case 'SCH_ADMIN':
     case 'SCHOOLADMIN':
@@ -97,6 +95,36 @@ const getDashboardRoute = () => {
     default:
       console.log('未匹配到对应角色路由，使用默认/dashboard') // 调试信息
       return '/dashboard'
+  }
+}
+
+// 根据用户角色获取对应的成果展示路由
+const getAchievementRoute = () => {
+  if (!isLoggedIn.value) return '/achievement'
+  
+  const user = appStore.user as any || {}
+  const role = (user.role || '').toUpperCase()
+  
+  switch (role) {
+   
+    //学生
+    case 'STUDENT':
+      return '/achievement/student'
+       //老师
+    case 'TEACHER':
+    //学校管理员
+    case 'SCH_ADMIN':
+      return '/achievement/school'
+    //企业管理员
+    case 'EN_ADMIN':
+    // 企业老师
+    case 'EN_TEACHER':
+      return '/achievement/enterprise'
+    //系统管理员
+    case 'SYSADMIN':
+      return '/achievement/admin'
+    default:
+      return '/achievement'
   }
 }
 
