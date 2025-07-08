@@ -35,6 +35,72 @@
             <p class="text-gray-700">{{ chapter.description || '暂无章节详细介绍' }}</p>
           </div>
           
+          <!-- 章节视频区 -->
+          <div class="mt-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">章节视频</h3>
+            <div v-if="videoLoading" class="py-4 flex justify-center">
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            </div>
+            <div v-else-if="videoError" class="text-red-500 py-2">{{ videoError }}</div>
+            <div v-else>
+              <div v-if="chapterVideo">
+                <div class="mb-2">
+                  <strong>{{ chapterVideo.title }}</strong>
+                  <span class="text-xs text-gray-500 ml-2">{{ chapterVideo.duration ? (chapterVideo.duration + '秒') : '' }}</span>
+                </div>
+                <video
+                  v-if="chapterVideo.filePath"
+                  ref="videoRef"
+                  :src="chapterVideo.filePath"
+                  controls
+                  class="w-full max-w-2xl mb-2"
+                  @ended="onVideoEnded"
+                  :poster="chapterVideo.coverImage"
+                />
+                <div class="flex items-center space-x-2 mb-2">
+                  <button v-if="isStudent && !chapterVideo.isCompleted" @click="markVideoCompletedHandler" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">标记已完成</button>
+                  <span v-if="isStudent && chapterVideo.isCompleted" class="text-green-600 text-sm">已完成</span>
+                  <button v-if="isTeacher" @click="showEditVideo = true" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">编辑视频信息</button>
+                  <button v-if="isTeacher" @click="deleteVideoHandler" class="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700">删除视频</button>
+                </div>
+                <div class="text-gray-600 text-sm mb-2">{{ chapterVideo.description }}</div>
+              </div>
+              <div v-else class="text-gray-400 py-2">暂无章节视频</div>
+              <div v-if="isTeacher && !chapterVideo">
+                <button @click="showUploadVideo = true" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">上传章节视频</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 上传/编辑视频弹窗 -->
+          <div v-if="showUploadVideo || showEditVideo" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 max-w-lg w-full relative">
+              <button @click="closeVideoModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <form @submit.prevent="handleVideoSubmit">
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">视频标题</label>
+                  <input v-model="videoForm.title" required class="w-full border rounded px-3 py-2" />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">视频描述</label>
+                  <textarea v-model="videoForm.description" class="w-full border rounded px-3 py-2" />
+                </div>
+                <div class="mb-4" v-if="showUploadVideo">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">选择视频文件</label>
+                  <input type="file" accept="video/*" @change="onVideoFileChange" required />
+                </div>
+                <div class="flex justify-end space-x-2">
+                  <button type="button" @click="closeVideoModal" class="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50">取消</button>
+                  <button type="submit" :disabled="videoSubmitting" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50">{{ videoSubmitting ? '提交中...' : '提交' }}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
           <!-- 教师编辑按钮 -->
           <div v-if="isTeacher" class="mt-6">
             <router-link 
@@ -343,6 +409,7 @@ import {
 } from '@/lib/api/classroom'
 import ChapterResourceManager from '@/components/classroom/ChapterResourceManager.vue'
 import LearningProgressManager from '@/components/classroom/LearningProgressManager.vue'
+import { uploadChapterVideo, getChapterVideoByChapterId, getChapterVideoById, updateChapterVideo, deleteChapterVideo, markVideoCompleted } from '@/lib/api/chapterVideo'
 
 // 路由和导航
 const route = useRoute()
@@ -374,6 +441,19 @@ const chapterStats = ref<any>(null)
 const chapterStatsLoading = ref(false)
 const initializingChapterProgress = ref(false)
 const progressManagerRef = ref()
+
+const videoRef = ref<HTMLVideoElement|null>(null)
+const chapterVideo = ref<any>(null)
+const videoLoading = ref(false)
+const videoError = ref('')
+const showUploadVideo = ref(false)
+const showEditVideo = ref(false)
+const videoForm = ref({
+  title: '',
+  description: '',
+  file: null as File|null
+})
+const videoSubmitting = ref(false)
 
 // 批量初始化本章节所有学生的进度
 const handleInitializeChapterProgressForAllStudents = async () => {
@@ -718,6 +798,99 @@ const formatDate = (dateString: string) => {
   const minutes = String(date.getMinutes()).padStart(2, '0')
   return `${year}-${month}-${day} ${hours}:${minutes}`
 }
+
+// 加载章节视频
+const loadChapterVideo = async () => {
+  videoLoading.value = true
+  videoError.value = ''
+  try {
+    const res = await getChapterVideoByChapterId(chapterId.value)
+    if (res.code === 200 && res.data) {
+      chapterVideo.value = res.data
+      // 回填编辑表单
+      videoForm.value.title = res.data.title
+      videoForm.value.description = res.data.description
+    } else {
+      chapterVideo.value = null
+    }
+  } catch (err: any) {
+    videoError.value = err.message || '加载章节视频失败'
+  } finally {
+    videoLoading.value = false
+  }
+}
+
+const onVideoFileChange = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (target.files && target.files[0]) {
+    videoForm.value.file = target.files[0]
+  }
+}
+
+const handleVideoSubmit = async () => {
+  videoSubmitting.value = true
+  try {
+    if (showUploadVideo.value) {
+      // 上传
+      const formData = new FormData()
+      formData.append('file', videoForm.value.file as File)
+      formData.append('chapterId', String(chapterId.value))
+      formData.append('title', videoForm.value.title)
+      formData.append('description', videoForm.value.description)
+      await uploadChapterVideo(formData)
+    } else if (showEditVideo.value && chapterVideo.value) {
+      // 编辑
+      await updateChapterVideo(chapterVideo.value.id, {
+        chapterId: chapterId.value,
+        title: videoForm.value.title,
+        description: videoForm.value.description
+      })
+    }
+    await loadChapterVideo()
+    closeVideoModal()
+  } catch (err: any) {
+    alert(err.message || '操作失败')
+  } finally {
+    videoSubmitting.value = false
+  }
+}
+
+const closeVideoModal = () => {
+  showUploadVideo.value = false
+  showEditVideo.value = false
+  videoForm.value = { title: '', description: '', file: null }
+}
+
+const deleteVideoHandler = async () => {
+  if (!chapterVideo.value) return
+  if (!confirm('确定要删除该章节视频吗？')) return
+  try {
+    await deleteChapterVideo(chapterVideo.value.id)
+    await loadChapterVideo()
+  } catch (err: any) {
+    alert(err.message || '删除失败')
+  }
+}
+
+const onVideoEnded = () => {
+  if (!chapterVideo.value) return
+  markVideoCompletedHandler()
+}
+
+const markVideoCompletedHandler = async () => {
+  if (!chapterVideo.value) return
+  try {
+    await markVideoCompleted(chapterVideo.value.id)
+    await loadChapterVideo()
+  } catch (err: any) {
+    alert(err.message || '操作失败')
+  }
+}
+
+// 页面加载时加载章节视频
+watch([chapterId], () => {
+  loadChapterVideo()
+}, { immediate: true })
 
 // 监听路由参数变化
 onMounted(() => {
