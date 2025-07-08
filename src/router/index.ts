@@ -457,35 +457,7 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-<<<<<<< HEAD
   next()
-=======
-  // 检查项目合作管理相关路由的权限
-  if (to.path.startsWith('/project/')) {
-    const user = appStore.user as any
-    if (!user) {
-      next('/login')
-      return
-    }
-    
-    // 根据具体路由检查权限
-    if (to.path === '/project/publish' && !appStore.hasProjectPermission('publish_project')) {
-      next('/dashboard')
-      return
-    }
-    
-    if (to.path === '/project/application' && !appStore.hasProjectPermission('review_application')) {
-      next('/dashboard')
-      return
-    }
-  }
-  
-  if (to.meta.requiresAuth && !appStore.user) {
-    next({ name: 'login' })
-  } else {
-    next()
-  }
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 })
 
 export default router 

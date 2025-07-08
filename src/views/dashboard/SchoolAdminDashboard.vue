@@ -11,6 +11,7 @@
         <p class="text-base text-blue-200">高效管理学校用户与个人信息</p>
       </div>
     </div>
+
     <!-- 个人信息板块 -->
     <div class="container mx-auto px-4 py-8">
       <UserProfileInfo
@@ -421,7 +422,9 @@
       </div>
     </div>
   </div>
+  </div>
 </template>
+
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { BriefcaseIcon, AcademicCapIcon, DocumentTextIcon, BuildingOffice2Icon, UserGroupIcon, ShieldCheckIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
@@ -447,13 +450,7 @@ import {
 import { getEquipmentBookings, reviewEquipmentBooking } from '@/lib/api/resource'
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
-<<<<<<< HEAD
-import { achievementStatisticsApi } from '@/lib/api/achievement'
-import type { SchoolAchievementStatistics, StudentAchievementOverviewVO } from '@/lib/api/achievement'
-import { message } from 'ant-design-vue'
-=======
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 
 const school = ref({
   logo: 'https://randomuser.me/api/portraits/lego/2.jpg',
@@ -1152,52 +1149,6 @@ async function fetchRecentEquipmentBookings() {
   }
 }
 
-<<<<<<< HEAD
-// 成果统计数据
-const schoolStats = ref<SchoolAchievementStatistics>({
-  totalStudents: 0,
-  totalAchievements: 0,
-  totalVerifiedAchievements: 0,
-  portfolioCount: 0,
-  awardCount: 0,
-  researchCount: 0,
-  avgAchievementsPerStudent: 0,
-  verificationRate: 0
-})
-
-// 优秀学生列表
-const topStudents = ref<StudentAchievementOverviewVO[]>([])
-
-// 计算百分比
-const calculatePercentage = (part: number = 0, total: number = 0) => {
-  if (total === 0) return 0
-  return ((part / total) * 100).toFixed(1)
-}
-
-// 获取成果统计数据
-const fetchAchievementStats = async () => {
-  try {
-    const [statsRes, topStudentsRes] = await Promise.all([
-      achievementStatisticsApi.getSchoolStatistics(),
-      achievementStatisticsApi.getSchoolTopStudents(10)
-    ])
-    
-    if (statsRes.code === 0) {
-      schoolStats.value = statsRes.data
-    }
-    
-    if (topStudentsRes.code === 0) {
-      topStudents.value = topStudentsRes.data
-    }
-  } catch (error) {
-    message.error('获取成果统计数据失败')
-  }
-}
-
-onMounted(() => {
-  fetchAchievementStats()
-})
-=======
 function goToProjectAudit() {
   router.push('/project/audit')
 }
@@ -1205,5 +1156,4 @@ function goToProjectAudit() {
 const pendingProjectsCount = 0 // 这里可以通过接口获取真实数量
 const approvedProjectsCount = 0
 const rejectedProjectsCount = 0
->>>>>>> 45547b81fccbe66d647faecdbc5bd2089e0c42f7
 </script> 
