@@ -22,17 +22,17 @@
           @keyup.enter="onSearch"
           type="text"
           placeholder="请输入项目名称/项目编号"
-          class="flex-1 max-w-2xl border border-blue-400 rounded-l-lg px-4 py-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+          class="flex-1 max-w-2xl border border-blue-400 rounded-l-xl px-4 py-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base shadow-sm"
         />
         <button
           @click="onSearch"
-          class="px-8 py-3 rounded-r-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base"
+          class="px-8 py-3 rounded-r-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-base shadow"
         >
           查找项目
         </button>
       </div>
-      <!-- 筛选栏 -->
-      <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <!-- 筛选栏卡片 -->
+      <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-4">按条件筛选项目</h2>
         <div class="space-y-4">
           <div class="flex items-center flex-wrap overflow-x-auto">
@@ -43,7 +43,7 @@
                 :key="item.value"
                 @click="selectFilter(item.value)"
                 :class="isSelected(item.value) ? activeBtn : inactiveBtn"
-                class="mb-2"
+                class="mb-2 transition"
               >
                 {{ item.label }}
               </button>
@@ -51,7 +51,7 @@
           </div>
         </div>
       </div>
-      <!-- 项目表格 -->
+      <!-- 项目表格卡片 -->
       <div class="bg-white rounded-2xl shadow-lg p-4">
         <table class="min-w-full">
           <thead>
@@ -85,37 +85,37 @@
                 <!-- 待审核 -->
                 <template v-if="project.status === 'pending'">
                   <router-link :to="`/project/detail/${project.projectId}`">
-                    <button class="px-2 py-1 rounded-md bg-blue-500 text-white text-xs mr-1 shadow hover:bg-blue-600 transition">查看详情</button>
+                    <button class="px-2 py-1 rounded-xl bg-blue-500 text-white text-xs mr-1 shadow hover:bg-blue-600 transition">查看详情</button>
                   </router-link>
-                  <button @click="reviewProject(project.projectId, 'active')" class="px-2 py-1 rounded-md bg-green-500 text-white text-xs mr-1 shadow hover:bg-green-600 transition">通过</button>
-                  <button @click="reviewProject(project.projectId, 'rejected')" class="px-2 py-1 rounded-md bg-red-500 text-white text-xs shadow hover:bg-red-600 transition">驳回</button>
+                  <button @click="reviewProject(project.projectId, 'active')" class="px-2 py-1 rounded-xl bg-green-500 text-white text-xs mr-1 shadow hover:bg-green-600 transition">通过</button>
+                  <button @click="reviewProject(project.projectId, 'rejected')" class="px-2 py-1 rounded-xl bg-red-500 text-white text-xs shadow hover:bg-red-600 transition">驳回</button>
                 </template>
                 <!-- 待合作 -->
                 <template v-else-if="project.status === 'active'">
                   <router-link :to="`/project/detail/${project.projectId}`">
-                    <button class="px-2 py-1 rounded-md bg-blue-500 text-white text-xs mr-1 shadow hover:bg-blue-600 transition">查看详情</button>
+                    <button class="px-2 py-1 rounded-xl bg-blue-500 text-white text-xs mr-1 shadow hover:bg-blue-600 transition">查看详情</button>
                   </router-link>
-                  <button @click="reviewProject(project.projectId, 'terminated')" class="px-2 py-1 rounded-md bg-red-500 text-white text-xs shadow hover:bg-red-600 transition">终止</button>
+                  <button @click="reviewProject(project.projectId, 'terminated')" class="px-2 py-1 rounded-xl bg-red-500 text-white text-xs shadow hover:bg-red-600 transition">终止</button>
                 </template>
                 <!-- 已合作 -->
                 <template v-else-if="project.status === 'matched'">
                   <template v-if="project.contractStatus === 'no_contract'">
-                    <span class="px-2 py-1 rounded-md bg-gray-300 text-gray-600 text-xs">等待发起合同</span>
+                    <span class="px-2 py-1 rounded-xl bg-gray-300 text-gray-600 text-xs">等待发起合同</span>
                   </template>
                   <template v-else-if="project.contractStatus === 'pending'">
-                    <span class="px-2 py-1 rounded-md bg-yellow-300 text-yellow-800 text-xs">等待签署</span>
+                    <span class="px-2 py-1 rounded-xl bg-yellow-300 text-yellow-800 text-xs">等待签署</span>
                   </template>
                   <template v-else-if="project.contractStatus === 'approved'">
-                    <button @click="showContract(project.projectId)" class="px-2 py-1 rounded-md bg-blue-500 text-white text-xs mr-1 shadow hover:bg-blue-600 transition">查看合同</button>
-                    <button @click="viewFund(project.projectId)" class="px-2 py-1 rounded-md bg-orange-500 text-white text-xs mr-1 shadow hover:bg-orange-600 transition">查看经费申请</button>
+                    <button @click="showContract(project.projectId)" class="px-2 py-1 rounded-xl bg-blue-500 text-white text-xs mr-1 shadow hover:bg-blue-600 transition">查看合同</button>
+                    <button @click="viewFund(project.projectId)" class="px-2 py-1 rounded-xl bg-orange-500 text-white text-xs mr-1 shadow hover:bg-orange-600 transition">查看经费申请</button>
                     <!-- 结项按钮 -->
                     <button
                       v-if="progressMap[project.projectId] && hasPendingClosure(progressMap[project.projectId])"
                       @click="onAgreeClosure(project.projectId)"
-                      class="px-2 py-1 rounded-md bg-purple-600 text-white text-xs shadow hover:bg-purple-700 transition"
+                      class="px-2 py-1 rounded-xl bg-purple-600 text-white text-xs shadow hover:bg-purple-700 transition"
                     >同意结项</button>
                   </template>
-                  <button @click="reviewProject(project.projectId, 'terminated')" class="px-2 py-1 rounded-md bg-red-500 text-white text-xs shadow hover:bg-red-600 transition">终止</button>
+                  <button @click="reviewProject(project.projectId, 'terminated')" class="px-2 py-1 rounded-xl bg-red-500 text-white text-xs shadow hover:bg-red-600 transition">终止</button>
                 </template>
                 <!-- 已完成 -->
                 <template v-else-if="project.status === 'closed'">
@@ -123,7 +123,7 @@
                 </template>
                 <!-- 已驳回、已取消、已终止 -->
                 <template v-else-if="['rejected', 'canceled', 'terminated'].includes(project.status)">
-                  <button @click="viewReason(project)" class="px-2 py-1 rounded-md bg-gray-400 text-white text-xs shadow hover:bg-gray-500 transition">查看原因</button>
+                  <button @click="viewReason(project)" class="px-2 py-1 rounded-xl bg-gray-400 text-white text-xs shadow hover:bg-gray-500 transition">查看原因</button>
                 </template>
               </td>
             </tr>
@@ -138,7 +138,7 @@
         <button
           :disabled="currentPage === 1"
           @click="changePage(currentPage - 1)"
-          class="px-3 py-1 mx-1 rounded bg-gray-200 disabled:opacity-50"
+          class="px-3 py-1 mx-1 rounded-xl bg-gray-200 disabled:opacity-50 shadow"
         >
           上一页
         </button>
@@ -146,15 +146,15 @@
         <button
           :disabled="currentPage === Math.ceil(total / pageSize)"
           @click="changePage(currentPage + 1)"
-          class="px-3 py-1 mx-1 rounded bg-gray-200 disabled:opacity-50"
+          class="px-3 py-1 mx-1 rounded-xl bg-gray-200 disabled:opacity-50 shadow"
         >
           下一页
         </button>
       </div>
     </div>
-    <!-- 输入缘由弹窗 -->
+    <!-- 输入缘由弹窗美化 -->
     <div v-if="reasonDialogVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-80">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-80 animate-fade-in">
         <div class="font-bold text-lg mb-2">
           请输入
           <template v-if="currentAction === 'active'">通过</template>
@@ -163,26 +163,26 @@
           <template v-else-if="currentAction === 'canceled'">撤回</template>
           原因
         </div>
-        <textarea v-model="reasonText" class="w-full border rounded p-2 mb-4" rows="3" placeholder="请输入原因"></textarea>
+        <textarea v-model="reasonText" class="w-full border rounded-xl p-2 mb-4 shadow-sm" rows="3" placeholder="请输入原因"></textarea>
         <div class="flex justify-end space-x-2">
-          <button @click="reasonDialogVisible = false" class="px-4 py-2 bg-gray-300 rounded">取消</button>
-          <button @click="confirmReason" class="px-4 py-2 bg-blue-500 text-white rounded">确定</button>
+          <button @click="reasonDialogVisible = false" class="px-4 py-2 bg-gray-300 rounded-xl shadow">取消</button>
+          <button @click="confirmReason" class="px-4 py-2 bg-blue-500 text-white rounded-xl shadow">确定</button>
         </div>
       </div>
     </div>
-    <!-- 查看缘由弹窗 -->
+    <!-- 查看缘由弹窗美化 -->
     <div v-if="reasonViewDialogVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-80">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-80 animate-fade-in">
         <div class="font-bold text-lg mb-2">原因</div>
         <div class="text-gray-700 mb-4 whitespace-pre-line">{{ reasonText }}</div>
         <div class="flex justify-end">
-          <button @click="reasonViewDialogVisible = false" class="px-4 py-2 bg-blue-500 text-white rounded">关闭</button>
+          <button @click="reasonViewDialogVisible = false" class="px-4 py-2 bg-blue-500 text-white rounded-xl shadow">关闭</button>
         </div>
       </div>
     </div>
-    <!-- 合同弹窗 -->
+    <!-- 合同弹窗美化 -->
     <div v-if="contractDialog" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-      <div class="bg-white rounded-2xl shadow-lg p-8 max-w-2xl w-full">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full animate-fade-in">
         <div class="font-bold mb-4 text-xl text-blue-700 flex items-center justify-between">
           <span>合同详情</span>
           <button @click="contractDialog = false" class="text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
@@ -198,30 +198,30 @@
               <div class="font-medium mb-2">合同附件：</div>
               <div class="flex flex-wrap gap-2">
                 <template v-for="(fileUrl, fileIdx) in (currentContract.contractUrl ? currentContract.contractUrl.split(',') : [])" :key="fileIdx">
-                  <div class="flex items-center bg-gray-100 rounded px-3 py-2 shadow-sm">
-                    <span class="truncate max-w-[200px] select-all" :title="fileUrl">{{ fileUrl.split('/').pop() }}</span>
-                    <a :href="fileUrl" target="_blank" class="ml-2 px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-700">下载</a>
+                  <div class="flex items-center bg-gray-100 rounded-xl px-3 py-2 shadow-sm">
+                    <span class="truncate max-w-[200px] select-all" :title="getOriginalName(fileIdx)">{{ getOriginalName(fileIdx) }}</span>
+                    <button @click="handleDownloadFile(fileUrl, fileIdx)" class="ml-2 px-2 py-1 bg-blue-500 text-white rounded-xl text-xs hover:bg-blue-700">下载</button>
                   </div>
                 </template>
               </div>
             </div>
           </div>
           <div class="flex justify-end gap-3">
-            <button @click="contractDialog = false" class="px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600 transition">关闭</button>
+            <button @click="contractDialog = false" class="px-4 py-2 bg-blue-500 text-white rounded-xl shadow hover:bg-blue-600 transition">关闭</button>
           </div>
         </div>
       </div>
     </div>
-    <!-- 结项弹窗 -->
+    <!-- 结项弹窗美化 -->
     <div v-if="showClosureDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-96 animate-fade-in">
         <div class="font-bold text-lg mb-2">结项总结</div>
-        <textarea v-model="closureSummary" class="w-full border rounded p-2 mb-4" rows="4" placeholder="请输入结项总结"></textarea>
+        <textarea v-model="closureSummary" class="w-full border rounded-xl p-2 mb-4 shadow-sm" rows="4" placeholder="请输入结项总结"></textarea>
         <!-- 附件上传可根据实际需求实现，这里简单输入url -->
-        <input v-model="closureAttachments[0]" class="w-full border rounded p-2 mb-4" placeholder="附件URL（可选）" />
+        <input v-model="closureAttachments[0]" class="w-full border rounded-xl p-2 mb-4 shadow-sm" placeholder="附件URL（可选）" />
         <div class="flex justify-end space-x-2">
-          <button @click="showClosureDialog = false" class="px-4 py-2 bg-gray-300 rounded">取消</button>
-          <button @click="submitClosure" class="px-4 py-2 bg-blue-500 text-white rounded">确定</button>
+          <button @click="showClosureDialog = false" class="px-4 py-2 bg-gray-300 rounded-xl shadow">取消</button>
+          <button @click="submitClosure" class="px-4 py-2 bg-blue-500 text-white rounded-xl shadow">确定</button>
         </div>
       </div>
     </div>
@@ -233,6 +233,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { getProjects, updateProjectStatus, getContracts, getProjectProgressList, closeProject } from '@/lib/api/project'
+import { downloadFile } from '@/lib/api/file'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -481,6 +482,40 @@ async function submitClosure() {
 
 function viewFund(projectId: number) {
   router.push(`/project/${projectId}/fund`)
+}
+
+function getOriginalName(idx: number) {
+  if (!currentContract.value) return '';
+  if (currentContract.value.originalName) {
+    const arr = currentContract.value.originalName.split(',');
+    return arr[idx] || arr[0] || '附件';
+  }
+  return currentContract.value.contractUrl.split(',')[idx]?.split('/').pop() || '附件';
+}
+
+async function handleDownloadFile(fileUrl: string, idx?: number) {
+  let filename = fileUrl.split('/').pop() || '文件';
+  // 优先用 originalName
+  if (typeof idx === 'number' && getOriginalName(idx)) {
+    filename = getOriginalName(idx);
+  }
+  if (!filename) {
+    alert('无法获取文件名');
+    return;
+  }
+  try {
+    const fileKey = fileUrl.split('/').pop() || '';
+    const blob = await downloadFile(fileKey);
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(link.href);
+  } catch (err) {
+    alert('下载失败');
+  }
 }
 
 onMounted(() => fetchProjects())

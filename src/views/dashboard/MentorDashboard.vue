@@ -3,12 +3,7 @@
     <Navbar />
     <div class="container mx-auto px-4 py-8">
       <!-- 项目相关入口 -->
-      <div class="flex flex-wrap gap-4 mb-8">
-        <button @click="router.push('/project/search')" class="px-6 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">项目搜索与对接</button>
-        <button @click="logAndGoPublish" class="px-6 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">发布新项目</button>
-        <button @click="router.push('/project/my')" class="px-6 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition">我的项目管理</button>
-        <button @click="router.push('/my-project-applications')" class="px-6 py-2 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600 transition">我的项目申请</button>
-      </div>
+      
       <!-- 头部区域 -->
       <UserProfileInfo
         :avatar="mentor.avatar"
@@ -593,7 +588,7 @@ const blocks = ref<BlockItem[]>([
       { id: 1, label: 'AI创新项目论文', extra: '李四' }
     ],
     empty: '暂无成果',
-    footer: { text: '查看全部成果', link: '/achievements' }
+    footer: { text: '查看全部成果', link: '/achievement/enterprise' }
   },
   {
     title: '资源上传',

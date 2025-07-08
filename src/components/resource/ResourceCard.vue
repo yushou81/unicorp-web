@@ -56,10 +56,6 @@
           <router-link :to="`/resource/${resource.id}`">
             <Button size="sm" class="px-5">查看详情</Button>
           </router-link>
-          <Button variant="outline" size="sm" @click="onCollect" class="flex items-center">
-            <BookmarkIcon class="w-4 h-4 mr-1.5" />
-            收藏
-          </Button>
         </div>
       </div>
     </div>
@@ -67,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { MapPinIcon, BookmarkIcon, TagIcon, FolderIcon } from 'lucide-vue-next'
+import { MapPinIcon, TagIcon, FolderIcon } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 
 interface Resource {
@@ -89,9 +85,6 @@ const props = defineProps<{
   resource: Resource
 }>()
 
-const emit = defineEmits(['collect'])
-
-const onCollect = () => {
-  emit('collect', props.resource.id)
-}
+// 不再需要收藏功能
+const emit = defineEmits([])
 </script> 

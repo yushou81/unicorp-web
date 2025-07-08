@@ -12,7 +12,6 @@
         :editable="false"
         :verified="false"
       />
-      <div class="text-gray-400 text-sm mt-2 ml-2">上次登录：{{ userInfo.lastLoginTime ? new Date(userInfo.lastLoginTime).toLocaleString() : '-' }}</div>
       <!-- Tab栏 -->
       <DashboardTabs :tabs="tabList" :activeTab="activeTab" @change="val => activeTab = val" />
       <div class="mt-8">

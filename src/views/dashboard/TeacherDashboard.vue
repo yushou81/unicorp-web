@@ -15,12 +15,7 @@
       />
       
       <!-- 项目相关入口 -->
-      <div class="flex flex-wrap gap-4 mb-8 mt-6">
-        <button @click="router.push('/project/search')" class="px-6 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition">项目搜索与对接</button>
-        <button @click="logAndGoPublish" class="px-6 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition">发布新项目</button>
-        <button @click="router.push('/project/my')" class="px-6 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition">我的项目管理</button>
-        <button @click="router.push('/my-project-applications')" class="px-6 py-2 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600 transition">我的项目申请</button>
-      </div>
+   
       
       <DashboardTabs
           :tabs="[
@@ -467,9 +462,26 @@ function statusText(status: string) {
   return map[status] || status
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchCourses()
   loadMyResources()
+  // 新增：获取用户信息
+  try {
+    const res = await getMe()
+    if (res && res.data) {
+      teacher.value = {
+        avatar: res.data.avatar || 'https://randomuser.me/api/portraits/men/33.jpg',
+        name: res.data.nickname || res.data.account || '未知教师',
+        email: res.data.email || '',
+        phone: res.data.phone || '',
+        verified: res.data.verified || false,
+        school: res.data.organizationName || '未绑定',
+        company: res.data.companyName || ''
+      }
+    }
+  } catch (e) {
+    // 获取失败时保留默认值
+  }
 })
 
 function onEditProfileClick() {
