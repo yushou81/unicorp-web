@@ -179,14 +179,14 @@
               >
                 <div class="flex items-start space-x-4">
                   <img
-                    :src="comment.authorAvatar || 'https://randomuser.me/api/portraits/men/32.jpg'"
-                    :alt="comment.authorName"
+                    :src="comment.authorAvatar || comment.userAvatar || 'https://randomuser.me/api/portraits/men/32.jpg'"
+                    :alt="comment.authorName || comment.userName"
                     class="w-10 h-10 rounded-full border-2 border-gray-200 object-cover"
                   />
                   <div class="flex-1">
                     <div class="flex items-center justify-between mb-1">
                       <div class="flex items-center space-x-2">
-                        <span class="font-semibold text-gray-900">{{ comment.authorName }}</span>
+                        <span class="font-semibold text-gray-900">{{ comment.authorName || comment.userName }}</span>
                         <span class="text-xs text-gray-400">{{ formatTime(comment.createdAt) }}</span>
                       </div>
                       <div class="flex items-center space-x-2">
@@ -244,10 +244,10 @@
                     :key="reply.id"
                     class="flex items-start space-x-3 bg-gray-50 rounded-lg p-3 border border-gray-100 hover:shadow transition"
                   >
-                    <img :src="reply.authorAvatar || 'https://randomuser.me/api/portraits/men/32.jpg'" :alt="reply.authorName" class="w-8 h-8 rounded-full border border-gray-200 object-cover" />
+                    <img :src="reply.authorAvatar || reply.userAvatar || 'https://randomuser.me/api/portraits/men/32.jpg'" :alt="reply.authorName || reply.userName" class="w-8 h-8 rounded-full border border-gray-200 object-cover" />
                     <div class="flex-1">
                       <div class="flex items-center space-x-2 mb-1">
-                        <span class="font-semibold text-gray-900">{{ reply.authorName }}</span>
+                        <span class="font-semibold text-gray-900">{{ reply.authorName || reply.userName }}</span>
                         <span class="text-xs text-gray-400">{{ formatTime(reply.createdAt) }}</span>
                       </div>
                       <div class="text-gray-800 text-sm leading-relaxed whitespace-pre-line">{{ reply.content }}</div>

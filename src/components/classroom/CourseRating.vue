@@ -28,7 +28,7 @@
       </div>
       <div class="mb-6">
         <label class="block text-lg font-semibold text-gray-800 mb-3">评价内容</label>
-        <textarea v-model="ratingData.content" rows="4" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200" placeholder="请分享您对这门课程的看法和建议..."></textarea>
+        <textarea v-model="ratingData.comment" rows="4" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200" placeholder="请分享您对这门课程的看法和建议..."></textarea>
       </div>
       <div class="flex justify-end space-x-3">
         <button @click="cancelRating" class="px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium">取消</button>
@@ -60,7 +60,7 @@
           </div>
         </div>
         <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
-          <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ rating.comment ?? rating.content }}</p>
+          <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ rating.comment }}</p>
         </div>
       </div>
       <!-- 分页 -->
@@ -124,7 +124,7 @@
         <div>
           <h4 class="font-semibold text-gray-900 mb-2">评价内容：</h4>
           <div class="p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
-            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ selectedRating.content }}</p>
+            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ selectedRating.comment }}</p>
           </div>
         </div>
         
@@ -195,12 +195,12 @@ const selectedRating = ref<CourseRatingVO | null>(null)
 const ratingData = ref<CourseRatingDTO>({
   courseId: props.courseId,
   rating: 5,
-  content: ''
+  comment: ''
 })
 
 // 提交评价
 const submitRating = async () => {
-  if (!ratingData.value.content.trim()) {
+  if (!ratingData.value.comment.trim()) {
     emit('error', '请输入评价内容')
     return
   }
@@ -233,7 +233,7 @@ const editRating = (rating: CourseRatingVO) => {
   ratingData.value = {
     courseId: rating.courseId,
     rating: rating.rating,
-    content: rating.content
+    comment: rating.comment
   }
   showRatingForm.value = true
 }
@@ -265,7 +265,7 @@ const resetRatingForm = () => {
   ratingData.value = {
     courseId: props.courseId,
     rating: 5,
-    content: ''
+    comment: ''
   }
 }
 

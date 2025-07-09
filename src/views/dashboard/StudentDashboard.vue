@@ -97,10 +97,6 @@
             </div>
           </div>
         </div>
-        <div v-else-if="activeTab === 'study'">
-          <!-- 学习记录tab内容 -->
-          <!-- ... existing code ... -->
-        </div>
         <div v-else-if="activeTab === 'course'">
           <!-- 课程管理tab内容 -->
           <div class="bg-white rounded-xl shadow-sm p-8">
@@ -463,17 +459,6 @@ const blocks = ref<Block[]>([
     loading: false,
     empty: '暂无职位记录',
     footer: { text: '查看全部职位', link: '/job' }
-  },
-  {
-    title: '学习记录',
-    icon: AcademicCapIcon,
-    color: 'text-green-500',
-    type: 'list',
-    data: [
-      { id: 1, label: 'AI创新项目论文', extra: '2024-04-22' }
-    ],
-    empty: '暂无学习记录',
-    footer: { text: '管理我的学习', link: '/learn' }
   },
   {
     title: '报名课程',
@@ -1092,7 +1077,6 @@ watch(activeTab, (val) => {
 
 const tabList = [
   { label: '求职记录', value: 'record' },
-  { label: '学习记录', value: 'study' },
   { label: '课程管理', value: 'course' },
   { label: '我的简历', value: 'resume' },
   { label: '聊天', value: 'chat' },

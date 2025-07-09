@@ -410,6 +410,7 @@ import {
 import ChapterResourceManager from '@/components/classroom/ChapterResourceManager.vue'
 import LearningProgressManager from '@/components/classroom/LearningProgressManager.vue'
 import { uploadChapterVideo, getChapterVideoByChapterId, getChapterVideoById, updateChapterVideo, deleteChapterVideo, markVideoCompleted } from '@/lib/api/chapterVideo'
+import { API_BASE_URL } from '@/lib/api/apiClient'
 
 // 路由和导航
 const route = useRoute()
@@ -720,7 +721,7 @@ const onResourceRemoved = (resourceId: number) => {
 const downloadResource = async (resourceId: number, title?: string) => {
   try {
     const token = localStorage.getItem('token') || ''
-    const url = `http://192.168.58.74:8081/api/v1/course-resources/download/${resourceId}`
+    const url = `${API_BASE_URL}/v1/course-resources/download/${resourceId}`
     
     const response = await fetch(url, {
       method: 'GET',

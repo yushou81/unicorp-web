@@ -370,9 +370,11 @@ export async function applyJob(jobId: number | string, resumeId: number | string
  */
 export async function createJob(data: JobCreationDTO) {
   const url = '/v1/jobs'
+  // 移除 skillTags 字段
+  const { skillTags, ...rest } = data as any;
   const response = await apiRequest<ApiResponse<any>>(url, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify(rest),
     headers: {
       'Content-Type': 'application/json'
     }
@@ -407,9 +409,11 @@ export async function updateApplicationStatus(applicationId: number, statusData:
  */
 export async function updateJob(id: number | string, data: JobCreationDTO) {
   const url = `/v1/jobs/${id}`
+  // 移除 skillTags 字段
+  const { skillTags, ...rest } = data as any;
   const response = await apiRequest<ApiResponse<any>>(url, {
     method: 'PUT',
-    body: JSON.stringify(data),
+    body: JSON.stringify(rest),
     headers: {
       'Content-Type': 'application/json'
     }

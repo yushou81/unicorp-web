@@ -183,12 +183,13 @@
                 </div>
               </div>
               
-              <div class="mt-4 pt-4 border-t border-gray-100">
+              <!-- 移除公司主页链接div -->
+              <!-- <div class="mt-4 pt-4 border-t border-gray-100">
                 <router-link :to="`/company/${job.organizationId}`" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
                   <ExternalLinkIcon class="w-4 h-4 mr-1" />
                   查看公司主页
                 </router-link>
-              </div>
+              </div> -->
             </div>
             
             <div class="bg-white rounded-lg shadow-sm p-5 mb-5">

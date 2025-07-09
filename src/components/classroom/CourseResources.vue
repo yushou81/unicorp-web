@@ -268,9 +268,6 @@
               {{ uploading ? '上传中...' : '上传' }}
             </button>
           </div>
-          <!-- 调试输出：实时显示file和title -->
-          <div class="mt-2 text-xs text-gray-500">file: {{ resourceFile ? resourceFile.name : '无' }} | title: {{ resourceForm.title }}</div>
-          <div class="mt-2 text-xs text-red-500">resourceForm: {{ JSON.stringify(resourceForm) }}</div>
         </form>
       </div>
     </div>
@@ -314,7 +311,7 @@ import {
   getResourceDownloadUrl,
   CourseResourceVO
 } from '@/lib/api/classroom'
-import { getToken } from '@/lib/api/apiClient'
+import { getToken, API_BASE_URL } from '@/lib/api/apiClient'
 
 // 属性定义
 const props = defineProps({
@@ -546,7 +543,7 @@ const getDownloadUrl = (resourceId: number) => {
 const downloadResource = async (resourceId: number, title?: string) => {
   try {
     const token = localStorage.getItem('token') || ''
-    const url = `http://192.168.58.74:8081/api/v1/course-resources/download/${resourceId}`
+    const url = `${API_BASE_URL}/v1/course-resources/download/${resourceId}`
     
     const response = await fetch(url, {
       method: 'GET',
