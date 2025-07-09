@@ -89,9 +89,9 @@ const initMap = async () => {
       // 尝试获取JS脚本URL配置
       const response = await apiRequest('/v1/map/config')
       
-      if (response.data?.jsUrl) {
-        jsUrl = response.data.jsUrl
-      }
+      // if (response.data?.jsUrl) {
+      //   jsUrl = response.data.jsUrl
+      // }
     } catch (e) {
       console.warn('获取地图配置失败，使用默认配置', e)
     }

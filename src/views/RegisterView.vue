@@ -253,9 +253,9 @@ async function onRegister() {
       password: password.value,
       email: email.value,
       phone: phone.value,
-      organization_id: Number(organizationId.value),
-      real_name: realName.value,
-      id_card: idCard.value
+      organizationId: Number(organizationId.value),
+      realName: realName.value,
+      idCard: idCard.value
     }
     console.log('[注册] 学生注册参数:', studentPayload)
     try {

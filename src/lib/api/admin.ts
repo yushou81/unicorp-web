@@ -159,26 +159,30 @@ export function getJobCategoryChildren(id: number) {
 // 创建岗位分类
 export function createJobCategory(data: {
   name: string
-  description?: string
-  sortOrder?: number
   parentId?: number
 }) {
+  const requestData: any = {
+    name: data.name
+  }
+  if (data.parentId !== undefined && data.parentId !== null) {
+    requestData.parentId = data.parentId
+  }
   return apiRequest('/v1/admin/job-categories', {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: JSON.stringify(requestData)
   })
 }
 
 // 更新岗位分类
 export function updateJobCategory(id: number, data: {
   name?: string
-  description?: string
-  sortOrder?: number
-  parentId?: number
 }) {
+  const requestData: any = {}
+  if (data.name !== undefined) requestData.name = data.name
+  // 不再传 parentId
   return apiRequest(`/v1/admin/job-categories/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(data)
+    body: JSON.stringify(requestData)
   })
 }
 

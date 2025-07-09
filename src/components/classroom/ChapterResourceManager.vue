@@ -165,6 +165,7 @@ import {
   getResourceDownloadUrl,
   CourseResourceVO
 } from '@/lib/api/classroom'
+import { API_BASE_URL } from '@/lib/api/apiClient'
 
 // 属性定义
 const props = defineProps({
@@ -332,7 +333,7 @@ const getDownloadUrl = (resourceId: number) => {
 const downloadResource = async (resourceId: number, title?: string) => {
   try {
     const token = localStorage.getItem('token') || ''
-    const url = `http://192.168.58.74:8081/api/v1/course-resources/download/${resourceId}`
+    const url = `${API_BASE_URL}/v1/course-resources/download/${resourceId}`
     
     const response = await fetch(url, {
       method: 'GET',

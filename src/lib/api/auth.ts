@@ -64,9 +64,9 @@ export function registerStudent(data: {
   password: string
   email: string
   phone?: string
-  organization_id: number
-  real_name: string
-  id_card: string
+  organizationId: number
+  realName: string // 用 realName
+  idCard: string   // 用 idCard
 }) {
   return apiRequest('/v1/auth/register/student', {
     method: 'POST',
@@ -77,7 +77,7 @@ export function registerStudent(data: {
 // 企业注册
 export function registerEnterprise(data: {
   organizationName: string
-  companyCode: string
+  // companyCode: string // 移除
   description?: string
   address?: string
   website?: string
@@ -91,8 +91,10 @@ export function registerEnterprise(data: {
   latitude?: number | null
   longitude?: number | null
 }) {
+  // 移除 companyCode 字段
+  const { companyCode, ...rest } = data as any;
   return apiRequest('/v1/auth/register/enterprise', {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: JSON.stringify(rest)
   })
 } 

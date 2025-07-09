@@ -3,8 +3,8 @@
     <div class="flex items-start space-x-4">
       <!-- 作者头像 -->
       <img
-        :src="topic.authorAvatar || 'https://randomuser.me/api/portraits/men/32.jpg'"
-        :alt="topic.authorName"
+        :src="topic.authorAvatar || topic.userAvatar || 'https://randomuser.me/api/portraits/men/32.jpg'"
+        :alt="topic.authorName || topic.userName"
         class="w-12 h-12 rounded-full border border-gray-200"
       />
       

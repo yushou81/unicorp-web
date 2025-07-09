@@ -74,7 +74,7 @@ export interface CourseEnrollmentDTO {
 export interface CourseRatingDTO {
   courseId: number
   rating: number
-  content: string
+  comment: string
 }
 
 // 课程评价VO
@@ -337,7 +337,7 @@ export async function getCourseStudents(courseId: number) {
 // 提交课程评价
 export async function submitRating(ratingData: CourseRatingDTO) {
   // 兼容后端字段，content和comment都传
-  const data = { ...ratingData, comment: ratingData.content }
+  const data = { ...ratingData, comment: ratingData.comment }
   return apiRequest<ApiResponse<CourseRatingVO>>('/v1/course-ratings', {
     method: 'POST',
     body: JSON.stringify(data)
@@ -352,7 +352,7 @@ export async function getRatingById(ratingId: number) {
 // 更新课程评价
 export async function updateRating(ratingId: number, ratingData: CourseRatingDTO) {
   // 兼容后端字段，content和comment都传
-  const data = { ...ratingData, comment: ratingData.content }
+  const data = { ...ratingData, comment: ratingData.comment }
   return apiRequest<ApiResponse<CourseRatingVO>>(`/v1/course-ratings/${ratingId}`, {
     method: 'PUT',
     body: JSON.stringify(data)
@@ -877,10 +877,14 @@ export async function getQuestionDetail(id: number) {
 }
 // 更新问题内容
 export async function updateQuestion(id: number, data: CourseQuestionDTO) {
-  // 新API：PUT /v1/course-questions/{id}?content=xxx
-  return apiRequest<ApiResponse<CourseQuestionVO>>(`/v1/course-questions/${id}?content=${encodeURIComponent(data.content)}`, {
-    method: 'PUT'
-  })
+  // 正确API：PUT /v1/course-questions/{id}?title=xxx&content=xxx
+  const params = new URLSearchParams()
+  if (data.title) params.append('title', data.title)
+  if (data.content) params.append('content', data.content)
+  return apiRequest<ApiResponse<CourseQuestionVO>>(
+    `/v1/course-questions/${id}?${params.toString()}`,
+    { method: 'PUT' }
+  )
 }
 export async function deleteQuestion(id: number) {
   return apiRequest<ApiResponse<boolean>>(`/v1/course-questions/${id}`, {

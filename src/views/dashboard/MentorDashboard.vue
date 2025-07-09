@@ -6,7 +6,7 @@
       
       <!-- 头部区域 -->
       <UserProfileInfo
-        :avatar="mentor.avatar"
+        :avatar="userAvatar"
         :name="mentor.name"
         :role="'企业导师'"
         :organization="mentor.company"
@@ -620,7 +620,8 @@ const router = useRouter()
 const appStore = useAppStore()
 
 const userInfo = computed(() => appStore.user as any || {})
-const userAvatar = computed(() => userInfo.value.avatar || mentor.value.avatar)
+// 头像显示逻辑，优先用登录用户真实头像
+const userAvatar = computed(() => userInfo.value.avatar || mentor.value.avatar || 'https://randomuser.me/api/portraits/men/34.jpg')
 const roleText = computed(() => {
   const role = userInfo.value?.role as string
   const roleMap: Record<string, string> = {
@@ -688,7 +689,7 @@ async function fetchMentorInfo() {
     const userData = res.data
     if (userData) {
       mentor.value = {
-        avatar: userData.avatar || 'https://randomuser.me/api/portraits/men/34.jpg',
+        avatar: userData.avatar || userData.avatarUrl || 'https://randomuser.me/api/portraits/men/34.jpg',
         name: userData.nickname || userData.account || '未知导师',
         email: userData.email || '',
         phone: userData.phone || '',
@@ -696,7 +697,7 @@ async function fetchMentorInfo() {
         company: userData.organizationName || '未绑定企业',
         school: ''
       }
-      // 关键：同步更新 appStore.user，保证 userInfo.value.id 有值
+      // 关键：同步更新 appStore.user，保证 userInfo.value.avatar 有真实头像
       appStore.setUser(userData)
     }
   } catch (e: any) {

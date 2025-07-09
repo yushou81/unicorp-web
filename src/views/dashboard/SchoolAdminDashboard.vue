@@ -4,13 +4,13 @@
     <Navbar />
     
     <!-- 大标题区 -->
-    <div class="w-full py-10 bg-gradient-to-r from-blue-400 to-indigo-400 mb-8 shadow-lg">
+    <!-- <div class="w-full py-10 bg-gradient-to-r from-blue-400 to-indigo-400 mb-8 shadow-lg">
       <div class="container mx-auto px-4 flex flex-col items-center">
         <h1 class="text-4xl md:text-5xl font-extrabold text-white drop-shadow mb-2 tracking-wide">学校管理后台</h1>
         <p class="text-lg md:text-xl text-blue-100 font-medium mb-2">欢迎来到学校管理平台</p>
         <p class="text-base text-blue-200">高效管理学校用户与个人信息</p>
       </div>
-    </div>
+    </div> -->
 
     <!-- 个人信息板块 -->
     <div class="container mx-auto px-4 py-8">
@@ -26,6 +26,68 @@
         :onEdit="onEditProfileClick"
       />
     </div>
+    <!-- 编辑个人资料弹窗 -->
+    <div v-if="showProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md overflow-y-auto max-h-[80vh] relative">
+        <button @click="showProfileDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
+        <h2 class="text-2xl font-bold mb-4 text-blue-700">编辑个人资料</h2>
+        <form @submit.prevent="onUpdateProfile">
+          <!-- 头像上传 -->
+          <div class="mb-5 flex flex-col items-center">
+            <div class="relative group">
+              <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2 object-cover" alt="avatar" />
+              <div 
+                @click="fileInput?.click()"
+                class="absolute inset-0 rounded-full bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-200"
+              >
+                <span class="text-white text-sm">更换头像</span>
+              </div>
+            </div>
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleAvatarChange"
+            />
+            <p v-if="avatarFile" class="text-xs text-gray-500 mt-1 flex items-center">
+              <span>{{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})</span>
+              <button 
+                type="button" 
+                @click="cancelAvatarUpload" 
+                class="ml-2 text-red-500 hover:text-red-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </p>
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm font-medium">昵称</label>
+            <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入昵称" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm font-medium">邮箱</label>
+            <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入邮箱" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1 text-sm font-medium">手机号</label>
+            <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入手机号" />
+          </div>
+          <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" @click="showProfileDialog = false" class="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">取消</button>
+            <button type="submit" :disabled="updateProfileLoading" class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition flex items-center">
+              <svg v-if="updateProfileLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ updateProfileLoading ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
     
     <!-- 标签页导航 -->
     <div class="container mx-auto px-4 mb-6">
@@ -37,13 +99,14 @@
         >
           用户管理
         </button>
-        <button 
+        <!-- 移除双师课堂tab -->
+        <!-- <button 
           @click="activeTab = 'classroom'" 
           :class="['px-4 py-2 font-medium transition-colors', 
                   activeTab === 'classroom' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-blue-500']"
         >
           双师课堂
-        </button>
+        </button> -->
         <button 
           @click="activeTab = 'resources'" 
           :class="['px-4 py-2 font-medium transition-colors', 
@@ -704,7 +767,7 @@ const userInfo = computed<{
   role?: string;
   avatar?: string;
 }>(() => (appStore.user ? appStore.user as any : {}))
-const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/lego/2.jpg')
+const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/men/32.jpg')
 const roleText = computed(() => {
   const role = userInfo.value.role || ''
   const roleMap: Record<string, string> = {

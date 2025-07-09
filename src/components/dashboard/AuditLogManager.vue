@@ -197,7 +197,7 @@ async function fetchLogs() {
       logs.value = filteredLogs
       totalLogs.value = filteredLogs.length
       totalPages.value = Math.ceil(filteredLogs.length / pageSize.value)
-      currentPage.value = 1 // 每次筛选后回到第一页
+      // currentPage.value = 1 // 这一行删掉
     }
   } catch (e: any) {
     error.value = e.message || '获取日志失败'
@@ -233,14 +233,14 @@ function resetFilters() {
 function onPageChange(page: number) {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
-    fetchLogs()
+    // 不再调用 fetchLogs()
   }
 }
 
 function onPageSizeChange(size: number) {
   pageSize.value = size
   currentPage.value = 1
-  fetchLogs()
+  // 不再调用 fetchLogs()
 }
 
 function formatDate(dateTime: string) {

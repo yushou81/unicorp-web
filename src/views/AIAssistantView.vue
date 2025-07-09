@@ -169,7 +169,7 @@ async function sendMessage() {
   
   try {
     // 直接使用GET请求而不是POST，避免OPTIONS预检请求
-    const url = `http://127.0.0.1:8000/query?query=${encodeURIComponent(userMessage)}`
+    const url = `http://192.168.58.100:8000/query?query=${encodeURIComponent(userMessage)}`
     const response = await fetch(url, {
       method: 'GET',
       headers: {

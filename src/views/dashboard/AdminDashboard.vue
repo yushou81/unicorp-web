@@ -277,24 +277,26 @@
         <!-- 审计日志管理 -->
         <AuditLogManager v-if="activeTab === 'audit'" />
         <!-- 新增/编辑岗位分类弹窗、删除弹窗、添加学校弹窗等保留原有弹窗逻辑 -->
-        <div v-if="showAddJobCategoryDialog || showEditJobCategoryDialog">
+        <div v-if="showAddJobCategoryDialog || showEditJobCategoryDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
             <div class="flex justify-between items-center mb-6">
-              <h3 class="text-xl font-bold text-blue-700">{{ showEditJobCategoryDialog ? '编辑' : '新增' }}岗位分类</h3>
+              <h3 class="text-xl font-bold text-blue-700">{{ showEditJobCategoryDialog ? '编辑岗位分类' : '新增岗位分类' }}</h3>
               <button @click="closeJobCategoryForm" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             <form @submit.prevent="onSubmitJobCategory" class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">分类名称 *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">分类名称 <span class="text-red-500">*</span></label>
                 <input 
                   v-model="jobCategoryForm.name" 
                   type="text" 
                   required
+                  maxlength="100"
+                  minlength="1"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="请输入分类名称"
+                  placeholder="请输入分类名称，1-100字"
                 />
               </div>
-              <div>
+              <div v-if="showAddJobCategoryDialog">
                 <label class="block text-sm font-medium text-gray-700 mb-1">父分类</label>
                 <select 
                   v-model="jobCategoryForm.parentId" 
@@ -306,39 +308,66 @@
                   </option>
                 </select>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">描述</label>
-                <textarea 
-                  v-model="jobCategoryForm.description" 
-                  rows="3"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="请输入分类描述"
-                ></textarea>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">排序</label>
-                <input 
-                  v-model.number="jobCategoryForm.sortOrder" 
-                  type="number" 
-                  min="0"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="数字越小排序越靠前"
-                />
-              </div>
               <div class="flex justify-end space-x-3 pt-4">
                 <Button type="button" variant="outline" @click="closeJobCategoryForm">取消</Button>
                 <Button type="submit" :loading="jobCategorySubmitting" class="bg-blue-600 hover:bg-blue-700">
-                  {{ jobCategorySubmitting ? '提交中...' : (showEditJobCategoryDialog ? '更新' : '创建') }}
+                  {{ jobCategorySubmitting ? '提交中...' : (showEditJobCategoryDialog ? '保存' : '创建') }}
                 </Button>
               </div>
             </form>
           </div>
         </div>
-        <div v-if="showDeleteJobCategoryDialog">
-          <!-- ... existing code ... -->
+        <div v-if="showDeleteJobCategoryDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm text-center">
+            <h2 class="text-xl font-bold mb-4">确认删除岗位分类？</h2>
+            <div class="mb-6 text-gray-700">
+              删除分类 "{{ deleteTargetCategory?.name }}" 将同时删除其所有子分类，此操作不可恢复。
+            </div>
+            <div class="flex justify-center space-x-4">
+              <button @click="showDeleteJobCategoryDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+              <button @click="onConfirmDeleteJobCategory" :disabled="deleteJobCategoryLoading" class="px-4 py-1 rounded bg-red-600 text-white">{{ deleteJobCategoryLoading ? '删除中...' : '确认删除' }}</button>
+            </div>
+          </div>
         </div>
-        <div v-if="showAddSchoolDialog">
-          <!-- ... existing code ... -->
+        <div v-if="showAddSchoolDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4 text-blue-700">添加学校</h2>
+            <p class="text-sm text-gray-600 mb-4">创建新的学校组织，并为其创建管理员账号</p>
+            <form @submit.prevent="onAddSchool">
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">学校名称 <span class="text-red-500">*</span></label>
+                <input v-model="newSchool.organizationName" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入学校名称" />
+              </div>
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">学校简介</label>
+                <textarea v-model="newSchool.description" rows="3" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入学校简介（可选）"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">学校地址</label>
+                <input v-model="newSchool.address" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入学校地址（可选）" />
+              </div>
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">学校网站</label>
+                <input v-model="newSchool.website" type="url" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入学校网站（可选）" />
+              </div>
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">管理员邮箱 <span class="text-red-500">*</span></label>
+                <input v-model="newSchool.adminEmail" required type="email" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入管理员邮箱" />
+              </div>
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">管理员昵称</label>
+                <input v-model="newSchool.adminNickname" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入管理员昵称（可选）" />
+              </div>
+              <div class="mb-4">
+                <label class="block text-gray-700 mb-1">初始密码 <span class="text-red-500">*</span></label>
+                <input v-model="newSchool.adminPassword" type="password" required minlength="6" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入初始密码（至少6位）" />
+              </div>
+              <div class="flex justify-end space-x-2 mt-4">
+                <button type="button" @click="showAddSchoolDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+                <button type="submit" :disabled="addSchoolLoading" class="px-4 py-1 rounded bg-blue-600 text-white disabled:bg-gray-400">{{ addSchoolLoading ? '添加中...' : '添加学校' }}</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -362,6 +391,7 @@ import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 import AuditLogManager from '@/components/dashboard/AuditLogManager.vue'
 
 const showAddSchoolDialog = ref(false)
+const addSchoolLoading = ref(false)
 const newSchool = ref({
   organizationName: '',
   description: '',
@@ -614,6 +644,8 @@ async function onAddSchool() {
     alert('学校名称、管理员邮箱和初始密码为必填项！')
     return
   }
+  
+  addSchoolLoading.value = true
   try {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -624,8 +656,41 @@ async function onAddSchool() {
     alert(`已添加学校：${newSchool.value.organizationName}`)
     showAddSchoolDialog.value = false
     newSchool.value = { organizationName: '', description: '', address: '', website: '', adminEmail: '', adminNickname: '', adminPassword: '' }
+    
+    // 刷新学校列表
+    publicSchoolsLoading.value = true
+    publicSchoolsError.value = ''
+    try {
+      const res = await getAllSchools('detailed')
+      publicSchools.value = res.data || []
+      // 自动提取所有字段作为表头，过滤掉id字段
+      if (publicSchools.value.length > 0) {
+        const allKeys = Object.keys(publicSchools.value[0])
+        schoolTableKeys.value = allKeys.filter(key => key !== 'id')
+        // 设置中文表头映射
+        schoolTableHeaders.value = {
+          organizationName: '学校名称',
+          description: '简介',
+          website: '网址',
+          address: '地址',
+          adminEmail: '管理员邮箱',
+          adminNickname: '管理员昵称',
+          status: '状态',
+          type: '类型',
+          createdAt: '创建时间',
+          updatedAt: '更新时间'
+        }
+      }
+    } catch (e: any) {
+      console.error('获取学校列表失败:', e)
+      publicSchoolsError.value = e.message || '获取学校列表失败'
+    } finally {
+      publicSchoolsLoading.value = false
+    }
   } catch (e: any) {
     alert('添加失败：' + (e.message || '未知错误'))
+  } finally {
+    addSchoolLoading.value = false
   }
 }
 
@@ -770,7 +835,6 @@ const expandedCategories = ref<number[]>([])
 const expandedChildCategories = ref<string[]>([])
 const jobCategoryForm = ref({
   name: '',
-  description: '',
   sortOrder: 0,
   parentId: null as number | null
 })
@@ -788,8 +852,7 @@ const filteredJobCategories = computed(() => {
   
   // 递归搜索分类及其子分类
   const searchInCategory = (category: any): any => {
-    const matchesSearch = category.name.toLowerCase().includes(searchTerm) ||
-                         (category.description && category.description.toLowerCase().includes(searchTerm))
+    const matchesSearch = category.name.toLowerCase().includes(searchTerm)
     
     // 如果有子分类，递归搜索子分类
     if (Array.isArray(category.children) && category.children.length > 0) {
@@ -999,7 +1062,6 @@ function onJobCategorySearch() {
 function onEditJobCategory(category: any) {
   jobCategoryForm.value = {
     name: category.name,
-    description: category.description || '',
     sortOrder: category.sortOrder || 0,
     parentId: category.parentId || null
   }
@@ -1017,7 +1079,6 @@ function closeJobCategoryForm() {
   showEditJobCategoryDialog.value = false
   jobCategoryForm.value = {
     name: '',
-    description: '',
     sortOrder: 0,
     parentId: null
   }
@@ -1029,30 +1090,25 @@ async function onSubmitJobCategory() {
     alert('请输入分类名称')
     return
   }
-  
+  if (jobCategoryForm.value.name.length < 1 || jobCategoryForm.value.name.length > 100) {
+    alert('分类名称长度需为1-100个字符')
+    return
+  }
   jobCategorySubmitting.value = true
   try {
-    const formData = {
-      name: jobCategoryForm.value.name,
-      description: jobCategoryForm.value.description,
-      sortOrder: jobCategoryForm.value.sortOrder
-    }
-    
-    // 只有当选择了父分类时才添加parentId
-    if (jobCategoryForm.value.parentId !== null) {
-      formData.parentId = jobCategoryForm.value.parentId
-    }
-    
     if (showEditJobCategoryDialog.value) {
       // 编辑模式
-      await updateJobCategory(deleteTargetCategory.value.id, formData)
+      await updateJobCategory(deleteTargetCategory.value.id, { name: jobCategoryForm.value.name })
       alert('岗位分类更新成功')
     } else {
       // 新增模式
+      const formData = { name: jobCategoryForm.value.name };
+      if (jobCategoryForm.value.parentId !== null) {
+        formData.parentId = jobCategoryForm.value.parentId;
+      }
       await createJobCategory(formData)
       alert('岗位分类创建成功')
     }
-    
     closeJobCategoryForm()
     fetchJobCategoriesWithChildren()
   } catch (e: any) {

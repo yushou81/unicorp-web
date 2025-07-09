@@ -356,13 +356,118 @@
       </div>
     </div>
   </div>
+  <!-- 编辑资料弹窗 -->
+  <div v-if="showProfileDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md overflow-y-auto max-h-[80vh] relative">
+      <button @click="showProfileDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
+      <h2 class="text-2xl font-bold mb-4 text-blue-700">编辑个人资料</h2>
+      <form @submit.prevent="onUpdateProfile">
+        <!-- 头像上传 -->
+        <div class="mb-5 flex flex-col items-center">
+          <div class="relative group">
+            <img :src="previewAvatar || userAvatar" class="w-24 h-24 rounded-full border-2 border-blue-200 mb-2 object-cover" alt="avatar" />
+            <div 
+              @click="fileInput?.click()"
+              class="absolute inset-0 rounded-full bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all duration-200"
+            >
+              <span class="text-white text-sm">更换头像</span>
+            </div>
+          </div>
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleAvatarChange"
+          />
+          <p v-if="avatarFile" class="text-xs text-gray-500 mt-1">
+            {{ avatarFile.name }} ({{ formatFileSize(avatarFile.size) }})
+            <button 
+              type="button" 
+              @click="cancelAvatarUpload" 
+              class="ml-2 text-red-500 hover:text-red-700"
+            >
+              取消
+            </button>
+          </p>
+        </div>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1">昵称</label>
+          <input v-model="editProfile.nickname" class="w-full px-3 py-2 border rounded" placeholder="请输入昵称" />
+        </div>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1">邮箱</label>
+          <input v-model="editProfile.email" type="email" class="w-full px-3 py-2 border rounded" placeholder="请输入邮箱" />
+        </div>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1">手机号</label>
+          <input v-model="editProfile.phone" class="w-full px-3 py-2 border rounded" placeholder="请输入手机号" />
+        </div>
+        <div class="flex justify-end space-x-2 mt-4">
+          <button type="button" @click="showProfileDialog = false" class="px-4 py-1 rounded bg-gray-200 text-gray-700">取消</button>
+          <button type="submit" :disabled="updateProfileLoading" class="px-4 py-1 rounded bg-blue-600 text-white">{{ updateProfileLoading ? '保存中...' : '保存' }}</button>
+        </div>
+      </form>
+      <div class="mt-6 pt-4 border-t">
+        <h3 class="text-lg font-semibold mb-3">修改密码</h3>
+        <form @submit.prevent="onChangePassword">
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">原密码</label>
+            <input v-model="changePwdForm.oldPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入原密码" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">新密码</label>
+            <input v-model="changePwdForm.newPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请输入新密码" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-700 mb-1">确认新密码</label>
+            <input v-model="changePwdForm.confirmPassword" type="password" required class="w-full px-3 py-2 border rounded" placeholder="请再次输入新密码" />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button type="submit" :disabled="changePwdLoading" class="px-4 py-1 rounded bg-green-600 text-white">{{ changePwdLoading ? '修改中...' : '修改密码' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- 修改密码弹窗 -->
+  <div v-if="showChangePwdDialog" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md overflow-y-auto max-h-[80vh] relative">
+      <button @click="showChangePwdDialog = false" class="absolute top-4 right-4 text-gray-400 hover:text-blue-600 text-2xl font-bold focus:outline-none">×</button>
+      <h2 class="text-2xl font-bold mb-4 text-blue-700">修改密码</h2>
+      <form @submit.prevent="onChangePassword">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1 text-sm font-medium">原密码</label>
+          <input v-model="changePwdForm.oldPassword" type="password" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入原密码" required />
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1 text-sm font-medium">新密码</label>
+          <input v-model="changePwdForm.newPassword" type="password" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请输入新密码" required />
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-1 text-sm font-medium">确认新密码</label>
+          <input v-model="changePwdForm.confirmPassword" type="password" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="请再次输入新密码" required />
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" @click="showChangePwdDialog = false" class="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">取消</button>
+          <button type="submit" :disabled="changePwdLoading" class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition flex items-center">
+            <svg v-if="changePwdLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ changePwdLoading ? '提交中...' : '提交' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { getMe, searchUser } from '@/lib/api/auth'
+import { getMe, searchUser, uploadAvatar, updateUserInfo } from '@/lib/api/auth'
 import Navbar from '@/components/layout/Navbar.vue'
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
@@ -399,7 +504,7 @@ interface ApiResponse<T = any> {
 const router = useRouter()
 
 const teacher = ref({
-  avatar: 'https://randomuser.me/api/portraits/men/33.jpg',
+  // avatar: 'https://randomuser.me/api/portraits/men/33.jpg', // 移除本地avatar字段
   name: '加载中...',
   email: '',
   phone: '',
@@ -410,7 +515,8 @@ const teacher = ref({
 
 const appStore = useAppStore()
 const userInfo = computed(() => appStore.user as any || {})
-const userAvatar = computed(() => (userInfo.value?.avatar as string) || 'https://randomuser.me/api/portraits/men/33.jpg')
+// 统一 userAvatar 逻辑，和 Navbar 及其他 dashboard 保持一致
+const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/men/32.jpg')
 
 const activeTab = ref('my-courses')
 
@@ -470,7 +576,7 @@ onMounted(async () => {
     const res = await getMe()
     if (res && res.data) {
       teacher.value = {
-        avatar: res.data.avatar || 'https://randomuser.me/api/portraits/men/33.jpg',
+        // avatar: res.data.avatar || 'https://randomuser.me/api/portraits/men/33.jpg', // 不再单独存avatar
         name: res.data.nickname || res.data.account || '未知教师',
         email: res.data.email || '',
         phone: res.data.phone || '',
@@ -478,15 +584,13 @@ onMounted(async () => {
         school: res.data.organizationName || '未绑定',
         company: res.data.companyName || ''
       }
+      // 关键：同步更新 appStore.user，保证 userAvatar 有真实头像
+      appStore.setUser(res.data)
     }
   } catch (e) {
     // 获取失败时保留默认值
   }
 })
-
-function onEditProfileClick() {
-  // 这里可以弹出编辑对话框或其他逻辑
-}
 
 // 创建/编辑课程相关
 const showCreateDialog = ref(false)
@@ -703,6 +807,118 @@ async function confirmDelete(resource: ResourceVO) {
     }
   } catch (e: any) {
     alert('删除失败：' + (e.message || '未知错误'))
+  }
+}
+
+// 编辑资料弹窗相关响应式变量和方法
+const showProfileDialog = ref(false)
+const editProfile = ref({ nickname: '', email: '', phone: '' })
+const fileInput = ref<HTMLInputElement | null>(null)
+const avatarFile = ref<File | null>(null)
+const previewAvatar = ref<string | null>(null)
+const avatarUploading = ref(false)
+const updateProfileLoading = ref(false)
+function onEditProfileClick() {
+  editProfile.value = {
+    nickname: userInfo.value.nickname || teacher.value.name || '',
+    email: userInfo.value.email || teacher.value.email || '',
+    phone: userInfo.value.phone || teacher.value.phone || ''
+  }
+  showProfileDialog.value = true
+}
+function handleAvatarChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    avatarFile.value = target.files[0]
+    previewAvatar.value = URL.createObjectURL(avatarFile.value)
+  }
+}
+function cancelAvatarUpload() {
+  avatarFile.value = null
+  previewAvatar.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i]
+}
+async function onUpdateProfile() {
+  updateProfileLoading.value = true
+  try {
+    // 先更新用户基本信息
+    await updateUserInfo({
+      nickname: editProfile.value.nickname,
+      email: editProfile.value.email,
+      phone: editProfile.value.phone
+    })
+    // 如果选择了新头像，则上传头像
+    if (avatarFile.value) {
+      avatarUploading.value = true
+      try {
+        await uploadAvatar(avatarFile.value)
+      } catch (avatarError) {
+        alert('头像上传失败: ' + (avatarError.message || '未知错误'))
+      } finally {
+        avatarUploading.value = false
+      }
+    }
+    showProfileDialog.value = false
+    avatarFile.value = null
+    previewAvatar.value = null
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+    // 重新获取用户信息，刷新头像
+    const res = await getMe()
+    if (res.data) {
+      appStore.setUser(res.data)
+      // 同步teacher对象的其他字段（不含avatar）
+      teacher.value = {
+        name: res.data.nickname || res.data.account || '未知教师',
+        email: res.data.email || '',
+        phone: res.data.phone || '',
+        verified: res.data.verified || false,
+        school: res.data.organizationName || '未绑定',
+        company: res.data.companyName || ''
+      }
+    }
+    alert('个人资料更新成功')
+  } catch (e: any) {
+    alert('更新失败：' + (e.message || '未知错误'))
+  } finally {
+    updateProfileLoading.value = false
+  }
+}
+
+// 新增响应式变量和方法
+const showChangePwdDialog = ref(false)
+const changePwdLoading = ref(false)
+const changePwdForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' })
+async function onChangePassword() {
+  if (!changePwdForm.value.oldPassword || !changePwdForm.value.newPassword || !changePwdForm.value.confirmPassword) {
+    alert('请填写完整')
+    return
+  }
+  if (changePwdForm.value.newPassword !== changePwdForm.value.confirmPassword) {
+    alert('两次输入的新密码不一致')
+    return
+  }
+  changePwdLoading.value = true
+  try {
+    // TODO: 调用后端修改密码接口
+    // await changePasswordApi(changePwdForm.value)
+    alert('密码修改成功（模拟）')
+    showChangePwdDialog.value = false
+    changePwdForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
+  } catch (e: any) {
+    alert('修改失败：' + (e.message || '未知错误'))
+  } finally {
+    changePwdLoading.value = false
   }
 }
 </script>
