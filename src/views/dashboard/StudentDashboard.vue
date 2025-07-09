@@ -34,7 +34,8 @@
         :avatar="userAvatar"
         :name="user.nickname"
         :role="roleText"
-        :organization="user.school"
+        :organization="organizationName || user.school"
+        :organizationLogo="organizationLogo"
         :phone="user.phone"
         :email="user.email"
         :editable="true"
@@ -331,6 +332,14 @@
     >
       {{ toast.message }}
     </div>
+
+    <UserFeatureModal
+      v-if="showFeatureModal"
+      :initialData="featureData"
+      @submit="handleFeatureSubmit"
+      :maskClosable="false"
+      :closable="false"
+    />
   </div>
 </template>
 
@@ -353,6 +362,9 @@ import ChatPanel from '@/components/chat/ChatPanel.vue'
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 import { getStudentEnrolledCourses, cancelEnrollment } from '@/lib/api/classroom'
+import { getUserFeature, updateUserFeature, generateRecommendedJobs } from '@/lib/api/recommendation'
+import UserFeatureModal from '@/components/dashboard/UserFeatureModal.vue'
+import { getSchoolById, getEnterpriseById } from '@/lib/api/organization'
 
 // 定义API响应类型
 interface ApiResponse<T> {
@@ -429,9 +441,11 @@ const user = ref<User>({
 })
 
 async function fetchUserInfo() {
+  console.log('fetchUserInfo 被调用')
   try {
     const res = await getMe() as ApiResponse<any>
     const userData = res?.data
+    console.log('getMe 返回:', userData)
     if (userData) {
       user.value = {
         avatar: userData.avatarUrl || 'https://randomuser.me/api/portraits/men/32.jpg',
@@ -441,10 +455,12 @@ async function fetchUserInfo() {
         verified: userData.verified || false,
         school: userData.organizationName || '未绑定学校'
       }
+      console.log('user.value 赋值后:', user.value)
+      console.log('userInfo.value:', userInfo.value)
+      await fetchOrganizationInfo()
     }
   } catch (e: any) {
     console.error('获取用户信息失败:', e)
-    // 保持默认值
   }
 }
 
@@ -881,6 +897,7 @@ const getBookingStatusColor = (status: string) => {
 }
 
 onMounted(() => {
+  console.log('onMounted 被调用')
   fetchUserInfo()
   fetchMyBookings()
 })
@@ -1155,6 +1172,71 @@ async function onCancelEnrollment(courseId: number) {
     cancelingId.value = null
   }
 }
+
+const showFeatureModal = ref(false)
+const featureData = ref({})
+
+function isFeatureEmpty(feature: any) {
+  // 你可以根据实际业务调整必填字段
+  return !feature || !feature.preferredJobTypes?.length || !feature.skills?.length
+}
+
+async function checkUserFeature() {
+  try {
+    const res = await getUserFeature()
+    featureData.value = res.data || {}
+    if (isFeatureEmpty(featureData.value)) {
+      showFeatureModal.value = true
+    }
+  } catch (e) {
+    // 获取失败也强制弹窗
+    showFeatureModal.value = true
+  }
+}
+
+async function handleFeatureSubmit(formData: any) {
+  await updateUserFeature(formData)
+  showFeatureModal.value = false
+  // 可选：重新拉取dashboard数据
+}
+
+const organizationLogo = ref('')
+const organizationName = ref('')
+
+async function fetchOrganizationInfo() {
+  console.log('fetchOrganizationInfo 被调用', userInfo.value)
+  const { role, organizationId } = userInfo.value
+  console.log('role:', role, 'organizationId:', organizationId)
+  if (role && organizationId && !role.toLowerCase().includes('admin')) {
+    let orgRes
+    if (role.toLowerCase().includes('student') || role.toLowerCase().includes('school')) {
+      orgRes = await getSchoolById(organizationId)
+      console.log('getSchoolById 返回:', orgRes)
+    } else if (role.toLowerCase().includes('company') || role.toLowerCase().includes('enterprise')) {
+      orgRes = await getEnterpriseById(organizationId)
+      console.log('getEnterpriseById 返回:', orgRes)
+    }
+    if (orgRes && orgRes.data) {
+      organizationLogo.value = orgRes.data.logoUrl
+      organizationName.value = orgRes.data.organizationName
+      console.log('设置 organizationLogo:', organizationLogo.value, 'organizationName:', organizationName.value)
+    }
+  }
+}
+
+onMounted(() => {
+  console.log('onMounted 被调用')
+  checkUserFeature()
+  generateRecommendedJobs().catch(() => {})
+  // 登录后主动拉取一次组织信息
+  fetchOrganizationInfo()
+})
+
+watch(
+  () => userInfo.value,
+  fetchOrganizationInfo,
+  { immediate: false, deep: true }
+)
 </script>
 
 <style scoped>

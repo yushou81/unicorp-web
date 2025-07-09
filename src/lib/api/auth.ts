@@ -75,26 +75,9 @@ export function registerStudent(data: {
 }
 
 // 企业注册
-export function registerEnterprise(data: {
-  organizationName: string
-  // companyCode: string // 移除
-  description?: string
-  address?: string
-  website?: string
-  industry?: string
-  companySize?: string
-  businessLicenseUrl: string
-  adminEmail: string
-  adminNickname?: string
-  adminPassword: string
-  adminPhone?: string
-  latitude?: number | null
-  longitude?: number | null
-}) {
-  // 移除 companyCode 字段
-  const { companyCode, ...rest } = data as any;
+export function registerEnterprise(formData: FormData) {
   return apiRequest('/v1/auth/register/enterprise', {
     method: 'POST',
-    body: JSON.stringify(rest)
+    body: formData
   })
 } 

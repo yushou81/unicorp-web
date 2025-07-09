@@ -52,7 +52,7 @@
         </div>
         <div v-if="role === 'companyAdmin'">
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">企业名称</label>
+            <label class="block text-gray-700 mb-1">企业名称 <span class="text-red-500">*</span></label>
             <input v-model="companyName" type="text" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业名称" />
           </div>
           <div class="mb-4">
@@ -92,26 +92,40 @@
             <input v-model="companySize" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入企业规模" />
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">营业执照图片URL</label>
-            <input v-model="businessLicenseUrl" type="text" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入营业执照图片的URL" />
-            <div v-if="businessLicenseUrl" class="mt-2">
-              <img :src="businessLicenseUrl" alt="营业执照预览" class="max-h-32 rounded border" />
+            <label class="block text-gray-700 mb-1">企业logo <span class="text-red-500">*</span></label>
+            <input type="file" @change="onLogoChange" accept="image/*" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <div v-if="logoFile" class="mt-2">
+              <img :src="logoPreview" alt="logo预览" class="max-h-32 rounded border" />
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-1">营业执照 <span class="text-red-500">*</span></label>
+            <input type="file" @change="onLicenseChange" accept="image/*,application/pdf" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <div v-if="businessLicenseFile" class="mt-2">
+              <span>已选择文件：{{ businessLicenseFile.name }}</span>
             </div>
           </div>
           <div class="mb-4">
             <label class="block text-gray-700 mb-1">管理员昵称</label>
             <input v-model="contactName" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员昵称" />
           </div>
+          <div class="mb-4 flex items-center">
+            <label class="block text-gray-700 mb-1 mr-2">管理员邮箱 <span class="text-red-500">*</span></label>
+            <input v-model="email" type="email" required class="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员邮箱" />
+            <button type="button" @click="sendVerificationCode" :disabled="countdown > 0" class="ml-2 px-3 py-1 bg-blue-600 text-white rounded">
+              {{ countdown > 0 ? countdown + '秒后重试' : '获取验证码' }}
+            </button>
+          </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">管理员邮箱</label>
-            <input v-model="email" type="email" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员邮箱" />
+            <label class="block text-gray-700 mb-1">邮箱验证码 <span class="text-red-500">*</span></label>
+            <input v-model="emailVerificationCode" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入邮箱验证码" />
           </div>
           <div class="mb-4">
             <label class="block text-gray-700 mb-1">管理员手机号（选填）</label>
             <input v-model="phone" type="tel" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入管理员手机号" />
           </div>
           <div class="mb-4">
-            <label class="block text-gray-700 mb-1">管理员密码</label>
+            <label class="block text-gray-700 mb-1">管理员密码 <span class="text-red-500">*</span></label>
             <input v-model="password" type="password" required class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入密码" />
           </div>
           <div class="mb-4">
@@ -137,6 +151,7 @@ import { useRouter } from 'vue-router'
 import { registerStudent, registerEnterprise } from '@/lib/api/auth'
 import { getAllSchools } from '@/lib/api/organization'
 import MapLocationPicker from '@/components/map/MapLocationPicker.vue'
+import { apiRequest } from '@/lib/api/apiClient'
 
 // 定义位置信息接口
 interface LocationInfo {
@@ -234,74 +249,128 @@ function isValidPhone(phone: string) {
   return /^1[3-9]\d{9}$/.test(phone)
 }
 
+const logoFile = ref<File|null>(null)
+const logoPreview = ref('')
+const businessLicenseFile = ref<File|null>(null)
+function onLogoChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0] || null
+  logoFile.value = file
+  logoPreview.value = file ? URL.createObjectURL(file) : ''
+}
+function onLicenseChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0] || null
+  businessLicenseFile.value = file
+}
+
+const emailVerificationCode = ref('')
+const countdown = ref(0)
+let timer: any = null
+
+function validateEmail(email: string) {
+  return /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(email)
+}
+
+async function sendVerificationCode() {
+  if (!email.value || !validateEmail(email.value)) {
+    alert('请输入有效的邮箱')
+    return
+  }
+  try {
+    await apiRequest('/v1/email/verification-code', {
+      method: 'GET',
+      params: { email: email.value }
+    })
+    alert('验证码已发送，请查收邮件')
+    countdown.value = 60
+    timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) clearInterval(timer)
+    }, 1000)
+  } catch (e: any) {
+    alert(e.message || '验证码发送失败')
+  }
+}
+
 async function onRegister() {
   if (password.value !== confirmPassword.value) {
     alert('两次输入的密码不一致')
     return
   }
-  if (role.value === 'student') {
-    if (!username.value || !email.value || !phone.value || !password.value || !realName.value || !idCard.value || !organizationId.value) {
-      alert('请填写完整信息，包括真实姓名、身份证号和学校')
+  if (role.value === 'companyAdmin') {
+    if (!companyName.value || !email.value || !password.value || !logoFile.value || !businessLicenseFile.value || !emailVerificationCode.value) {
+      alert('请填写所有必填项，包括验证码')
       return
     }
-    if (!isValidPhone(phone.value)) {
-      alert('手机号格式不正确')
-      return
-    }
-    const studentPayload = {
-      nickname: username.value,
-      password: password.value,
-      email: email.value,
-      phone: phone.value,
-      organizationId: Number(organizationId.value),
-      realName: realName.value,
-      idCard: idCard.value
-    }
-    console.log('[注册] 学生注册参数:', studentPayload)
-    try {
-      const res = await registerStudent(studentPayload)
-      console.log('[注册] 学生注册成功:', res)
-      alert('注册成功，请登录')
-      router.push('/login')
-    } catch (e: any) {
-      console.error('[注册] 学生注册失败:', e)
-      alert(e.message || '注册失败')
-    }
-  } else if (role.value === 'companyAdmin') {
-    if (!companyName.value || !email.value || !password.value || !businessLicenseUrl.value) {
-      alert('请填写企业名称、管理员邮箱、管理员密码并填写营业执照图片URL')
+    if (!validateEmail(email.value)) {
+      alert('请输入有效的邮箱')
       return
     }
     if (phone.value && !isValidPhone(phone.value)) {
       alert('管理员手机号格式不正确')
       return
     }
+    if (logoFile.value && logoFile.value.size > 2 * 1024 * 1024) {
+      alert('logo文件不能超过2M')
+      return
+    }
+    if (businessLicenseFile.value && businessLicenseFile.value.size > 5 * 1024 * 1024) {
+      alert('营业执照不能超过5M')
+      return
+    }
+    const formData = new FormData()
+    formData.append('organizationName', companyName.value)
+    if (description.value) formData.append('description', description.value)
+    if (address.value) formData.append('address', address.value)
+    if (website.value) formData.append('website', website.value)
+    if (industry.value) formData.append('industry', industry.value)
+    if (companySize.value) formData.append('companySize', companySize.value)
+    if (contactName.value) formData.append('adminNickname', contactName.value)
+    formData.append('adminEmail', email.value)
+    formData.append('adminPassword', password.value)
+    formData.append('emailVerificationCode', emailVerificationCode.value)
+    if (phone.value) formData.append('adminPhone', phone.value)
+    if (latitude.value) formData.append('latitude', latitude.value.toString())
+    if (longitude.value) formData.append('longitude', longitude.value.toString())
+    formData.append('logo', logoFile.value)
+    formData.append('businessLicense', businessLicenseFile.value)
+    for (let [key, value] of formData.entries()) {
+      console.log('[企业注册FormData]', key, value)
+    }
     try {
-      const enterprisePayload = {
-        organizationName: companyName.value,
-        description: description.value,
-        address: address.value,
-        website: website.value,
-        industry: industry.value,
-        companySize: companySize.value,
-        businessLicenseUrl: businessLicenseUrl.value,
-        adminNickname: contactName.value,
-        adminEmail: email.value,
-        adminPassword: password.value,
-        adminPhone: phone.value,
-        latitude: latitude.value || null,
-        longitude: longitude.value || null,
-        companyCode: "AUTO" // 添加缺失字段，设置为自动生成
-      }
-      console.log('[注册] 企业注册参数:', enterprisePayload)
-      const res = await registerEnterprise(enterprisePayload)
-      console.log('[注册] 企业注册成功:', res)
+      const res = await registerEnterprise(formData)
       alert('企业注册申请已提交，待审核后可登录')
       router.push('/login')
     } catch (e: any) {
-      console.error('[注册] 企业注册失败:', e)
       alert(e.message || '注册失败')
     }
+    return
+  }
+  if (!username.value || !email.value || !phone.value || !password.value || !realName.value || !idCard.value || !organizationId.value) {
+    alert('请填写完整信息，包括真实姓名、身份证号和学校')
+    return
+  }
+  if (!isValidPhone(phone.value)) {
+    alert('手机号格式不正确')
+    return
+  }
+  const studentPayload = {
+    nickname: username.value,
+    password: password.value,
+    email: email.value,
+    phone: phone.value,
+    organizationId: Number(organizationId.value),
+    realName: realName.value,
+    idCard: idCard.value
+  }
+  console.log('[注册] 学生注册参数:', studentPayload)
+  try {
+    const res = await registerStudent(studentPayload)
+    console.log('[注册] 学生注册成功:', res)
+    alert('注册成功，请登录')
+    router.push('/login')
+  } catch (e: any) {
+    console.error('[注册] 学生注册失败:', e)
+    alert(e.message || '注册失败')
   }
 }
 </script>

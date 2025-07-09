@@ -106,7 +106,47 @@
                   ]"
                 >
                   <span class="flex items-center space-x-2">
-                    <span v-if="category.icon" class="text-lg">{{ category.icon }}</span>
+                    <span v-if="category.name.includes('技术')">
+                      <!-- 技术交流: 代码块图标 -->
+                      <svg class="w-5 h-5 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2" />
+                        <path d="M9 9h6v6H9z" stroke-width="2" />
+                      </svg>
+                    </span>
+                    <span v-else-if="category.name.includes('就业')">
+                      <!-- 就业指导: 书本图标 -->
+                      <svg class="w-5 h-5 text-blue-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke-width="2" />
+                        <path d="M4 4.5A2.5 2.5 0 016.5 7H20v13H6.5A2.5 2.5 0 014 17.5V4.5z" stroke-width="2" />
+                      </svg>
+                    </span>
+                    <span v-else-if="category.name.includes('学术')">
+                      <!-- 学术研究: 地球图标 -->
+                      <svg class="w-5 h-5 text-purple-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke-width="2" />
+                        <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" stroke-width="2" />
+                      </svg>
+                    </span>
+                    <span v-else-if="category.name.includes('校园')">
+                      <!-- 校园生活: 用户图标 -->
+                      <svg class="w-5 h-5 text-pink-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="8" r="4" stroke-width="2" />
+                        <path d="M4 20v-1a4 4 0 014-4h8a4 4 0 014 4v1" stroke-width="2" />
+                      </svg>
+                    </span>
+                    <span v-else-if="category.name.includes('企业')">
+                      <!-- 企业专区: briefcase图标 -->
+                      <svg class="w-5 h-5 text-yellow-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="2" y="7" width="20" height="14" rx="2" stroke-width="2" />
+                        <path d="M16 3v4M8 3v4M2 11h20" stroke-width="2" />
+                      </svg>
+                    </span>
+                    <span v-else>
+                      <!-- 默认: 聊天气泡图标 -->
+                      <svg class="w-5 h-5 text-blue-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-width="2" />
+                      </svg>
+                    </span>
                     <span>{{ category.name }}</span>
                   </span>
                   <span class="text-sm text-gray-500">{{ category.topicCount }}</span>
@@ -386,15 +426,6 @@
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">版块图标</label>
-                  <input
-                    v-model="newCategory.icon"
-                    type="text"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="请输入图标（emoji或图标代码）"
-                  />
-                </div>
-                <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">排序顺序</label>
                   <input
                     v-model="newCategory.sortOrder"
@@ -428,7 +459,7 @@
                 <!-- 主版块 -->
                 <div class="flex items-center justify-between p-4">
                   <div class="flex items-center space-x-3">
-                    <span v-if="category.icon" class="text-lg">{{ category.icon }}</span>
+                    <span v-if="category.icon" :class="['iconfont', category.icon, 'text-lg']"></span>
                     <div>
                       <h5 class="font-medium text-gray-900">{{ category.name }}</h5>
                       <p v-if="category.description" class="text-sm text-gray-500">{{ category.description }}</p>
@@ -465,7 +496,7 @@
                     class="flex items-center justify-between p-4 pl-8 bg-gray-50"
                   >
                     <div class="flex items-center space-x-3">
-                      <span v-if="child.icon" class="text-lg">{{ child.icon }}</span>
+                      <span v-if="child.icon" :class="['iconfont', child.icon, 'text-lg']"></span>
                       <div>
                         <h6 class="font-medium text-gray-800">{{ child.name }}</h6>
                         <p v-if="child.description" class="text-sm text-gray-500">{{ child.description }}</p>
@@ -541,15 +572,6 @@
               </div>
               
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">版块图标</label>
-                  <input
-                    v-model="editCategoryForm.icon"
-                    type="text"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="请输入图标（emoji或图标代码）"
-                  />
-                </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">排序顺序</label>
                   <input
