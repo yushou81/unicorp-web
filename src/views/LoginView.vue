@@ -174,7 +174,7 @@ async function onGithubLogin() {
     const res = await getGithubLoginUrl() as unknown as ApiResponse<string>
     console.log('[GitHub登录] 获取登录URL成功:', res)
     // 获取到GitHub登录URL后，跳转到该URL进行OAuth认证
-    const baseUrl = 'http://localhost:8081/api'  // 后端API基础URL
+    const baseUrl = 'http://192.168.58.96:8081/api'  // 后端API基础URL
     const githubUrl = baseUrl + res.data
     console.log('[GitHub登录] 跳转到GitHub登录URL:', githubUrl)
     window.location.href = githubUrl

@@ -294,16 +294,16 @@
                 :key="relatedTopic.id"
                 class="border-b border-gray-100 pb-3 last:border-b-0"
               >
-                <router-link
-                  :to="`/community/topic/${relatedTopic.id}`"
-                  class="block hover:text-blue-600 transition"
+                <div
+                  class="block hover:text-blue-600 transition cursor-pointer"
+                  @click="handleRelatedTopicClick(relatedTopic)"
                 >
                   <h4 class="font-medium text-gray-900 line-clamp-2 mb-1">{{ relatedTopic.title }}</h4>
                   <div class="flex items-center justify-between text-sm text-gray-500">
                     <span>{{ relatedTopic.userName }}</span>
                     <span>{{ formatTime(relatedTopic.createdAt) }}</span>
                   </div>
-                </router-link>
+                </div>
               </div>
             </div>
           </div>
@@ -386,7 +386,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { topicApi, commentApi, interactionApi, type TopicVO, type CommentVO } from '@/lib/api/community'
@@ -492,10 +492,27 @@ const fetchRelatedTopics = async () => {
     const response = await topicApi.getRecommend(5)
     if (response.success) {
       relatedTopics.value = response.data.filter(t => t.id !== topicId).slice(0, 3)
+      console.log('相关话题数据:', relatedTopics.value)
     }
   } catch (error) {
     console.error('获取相关话题失败:', error)
   }
+}
+
+// 处理相关话题点击
+const handleRelatedTopicClick = (topic: TopicVO) => {
+  console.log('点击相关话题:', topic)
+  console.log('跳转路径:', `/community/topic/${topic.id}`)
+  
+  // 强制路由跳转并重新加载数据
+  router.push(`/community/topic/${topic.id}`).then(() => {
+    // 重新获取数据
+    fetchTopicDetail()
+    fetchComments()
+    fetchRelatedTopics()
+  }).catch((error) => {
+    console.error('路由跳转失败:', error)
+  })
 }
 
 // 点赞话题
@@ -672,6 +689,16 @@ const loadReplies = async (commentId: number) => {
   }
   repliesLoading.value[commentId] = false
 }
+
+// 监听路由参数变化
+watch(() => route.params.id, (newId, oldId) => {
+  if (newId !== oldId) {
+    console.log('路由参数变化，重新加载数据:', newId)
+    fetchTopicDetail()
+    fetchComments()
+    fetchRelatedTopics()
+  }
+})
 
 // 页面加载时获取数据
 onMounted(() => {
