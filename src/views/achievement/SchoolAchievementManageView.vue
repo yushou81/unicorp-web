@@ -288,9 +288,11 @@ import type {
   CompetitionAwardVO,
   PortfolioItemVO,
   ResearchVO,
-  StudentAchievementOverviewVO
+  StudentAchievementOverviewVO,
+  VerifyAwardDTO,
+  VerifyResearchDTO
 } from '@/lib/api/achievement'
-import { getAllUsers } from '@/lib/api/schoolAdmin'
+import { getAllUsers, type UserVO } from '@/lib/api/schoolAdmin'
 import { getMe } from '@/lib/api/auth'
 
 // 定义组件
@@ -481,29 +483,30 @@ const fetchAchievements = async () => {
     let results: Achievement[] = []
     
     try {
-      // 获取学生成果概览
-             const overviewResponse = await competitionAwardApi.getUnverifiedAwards(
-                    appStore.user?.organizationId || 0,
+      // 获取未认证的获奖和科研成果
+      const [awardsResponse, researchResponse] = await Promise.all([
+        competitionAwardApi.getUnverifiedAwards(
+          appStore.user?.organizationId || 0,
           currentPage.value,
-          10)
-      console.log('[SchoolAchievementManageView] 获取到学生成果概览:', overviewResponse)
+          10
+        ),
+        researchApi.getUnverifiedResearch(
+          appStore.user?.organizationId || 0,
+          currentPage.value,
+          10
+        )
+      ])
       
-      if (!overviewResponse.data) {
-        console.warn('[SchoolAchievementManageView] 响应中没有data字段')
-        return
-      }
+      console.log('[SchoolAchievementManageView] 获取到未认证获奖:', awardsResponse)
+      console.log('[SchoolAchievementManageView] 获取到未认证科研成果:', researchResponse)
       
-      // 修改这里以适配后端返回的数据格式
-      const records = overviewResponse.data.records || []
-      console.log('[SchoolAchievementManageView] 未认证成果数量:', records.length)
-      
-      // 如果没有获取到未认证成果，直接使用空数组
-      if (records.length === 0) {
-        results = []
-        console.log('[SchoolAchievementManageView] 没有找到任何未认证成果')
-      } else {
+      // 处理获奖数据
+      if (awardsResponse.data && awardsResponse.data.records) {
+        const awardRecords = awardsResponse.data.records || []
+        console.log('[SchoolAchievementManageView] 未认证获奖数量:', awardRecords.length)
+        
         // 将 CompetitionAwardVO 转换为 Achievement
-        results = records.map(award => ({
+        const awardResults = awardRecords.map(award => ({
           id: award.id,
           title: award.competitionName,
           type: AchievementType.AWARD,
@@ -519,11 +522,44 @@ const fetchAchievements = async () => {
           verifierName: award.verifierName,
           verifyDate: award.verifyDate
         }))
+        
+        results = [...results, ...awardResults]
       }
       
-      console.log('[SchoolAchievementManageView] 所有学生成果处理完成, 总成果数:', results.length)
+      // 处理科研成果数据
+      if (researchResponse.data && researchResponse.data.records) {
+        const researchRecords = researchResponse.data.records || []
+        console.log('[SchoolAchievementManageView] 未认证科研成果数量:', researchRecords.length)
+        
+        // 将 ResearchVO 转换为 Achievement
+        const researchResults = researchRecords.map(research => ({
+          id: research.id,
+          title: research.title,
+          type: AchievementType.RESEARCH,
+          studentId: research.userId,
+          studentName: research.userName,
+          organizationName: research.organizationName,
+          description: research.description,
+          verifyStatus: research.isVerified ? AchievementStatus.VERIFIED : AchievementStatus.PENDING,
+          isPublic: research.isPublic,
+          createdAt: research.createdAt,
+          updatedAt: research.updatedAt,
+          verifierId: research.verifierId,
+          verifierName: research.verifierName,
+          verifyDate: research.verifyDate
+        }))
+        
+        results = [...results, ...researchResults]
+      }
+      
+      // 如果没有获取到未认证成果，直接使用空数组
+      if (results.length === 0) {
+        console.log('[SchoolAchievementManageView] 没有找到任何未认证成果')
+      }
+      
+      console.log('[SchoolAchievementManageView] 所有未认证成果处理完成, 总成果数:', results.length)
     } catch (error) {
-      console.error('[SchoolAchievementManageView] 获取学生成果概览失败:', error)
+      console.error('[SchoolAchievementManageView] 获取未认证成果失败:', error)
     }
     
     // 根据筛选条件过滤
@@ -585,11 +621,9 @@ const submitVerify = async () => {
   if (!currentItem.value) return
 
   loading.value = true
-  // error.value = '' // Assuming error state is not used in this component
   try {
     const verifyData = {
       status: verifyForm.value.status,
-      // comment: verifyForm.value.comment, // 移除此字段
     }
 
     const id = currentItem.value.id
@@ -602,15 +636,17 @@ const submitVerify = async () => {
       const researchData: VerifyResearchDTO = { isVerified: verifyData.status === AchievementStatus.VERIFIED }
       await researchApi.verifyResearch(id, researchData)
     } else {
-      // 作品暂无认证接口，因为API权限中没有提供
       console.warn('作品类型暂无认证接口')
     }
 
     closeVerifyModal()
-    await fetchUnverifiedAchievements() // 审核成功后刷新列表
-    fetchStatistics()
+    alert('审核成功') // 弹出成功提示
+    
+    // 审核成功后直接刷新整个页面
+    window.location.reload()
   } catch (error) {
     console.error('审核失败:', error)
+    alert('审核失败: ' + (error instanceof Error ? error.message : '未知错误'))
   } finally {
     loading.value = false
   }
