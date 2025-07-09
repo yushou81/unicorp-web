@@ -5,6 +5,12 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>人力资源保障能力提升平台</title>
+    <script>
+      // 为sockjs-client提供global对象
+      window.global = window;
+      // 提供process.env.NODE_ENV
+      window.process = { env: { NODE_ENV: 'development' } };
+    </script>
   </head>
   <body>
     <div id="app"></div>

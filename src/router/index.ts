@@ -128,7 +128,6 @@ const router = createRouter({
             return { name: 'student-dashboard' }
           case 'EN_ADMIN':
           case 'COMPANYADMIN':
-          case 'EN_ADMIN':
             return { name: 'company-dashboard' }
           case 'TEACHER':
             return { name: 'teacher-dashboard' }

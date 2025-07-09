@@ -15,7 +15,7 @@
       </div>
 
       <!-- 标题 -->
-      <h1 class="text-2xl font-bold text-gray-900 mb-6">编辑项目</h1>
+      <h1 class="text-2xl font-bold text-gray-900 mb-6">创建项目</h1>
 
       <!-- 表单卡片 -->
       <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
@@ -27,11 +27,8 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">项目附件</label>
             <FileUploadArea
-              :existing-files="existingAttachments"
-              :original-names="originalName"
               :new-files="form.attachments"
               @add-files="addFiles"
-              @remove-existing="removeExistingFile"
               @remove-new="removeFile"
             />
           </div>
@@ -58,7 +55,7 @@
               :disabled="isSubmitting"
               class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {{ isSubmitting ? '更新中...' : '更新项目' }}
+              {{ isSubmitting ? '创建中...' : '创建项目' }}
             </button>
           </div>
         </form>
@@ -68,55 +65,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { uploadFile, updateProject, getProject } from '@/lib/api/project'
+import { uploadFile, createProject } from '@/lib/api/project'
 import ProjectFormFields from '@/components/project/ProjectFormFields.vue'
 import FileUploadArea from '@/components/project/FileUploadArea.vue'
 
-const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
-const projectId = Number(route.params.projectId)
-const isDockMode = computed(() => route.path.startsWith('/project/dock/'))
 
+// 表单数据
 const form = ref({
   title: '',
   description: '',
   field: '',
   budget: '',
   contact: '',
-  attachments: [] as File[],
-  projectId: projectId
+  attachments: [] as File[]
 })
 
-const existingAttachments = ref<string[]>([])
-const originalName = ref<string[]>([])
 const isSubmitting = ref(false)
-
-// 拉取项目详情
-onMounted(async () => {
-  try {
-    const res = await getProject(projectId)
-    if (res.data) {
-      const project = res.data
-      form.value = {
-        title: project.title || '',
-        description: project.description || '',
-        field: project.field || '',
-        budget: project.budget ? String(project.budget) : '',
-        contact: project.contact || '',
-        attachments: [],
-        projectId: projectId
-      }
-      existingAttachments.value = project.attachments || []
-      originalName.value = project.originalName || []
-    }
-  } catch (error) {
-    console.error('获取项目详情失败:', error)
-  }
-})
 
 // 文件处理方法
 function addFiles(files: File[]) {
@@ -125,11 +94,6 @@ function addFiles(files: File[]) {
 
 function removeFile(index: number) {
   form.value.attachments.splice(index, 1)
-}
-
-function removeExistingFile(index: number) {
-  existingAttachments.value.splice(index, 1)
-  originalName.value.splice(index, 1)
 }
 
 // 保存草稿
@@ -141,37 +105,33 @@ async function saveDraft() {
   try {
     isSubmitting.value = true
     
-    // 先上传新附件
-    let newAttachmentUrls: string[] = []
+    // 先上传附件
+    let attachmentUrls: string[] = []
     for (const file of form.value.attachments) {
       const res = await uploadFile(file)
       if (res.code === 200) {
-        newAttachmentUrls.push(res.data.file_url)
+        attachmentUrls.push(res.data.file_url)
       } else {
         throw new Error('文件上传失败: ' + file.name)
       }
     }
     
-    // 合并现有附件和新上传的附件
-    const allAttachments = [...existingAttachments.value, ...newAttachmentUrls]
-    
     // 构建提交数据
     const submitData = {
-      projectId,
       title: form.value.title,
       description: form.value.description,
       field: form.value.field,
       budget: Number(form.value.budget),
       contact: form.value.contact,
-      attachments: allAttachments,
+      attachments: attachmentUrls,
       status: 'draft'
     }
     
-    // 调用更新项目接口
-    const res = await updateProject(submitData)
+    // 调用创建项目接口
+    const res = await createProject(submitData)
     if (res.data && res.data.projectId) {
-      // 保存成功，自动返回上一页
-      router.back()
+      // 保存成功，跳转到项目列表页
+      router.push('/project/my')
     } else {
       throw new Error('草稿保存失败')
     }
@@ -183,11 +143,11 @@ async function saveDraft() {
   }
 }
 
-// 发布/更新项目
+// 创建项目
 async function submitForm() {
   if (isSubmitting.value) return
 
-  if (!window.confirm('确定要发布/更新该项目吗？')) return
+  if (!window.confirm('确定要创建该项目吗？')) return
 
   // 表单验证
   if (!form.value.title) {
@@ -214,45 +174,41 @@ async function submitForm() {
   try {
     isSubmitting.value = true
     
-    // 先上传新附件
-    let newAttachmentUrls: string[] = []
+    // 先上传附件
+    let attachmentUrls: string[] = []
     for (const file of form.value.attachments) {
       const res = await uploadFile(file)
       if (res.code === 200) {
-        newAttachmentUrls.push(res.data.file_url)
+        attachmentUrls.push(res.data.file_url)
       } else {
         throw new Error('文件上传失败: ' + file.name)
       }
     }
     
-    // 合并现有附件和新上传的附件
-    const allAttachments = [...existingAttachments.value, ...newAttachmentUrls]
-    
     // 构建提交数据
     const submitData = {
-      projectId,
       title: form.value.title,
       description: form.value.description,
       field: form.value.field,
       budget: Number(form.value.budget),
       contact: form.value.contact,
-      attachments: allAttachments,
+      attachments: attachmentUrls,
       status: 'pending'
     }
     
-    // 调用更新项目接口
-    const res = await updateProject(submitData)
+    // 调用创建项目接口
+    const res = await createProject(submitData)
     if (res.data && res.data.projectId) {
-      // 发布成功，自动返回上一页
-      router.back()
+      // 创建成功，跳转到项目列表页
+      router.push('/project/my')
     } else {
-      throw new Error('项目更新失败')
+      throw new Error('项目创建失败')
     }
   } catch (error) {
-    console.error('更新项目失败:', error)
-    alert('更新项目失败，请重试')
+    console.error('创建项目失败:', error)
+    alert('创建项目失败，请重试')
   } finally {
     isSubmitting.value = false
   }
 }
-</script>
+</script> 

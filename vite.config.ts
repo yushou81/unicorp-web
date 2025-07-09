@@ -1,15 +1,16 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
+// 移除 nodePolyfills 导入
+// import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), nodePolyfills()],
+  plugins: [vue()], // 移除 nodePolyfills 插件
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
-      crypto: 'crypto-browserify',
+      // 移除 crypto 别名，因为它可能依赖于 nodePolyfills
     },
   },
   server: {
@@ -23,5 +24,9 @@ export default defineConfig({
         ws: true,
       },
     },
+  },
+  define: {
+    // 为浏览器提供global对象
+    global: 'window',
   },
 }) 
