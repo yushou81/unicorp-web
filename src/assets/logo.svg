@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- 定义渐变 -->
+  <defs>
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C5AF3" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 背景圆形 -->
+  <circle cx="100" cy="100" r="80" fill="#FFFFFF" stroke="url(#primaryGradient)" stroke-width="4" />
+  
+  <!-- 学校图标 - 简化的学院帽 -->
+  <g transform="translate(60, 70)">
+    <path d="M0,15 L40,0 L80,15 L40,30 Z" fill="url(#primaryGradient)" />
+    <rect x="38" y="30" width="4" height="20" fill="url(#primaryGradient)" />
+    <path d="M30,50 L50,50 L50,55 L30,55 Z" fill="url(#primaryGradient)" />
+  </g>
+  
+  <!-- 企业图标 - 简化的办公楼 -->
+  <g transform="translate(70, 95)">
+    <rect x="0" y="0" width="60" height="40" rx="4" fill="url(#primaryGradient)" />
+    <rect x="10" y="10" width="10" height="10" fill="white" />
+    <rect x="25" y="10" width="10" height="10" fill="white" />
+    <rect x="40" y="10" width="10" height="10" fill="white" />
+    <rect x="10" y="25" width="10" height="10" fill="white" />
+    <rect x="25" y="25" width="10" height="10" fill="white" />
+    <rect x="40" y="25" width="10" height="10" fill="white" />
+  </g>
+  
+  <!-- 连接线 - 表示校企合作 -->
+  <path d="M100,90 Q120,100 100,110" stroke="url(#primaryGradient)" stroke-width="3" fill="none" />
+  <circle cx="100" cy="90" r="3" fill="url(#primaryGradient)" />
+  <circle cx="100" cy="110" r="3" fill="url(#primaryGradient)" />
+  
+  <!-- 外环装饰 -->
+  <path d="M100,20 A80,80 0 0,1 180,100" stroke="url(#primaryGradient)" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+  <path d="M20,100 A80,80 0 0,1 100,180" stroke="url(#primaryGradient)" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+</svg> 

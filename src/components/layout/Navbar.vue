@@ -2,7 +2,7 @@
   <header class="bg-white/90 backdrop-blur-sm border-b sticky top-0 z-20">
     <div class="container mx-auto flex items-center justify-between h-16 px-4">
       <div class="flex items-center space-x-2">
-        <img src="https://vitejs.dev/logo.svg" alt="logo" class="h-8 w-8" />
+        <img src="@/assets/logo.svg" alt="校企联盟平台" class="h-10 w-10" />
         <span class="font-bold text-xl text-blue-700">校企联盟平台</span>
       </div>
       <nav class="hidden md:flex space-x-6 text-gray-700 font-medium">
