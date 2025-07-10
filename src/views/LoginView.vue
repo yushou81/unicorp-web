@@ -52,16 +52,13 @@
           </svg>
           GitHub登录
         </button>
-        <button @click="onUnifiedLogin" class="w-full py-2 rounded bg-white border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition flex items-center justify-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 17l-4 4m0 0l-4-4m4 4V3"/></svg>
-          使用学校/企业统一认证登录
-        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { login, getMe, getGithubLoginUrl } from '@/lib/api/auth'
@@ -85,7 +82,7 @@ interface LoginResponse {
 
 // 用户信息类型
 interface UserInfo {
-  id?: number;
+  id: number; // 改为必需，与app.ts中的User类型一致
   account?: string;
   nickname?: string;
   email?: string;
@@ -174,8 +171,7 @@ async function onGithubLogin() {
     const res = await getGithubLoginUrl() as unknown as ApiResponse<string>
     console.log('[GitHub登录] 获取登录URL成功:', res)
     // 获取到GitHub登录URL后，跳转到该URL进行OAuth认证
-    const baseUrl = 'http://192.168.58.96:8081/api'  // 后端API基础URL
-    const githubUrl = baseUrl + res.data
+    const githubUrl =res.data+"/1112123123"
     console.log('[GitHub登录] 跳转到GitHub登录URL:', githubUrl)
     window.location.href = githubUrl
   } catch (e: any) {
