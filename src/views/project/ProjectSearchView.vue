@@ -113,7 +113,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getProjects, applyForProject } from '@/lib/api/project'
 import { useAppStore } from '@/stores/app'
@@ -246,6 +246,19 @@ function selectInitiatorType(value: string) {
   fetchProjects()
 }
 onMounted(fetchProjects)
+
+let intervalId: number | null = null;
+onMounted(() => {
+  fetchProjects();
+  intervalId = window.setInterval(() => {
+    fetchProjects();
+  }, 30000); // 30秒自动刷新
+});
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+});
 </script>
 
 <style scoped>

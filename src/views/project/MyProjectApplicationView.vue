@@ -195,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getMyProjectApplications, getContracts, updateContractStatus } from '@/lib/api/project';
 import { downloadFile } from '@/lib/api/file';
@@ -387,8 +387,20 @@ watch(currentStatus, () => {
   fetchApplications(1);
 });
 
+let intervalId: number | null = null;
+
 onMounted(() => {
   fetchApplications();
+  // 每30秒自动刷新一次
+  intervalId = window.setInterval(() => {
+    fetchApplications();
+  }, 30000); // 30秒
+});
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
 });
 </script>
 

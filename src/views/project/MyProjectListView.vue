@@ -352,11 +352,11 @@
         <div class="bg-white rounded-lg shadow-lg p-6 w-96">
           <div class="font-bold text-lg mb-2">经费申请</div>
           <div class="mb-3">
-            <label class="block mb-1">金额（元）</label>
+            <label class="block mb-1">金额（元）<span class="text-red-500">*</span></label>
             <input v-model="fundAmount" type="number" min="0" step="0.01" class="w-full border rounded p-2" placeholder="请输入金额" />
           </div>
           <div class="mb-3">
-            <label class="block mb-1">用途</label>
+            <label class="block mb-1">用途<span class="text-red-500">*</span></label>
             <input v-model="fundPurpose" class="w-full border rounded p-2" placeholder="请输入经费用途" />
           </div>
           <div class="mb-3">
@@ -435,7 +435,7 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted, nextTick } from 'vue'
+  import { ref, onMounted, nextTick, onUnmounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAppStore } from '@/stores/app'
   import { getProjects, updateProjectStatus, getProjectApplications, reviewApplication, getContracts, createContract, addProjectProgress, applyForFund, getClosure, getProjectProgressList, getProjectFundRecords } from '@/lib/api/project'
@@ -1053,8 +1053,20 @@
     return contracts.some((c: any) => c.status === 'pending')
   }
   
+  let intervalId: number | null = null
+
   onMounted(() => {
     fetchProjects()
+    // 每30秒自动刷新一次
+    intervalId = window.setInterval(() => {
+      fetchProjects()
+    }, 3000)
+  })
+
+  onUnmounted(() => {
+    if (intervalId) {
+      clearInterval(intervalId)
+    }
   })
   </script>
 
