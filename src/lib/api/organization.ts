@@ -10,7 +10,6 @@ export function getAllSchools(view: 'simple' | 'detailed' = 'simple') {
   return apiRequest(`/v1/organizations/schools?view=${view}`)
 }
 
-// 获取学校详情（公开接口）
 export function getSchoolById(id: number) {
   return apiRequest(`/v1/organizations/schools/${id}`)
 }
@@ -20,7 +19,6 @@ export function getAllEnterprises(view: 'simple' | 'detailed' = 'simple') {
   return apiRequest(`/v1/organizations/enterprises?view=${view}`)
 }
 
-// 获取企业详情（公开接口）
 export function getEnterpriseById(id: number) {
   return apiRequest(`/v1/organizations/enterprises/${id}`)
 }

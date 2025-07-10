@@ -6,7 +6,8 @@
           :avatar="userAvatar"
           :name="teacher.name"
           :role="'教师'"
-          :organization="teacher.school || '未绑定'"
+          :organization="organizationName || teacher.school || '未绑定'"
+          :organizationLogo="organizationLogo"
           :phone="teacher.phone"
           :email="teacher.email"
           :editable="true"
@@ -473,7 +474,10 @@ import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 import { createCourse, getTeacherCourses, updateCourse, deleteCourse, getCourseById, updateCourseStatus } from '@/lib/api/classroom'
 import { getMyUploadedResources, deleteResource } from '@/lib/api/resource'
+import { getSchoolById, getEnterpriseById } from '@/lib/api/organization'
 
+const organizationLogo = ref('')
+const organizationName = ref('')
 // 资源相关类型定义
 interface ResourceVO {
   id: number
@@ -569,6 +573,7 @@ function statusText(status: string) {
 }
 
 onMounted(async () => {
+  console.log('【当前页面】TeacherDashboard.vue onMounted 被调用')
   fetchCourses()
   loadMyResources()
   // 新增：获取用户信息
@@ -586,11 +591,37 @@ onMounted(async () => {
       }
       // 关键：同步更新 appStore.user，保证 userAvatar 有真实头像
       appStore.setUser(res.data)
+      await fetchOrganizationInfo()
     }
   } catch (e) {
     // 获取失败时保留默认值
   }
 })
+
+async function fetchUserInfo() {
+  console.log('【当前页面】TeacherDashboard.vue fetchUserInfo 被调用')
+  // 假设 teacher 里有 role 和 organizationId
+  await fetchOrganizationInfo()
+}
+
+async function fetchOrganizationInfo() {
+  // 打印所有相关对象，便于调试
+  console.log('teacher:', teacher)
+  console.log('userInfo:', userInfo)
+  // 优先从teacher.schoolId、teacher.organizationId、userInfo.organizationId等字段获取组织ID
+  const organizationId = teacher.value?.schoolId || teacher.schoolId || teacher.value?.organizationId || teacher.organizationId || userInfo.organizationId || userInfo.value?.organizationId
+  const role = teacher.role || teacher.value?.role || userInfo.role || userInfo.value?.role || 'teacher'
+  console.log('【当前页面】TeacherDashboard.vue fetchOrganizationInfo 被调用', role, organizationId)
+  if (role && organizationId) {
+    let orgRes = await getSchoolById(organizationId)
+    console.log('getSchoolById 返回:', orgRes)
+    if (orgRes && orgRes.data) {
+      organizationLogo.value = orgRes.data.logoUrl
+      organizationName.value = orgRes.data.organizationName
+      console.log('设置 organizationLogo:', organizationLogo.value, 'organizationName:', organizationName.value)
+    }
+  }
+}
 
 // 创建/编辑课程相关
 const showCreateDialog = ref(false)

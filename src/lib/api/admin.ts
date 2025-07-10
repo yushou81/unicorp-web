@@ -29,18 +29,10 @@ export function approveOrganization(id: number) {
 }
 
 // 手动创建学校信息
-export function createSchool(data: {
-  organizationName: string
-  description?: string
-  address?: string
-  website?: string
-  adminNickname?: string
-  adminPassword: string
-  adminEmail: string
-}) {
+export function createSchool(data: FormData) {
   return apiRequest('/v1/admin/schools', {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: data
   })
 }
 

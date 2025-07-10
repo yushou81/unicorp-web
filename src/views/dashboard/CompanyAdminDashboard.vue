@@ -7,7 +7,8 @@
         :avatar="userAvatar"
         :name="userInfo.nickname || userInfo.account || '企业管理员'"
         :role="'企业管理员'"
-        :organization="company.organizationName"
+        :organization="organizationName || company.organizationName"
+        :organizationLogo="organizationLogo"
         :phone="userInfo.phone"
         :email="userInfo.email"
         :editable="true"
@@ -240,6 +241,7 @@ import GridJobList from '@/components/job/GridJobList.vue'
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
 import JobManagement from '@/components/dashboard/JobManagement.vue'
+import { getSchoolById, getEnterpriseById } from '@/lib/api/organization'
 
 const company = ref({
   logo: 'https://randomuser.me/api/portraits/lego/1.jpg',
@@ -416,6 +418,7 @@ async function fetchCompanyInfo() {
 }
 
 onMounted(() => {
+  console.log('【当前页面】CompanyAdminDashboard.vue onMounted 被调用')
   fetchCompanyInfo()
   fetchMentors()
 })
@@ -617,6 +620,39 @@ const tabList = [
  
 ]
 const activeTab = ref('mentor')
+
+const organizationLogo = ref('')
+const organizationName = ref('')
+
+async function fetchUserInfo() {
+  console.log('【当前页面】CompanyAdminDashboard.vue fetchUserInfo 被调用')
+  // 假设 userInfo 已经有 role 和 organizationId
+  await fetchOrganizationInfo()
+}
+
+async function fetchOrganizationInfo() {
+  // 打印所有相关对象，便于调试
+  console.log('company:', company)
+  console.log('userInfo:', userInfo)
+  // 优先从company.id、userInfo.organizationId、userInfo.companyId等字段获取组织ID
+  const organizationId = company.value?.id || company.id || userInfo.organizationId || userInfo.companyId || userInfo.value?.organizationId || userInfo.value?.companyId
+  const role = company.role || company.value?.role || userInfo.role || userInfo.value?.role || 'company'
+  console.log('【当前页面】CompanyAdminDashboard.vue fetchOrganizationInfo 被调用', role, organizationId)
+  if (role && organizationId) {
+    let orgRes = await getEnterpriseById(organizationId)
+    console.log('getEnterpriseById 返回:', orgRes)
+    if (orgRes && orgRes.data) {
+      organizationLogo.value = orgRes.data.logoUrl
+      organizationName.value = orgRes.data.organizationName
+      console.log('设置 organizationLogo:', organizationLogo.value, 'organizationName:', organizationName.value)
+    }
+  }
+}
+
+onMounted(() => {
+  console.log('【当前页面】CompanyAdminDashboard.vue onMounted 被调用')
+  fetchUserInfo()
+})
 </script>
 
 <style scoped>

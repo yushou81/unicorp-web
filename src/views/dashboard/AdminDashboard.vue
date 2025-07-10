@@ -60,15 +60,20 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
                   <tr v-for="enterprise in publicEnterprises" :key="enterprise.id">
-                    <td v-for="key in enterpriseTableKeys" :key="key" class="px-4 py-2">
-                      <template v-if="key === 'website'">
-                        <a v-if="enterprise[key]" :href="enterprise[key]" target="_blank" class="text-blue-600 hover:underline">{{ enterprise[key] }}</a>
-                        <span v-else>-</span>
-                      </template>
-                      <template v-else>
-                        {{ enterprise[key] ?? '-' }}
-                      </template>
-                    </td>
+                    <template v-for="key in enterpriseTableKeys" :key="key">
+                      <td v-if="!(typeof enterprise[key] === 'string' && enterprise[key].startsWith('http://192.168.1.4:8081/api/v1/files/'))" class="px-4 py-2">
+                        <template v-if="key === 'website'">
+                          <a v-if="enterprise[key]" :href="enterprise[key]" target="_blank" class="text-blue-600 hover:underline">{{ enterprise[key] }}</a>
+                          <span v-else>-</span>
+                        </template>
+                        <template v-else-if="key === 'type'">
+                          {{ getOrgTypeText(enterprise[key]) }}
+                        </template>
+                        <template v-else>
+                          {{ enterprise[key] ?? '-' }}
+                        </template>
+                      </td>
+                    </template>
                   </tr>
                 </tbody>
               </table>
@@ -92,15 +97,20 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
                   <tr v-for="school in publicSchools" :key="school.id">
-                    <td v-for="key in schoolTableKeys" :key="key" class="px-4 py-2">
-                      <template v-if="key === 'website'">
-                        <a v-if="school[key]" :href="school[key]" target="_blank" class="text-blue-600 hover:underline">{{ school[key] }}</a>
-                        <span v-else>-</span>
-                      </template>
-                      <template v-else>
-                        {{ school[key] ?? '-' }}
-                      </template>
-                    </td>
+                    <template v-for="key in schoolTableKeys" :key="key">
+                      <td v-if="!(typeof school[key] === 'string' && school[key].startsWith('http://192.168.1.4:8081/api/v1/files/'))" class="px-4 py-2">
+                        <template v-if="key === 'website'">
+                          <a v-if="school[key]" :href="school[key]" target="_blank" class="text-blue-600 hover:underline">{{ school[key] }}</a>
+                          <span v-else>-</span>
+                        </template>
+                        <template v-else-if="key === 'type'">
+                          {{ getOrgTypeText(school[key]) }}
+                        </template>
+                        <template v-else>
+                          {{ school[key] ?? '-' }}
+                        </template>
+                      </td>
+                    </template>
                   </tr>
                 </tbody>
               </table>
@@ -253,10 +263,8 @@
                 <thead class="bg-gray-50">
                   <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">分类名称</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">描述</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">排序</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">子分类</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">创建时间</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
                   </tr>
                 </thead>
@@ -358,6 +366,10 @@
                 <label class="block text-gray-700 mb-1">管理员昵称</label>
                 <input v-model="newSchool.adminNickname" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入管理员昵称（可选）" />
               </div>
+              <div class="mb-3">
+                <label class="block text-gray-700 mb-1">学校logo</label>
+                <input type="file" @change="onLogoChange" accept="image/*" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
               <div class="mb-4">
                 <label class="block text-gray-700 mb-1">初始密码 <span class="text-red-500">*</span></label>
                 <input v-model="newSchool.adminPassword" type="password" required minlength="6" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入初始密码（至少6位）" />
@@ -457,13 +469,11 @@ const CategoryRow = defineComponent({
         h('td', { style: { paddingLeft: `${props.level * 32}px` } }, [
           `${'└ '.repeat(props.level)}${props.category.name}`
         ]),
-        h('td', props.category.description || '-'),
         h('td', props.category.sortOrder || 0),
         h('td', Array.isArray(props.category.children) && props.category.children.length > 0
           ? h('span', { class: 'text-blue-600' }, `${props.category.children.length} 个子分类`)
           : h('span', { class: 'text-gray-400' }, '无')
         ),
-        h('td', props.category.createdAt ? new Date(props.category.createdAt).toLocaleString() : '-'),
         h('td', [
           h(Button, { size: 'sm', variant: 'outline', onClick: () => props.onEdit && props.onEdit(props.category) }, '编辑'),
           h(Button, { size: 'sm', variant: 'outline', class: 'text-red-600 hover:text-red-700', onClick: () => props.onDelete && props.onDelete(props.category) }, '删除')
@@ -576,23 +586,13 @@ onMounted(async () => {
   try {
     const res = await getAllSchools('detailed')
     publicSchools.value = res.data || []
-    // 自动提取所有字段作为表头，过滤掉id字段
-    if (publicSchools.value.length > 0) {
-      const allKeys = Object.keys(publicSchools.value[0])
-      schoolTableKeys.value = allKeys.filter(key => key !== 'id')
-      // 设置中文表头映射
-      schoolTableHeaders.value = {
-        organizationName: '学校名称',
-        description: '简介',
-        website: '网址',
-        address: '地址',
-        adminEmail: '管理员邮箱',
-        adminNickname: '管理员昵称',
-        status: '状态',
-        type: '类型',
-        createdAt: '创建时间',
-        updatedAt: '更新时间'
-      }
+    // 只保留四个字段
+    schoolTableKeys.value = ['organizationName', 'type', 'address', 'adminEmail']
+    schoolTableHeaders.value = {
+      organizationName: '学校名称',
+      type: '类型',
+      address: '地址',
+      adminEmail: '管理员邮箱'
     }
   } catch (e: any) {
     console.error('获取学校列表失败:', e)
@@ -606,25 +606,13 @@ onMounted(async () => {
   try {
     const res = await getAllEnterprises('detailed')
     publicEnterprises.value = res.data || []
-    // 自动提取所有字段作为表头，过滤掉id字段
-    if (publicEnterprises.value.length > 0) {
-      const allKeys = Object.keys(publicEnterprises.value[0])
-      enterpriseTableKeys.value = allKeys.filter(key => key !== 'id')
-      // 设置中文表头映射
-      enterpriseTableHeaders.value = {
-        organizationName: '企业名称',
-        description: '简介',
-        website: '网址',
-        address: '地址',
-        industry: '行业',
-        companySize: '企业规模',
-        adminEmail: '管理员邮箱',
-        adminNickname: '管理员昵称',
-        status: '状态',
-        type: '类型',
-        createdAt: '创建时间',
-        updatedAt: '更新时间'
-      }
+    // 只保留四个字段
+    enterpriseTableKeys.value = ['organizationName', 'type', 'address', 'adminEmail']
+    enterpriseTableHeaders.value = {
+      organizationName: '企业名称',
+      type: '类型',
+      address: '地址',
+      adminEmail: '管理员邮箱'
     }
   } catch (e: any) {
     console.error('获取企业列表失败:', e)
@@ -638,13 +626,23 @@ const pendingEnterprises = computed(() =>
   organizations.value.filter(org => org.type === 'Enterprise')
 )
 
+const logoFile = ref<File|null>(null)
+
+function onLogoChange(e: Event) {
+  const files = (e.target as HTMLInputElement).files
+  if (files && files.length > 0) {
+    logoFile.value = files[0]
+  } else {
+    logoFile.value = null
+  }
+}
+
 async function onAddSchool() {
   // 简单校验
   if (!newSchool.value.organizationName || !newSchool.value.adminEmail || !newSchool.value.adminPassword) {
     alert('学校名称、管理员邮箱和初始密码为必填项！')
     return
   }
-  
   addSchoolLoading.value = true
   try {
     const token = localStorage.getItem('token')
@@ -652,34 +650,34 @@ async function onAddSchool() {
       alert('请先登录管理员账号！')
       return
     }
-    await createSchool(newSchool.value)
+    // 构造FormData
+    const formData = new FormData()
+    formData.append('organizationName', newSchool.value.organizationName)
+    if (newSchool.value.description) formData.append('description', newSchool.value.description)
+    if (newSchool.value.address) formData.append('address', newSchool.value.address)
+    if (newSchool.value.website) formData.append('website', newSchool.value.website)
+    if (newSchool.value.adminNickname) formData.append('adminNickname', newSchool.value.adminNickname)
+    formData.append('adminEmail', newSchool.value.adminEmail)
+    formData.append('adminPassword', newSchool.value.adminPassword)
+    if (logoFile.value) formData.append('logo', logoFile.value)
+    await createSchool(formData)
     alert(`已添加学校：${newSchool.value.organizationName}`)
     showAddSchoolDialog.value = false
     newSchool.value = { organizationName: '', description: '', address: '', website: '', adminEmail: '', adminNickname: '', adminPassword: '' }
-    
+    logoFile.value = null
     // 刷新学校列表
     publicSchoolsLoading.value = true
     publicSchoolsError.value = ''
     try {
       const res = await getAllSchools('detailed')
       publicSchools.value = res.data || []
-      // 自动提取所有字段作为表头，过滤掉id字段
-      if (publicSchools.value.length > 0) {
-        const allKeys = Object.keys(publicSchools.value[0])
-        schoolTableKeys.value = allKeys.filter(key => key !== 'id')
-        // 设置中文表头映射
-        schoolTableHeaders.value = {
-          organizationName: '学校名称',
-          description: '简介',
-          website: '网址',
-          address: '地址',
-          adminEmail: '管理员邮箱',
-          adminNickname: '管理员昵称',
-          status: '状态',
-          type: '类型',
-          createdAt: '创建时间',
-          updatedAt: '更新时间'
-        }
+      // 只保留四个字段
+      schoolTableKeys.value = ['organizationName', 'type', 'address', 'adminEmail']
+      schoolTableHeaders.value = {
+        organizationName: '学校名称',
+        type: '类型',
+        address: '地址',
+        adminEmail: '管理员邮箱'
       }
     } catch (e: any) {
       console.error('获取学校列表失败:', e)
@@ -1150,4 +1148,10 @@ const tabList = [
   { label: '审计日志', value: 'audit' }
 ]
 const activeTab = ref('pending')
+
+function getOrgTypeText(type) {
+  if (type === 'Enterprise') return '企业'
+  if (type === 'School') return '学校'
+  return type
+}
 </script> 

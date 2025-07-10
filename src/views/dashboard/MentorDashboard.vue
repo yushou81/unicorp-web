@@ -9,7 +9,8 @@
         :avatar="userAvatar"
         :name="mentor.name"
         :role="'企业导师'"
-        :organization="mentor.company"
+        :organization="organizationName || mentor.company"
+        :organizationLogo="organizationLogo"
         :phone="mentor.phone"
         :email="mentor.email"
         :editable="true"
@@ -523,6 +524,7 @@ import ApplicationSummary from '@/components/dashboard/ApplicationSummary.vue'
 import ChatPanel from '@/components/chat/ChatPanel.vue'
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
 import DashboardTabs from '@/components/dashboard/DashboardTabs.vue'
+import { getSchoolById, getEnterpriseById } from '@/lib/api/organization'
 
 // Tab栏相关声明，恢复岗位管理tab
 const mentorTabs = [
@@ -810,6 +812,7 @@ function getCourseTypeText(type: CourseType) {
 }
 
 onMounted(async () => {
+  console.log('【当前页面】MentorDashboard.vue onMounted 被调用')
   await fetchMentorInfo()
   fetchMentorCourses()
   // 如果初始tab是岗位，自动查一次岗位
@@ -1251,4 +1254,37 @@ function logAndGoPublish() {
   console.log('router:', router, 'appStore.user:', appStore.user)
   router.push('/project/publish')
 }
+
+const organizationLogo = ref('')
+const organizationName = ref('')
+
+async function fetchUserInfo() {
+  console.log('【当前页面】MentorDashboard.vue fetchUserInfo 被调用')
+  // 假设 mentor 里有 role 和 organizationId
+  await fetchOrganizationInfo()
+}
+
+async function fetchOrganizationInfo() {
+  // 打印所有相关对象，便于调试
+  console.log('mentor:', mentor)
+  console.log('userInfo:', userInfo)
+  // 优先从mentor.companyId、mentor.organizationId、userInfo.organizationId等字段获取组织ID
+  const organizationId = mentor.value?.companyId || mentor.companyId || mentor.value?.organizationId || mentor.organizationId || userInfo.organizationId || userInfo.value?.organizationId
+  const role = mentor.role || mentor.value?.role || userInfo.role || userInfo.value?.role || 'mentor'
+  console.log('【当前页面】MentorDashboard.vue fetchOrganizationInfo 被调用', role, organizationId)
+  if (role && organizationId) {
+    let orgRes = await getEnterpriseById(organizationId)
+    console.log('getEnterpriseById 返回:', orgRes)
+    if (orgRes && orgRes.data) {
+      organizationLogo.value = orgRes.data.logoUrl
+      organizationName.value = orgRes.data.organizationName
+      console.log('设置 organizationLogo:', organizationLogo.value, 'organizationName:', organizationName.value)
+    }
+  }
+}
+
+onMounted(() => {
+  console.log('【当前页面】MentorDashboard.vue onMounted 被调用')
+  fetchUserInfo()
+})
 </script> 

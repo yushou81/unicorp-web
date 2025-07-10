@@ -18,7 +18,8 @@
         :avatar="userAvatar"
         :name="userInfo.nickname || userInfo.account || '学校管理员'"
         :role="roleText"
-        :organization="school.name || '加载中...'"
+        :organization="organizationName || school.name || '加载中...'"
+        :organizationLogo="organizationLogo"
         :phone="userInfo.phone"
         :email="userInfo.email"
         :editable="true"
@@ -147,8 +148,12 @@
                   <td class="px-4 py-2">{{ teacher.email }}</td>
                   <td class="px-4 py-2">{{ teacher.nickname || '-' }}</td>
                   <td class="px-4 py-2">{{ teacher.phone || '-' }}</td>
-                  <td class="px-4 py-2">{{ teacher.roleName || teacher.role || (teacher.roles ? teacher.roles.join(',') : '-') }}</td>
-                  <td class="px-4 py-2">{{ teacher.status || '-' }}</td>
+                  <td class="px-4 py-2">
+                    {{ getRoleText(teacher.roleName || teacher.role || (teacher.roles ? teacher.roles[0] : '-')) }}
+                  </td>
+                  <td class="px-4 py-2">
+                    {{ getStatusText(teacher.status) }}
+                  </td>
                   <td class="px-4 py-2 space-x-2">
                     <Button size="sm" @click="onEditUser(teacher)">编辑</Button>
                     <Button 
@@ -178,24 +183,6 @@
               <button @click="(teacherPage + 1) * teacherSize < teacherTotal && (teacherPage++, fetchTeachers())" :disabled="(teacherPage + 1) * teacherSize >= teacherTotal" class="px-3 py-1 rounded bg-gray-200 text-gray-700 ml-2">下一页</button>
             </div>
           </div>
-        </div>
-        <div
-          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
-          @click="goToProjectAudit"
-        >
-          <svg class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h4M7 7h.01M7 11h.01M7 15h.01M17 7h.01M17 11h.01M17 15h.01" /></svg>
-          <span class="text-lg font-bold text-green-800 mb-1">项目审核</span>
-          <span class="text-sm text-green-500">管理和审核项目申请</span>
-        </div>
-        <div
-          class="group cursor-pointer bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-lg p-8 flex flex-col items-center transition-transform hover:scale-105 hover:shadow-2xl"
-          @click="router.push('/achievement/school')"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-green-600 mb-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <span class="text-lg font-bold text-green-800 mb-1">成果管理</span>
-          <span class="text-sm text-green-500">管理学校成果展示</span>
         </div>
       </div>
       
@@ -514,6 +501,7 @@ import { getEquipmentBookings, reviewEquipmentBooking } from '@/lib/api/resource
 import Button from '@/components/ui/Button.vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import UserProfileInfo from '@/components/dashboard/UserProfileInfo.vue'
+import { getSchoolById, getEnterpriseById } from '@/lib/api/organization'
 
 const school = ref({
   logo: 'https://randomuser.me/api/portraits/lego/2.jpg',
@@ -749,6 +737,7 @@ async function fetchSchoolInfo() {
 }
 
 onMounted(() => {
+  console.log('【当前页面】SchoolAdminDashboard.vue onMounted 被调用')
   fetchSchoolInfo()
   fetchTeachers()
   fetchCourses()
@@ -766,6 +755,7 @@ const userInfo = computed<{
   phone?: string;
   role?: string;
   avatar?: string;
+  organizationId?: number; // 新增组织ID
 }>(() => (appStore.user ? appStore.user as any : {}))
 const userAvatar = computed(() => userInfo.value.avatar || 'https://randomuser.me/api/portraits/men/32.jpg')
 const roleText = computed(() => {
@@ -1219,4 +1209,67 @@ function goToProjectAudit() {
 const pendingProjectsCount = 0 // 这里可以通过接口获取真实数量
 const approvedProjectsCount = 0
 const rejectedProjectsCount = 0
+
+function getRoleText(role: string) {
+  const roleMap = {
+    'admin': '系统管理员',
+    'SYSADMIN': '系统管理员',
+    'schoolAdmin': '学校管理员',
+    'SCH_ADMIN': '学校管理员',
+    'companyAdmin': '企业管理员',
+    'EN_ADMIN': '企业管理员',
+    'teacher': '教师',
+    'TEACHER': '教师',
+    'mentor': '企业导师',
+    'MENTOR': '企业导师',
+    'student': '学生',
+    'STUDENT': '学生'
+  }
+  return roleMap[role] || role || '-'
+}
+
+function getStatusText(status: string) {
+  const statusMap = {
+    'active': '正常',
+    'inactive': '禁用',
+    'pending_approval': '待审核',
+    'pending': '待审核',
+    'disabled': '禁用',
+    'enabled': '正常'
+  }
+  return statusMap[status] || status || '-'
+}
+
+const organizationLogo = ref('')
+const organizationName = ref('')
+
+async function fetchUserInfo() {
+  console.log('【当前页面】SchoolAdminDashboard.vue fetchUserInfo 被调用')
+  // 假设 userInfo 已经有 role 和 organizationId
+  await fetchOrganizationInfo()
+}
+
+async function fetchOrganizationInfo() {
+  // 打印所有相关对象，便于调试
+  console.log('userInfo:', userInfo)
+  console.log('school:', school)
+  // 优先从school.id、userInfo.organizationId、userInfo.schoolId等字段获取组织ID
+  const organizationId = school.value?.id || school.id || userInfo.organizationId || userInfo.schoolId || userInfo.value?.organizationId || userInfo.value?.schoolId
+  const role = userInfo.role || userInfo.value?.role || 'school'
+  console.log('【当前页面】SchoolAdminDashboard.vue fetchOrganizationInfo 被调用', role, organizationId)
+  if (role && organizationId) {
+    let orgRes = await getSchoolById(organizationId)
+    console.log('getSchoolById 返回:', orgRes)
+    if (orgRes && orgRes.data) {
+      organizationLogo.value = orgRes.data.logoUrl
+      organizationName.value = orgRes.data.organizationName
+      console.log('设置 organizationLogo:', organizationLogo.value, 'organizationName:', organizationName.value)
+    }
+  }
+}
+
+onMounted(() => {
+  console.log('【当前页面】SchoolAdminDashboard.vue onMounted 被调用')
+  fetchUserInfo()
+})
 </script> 

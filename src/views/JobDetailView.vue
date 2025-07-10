@@ -250,6 +250,25 @@
               </div>
             </div>
             
+            <!-- 推荐岗位区块 -->
+            <div class="bg-white rounded-lg shadow-sm p-5 mb-5">
+              <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <span class="w-5 h-5 mr-2 text-blue-600">🔗</span>
+                推荐岗位
+              </h2>
+              <div v-if="recommendedLoading">加载中...</div>
+              <div v-else>
+                <div v-if="recommendedJobs.length > 0">
+                  <GridJobCard
+                    v-for="recJob in recommendedJobs"
+                    :key="recJob.id"
+                    :job="recJob"
+                    class="mb-4"
+                  />
+                </div>
+                <div v-else class="text-gray-500 italic">暂无推荐岗位</div>
+              </div>
+            </div>
 
           </div>
         </div>
@@ -281,6 +300,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { getJobDetail, Job, favoriteJob, unfavoriteJob, ApiResponse, applyJob } from '@/lib/api/job'
 import { getEnterpriseById } from '@/lib/api/organization'
 import { getMyResumes } from '@/lib/api/resume'
+import { getRecommendedJobs } from '@/lib/api/recommendation'
+import GridJobCard from '@/components/job/GridJobCard.vue'
 import Navbar from '@/components/layout/Navbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import JobApplicationModal from '@/components/job/JobApplicationModal.vue'
@@ -353,6 +374,24 @@ const organizationLogo = ref<string | null>(null)
 const userResumes = ref<Resume[]>([])
 const selectedResumeId = ref<number | null>(null)
 const applyLoading = ref(false)
+
+const recommendedJobs = ref<any[]>([])
+const recommendedLoading = ref(false)
+
+const fetchRecommendedJobs = async () => {
+  recommendedLoading.value = true
+  try {
+    const res = await getRecommendedJobs({ size: 4 })
+    if (res.data?.records) {
+      recommendedJobs.value = res.data.records
+    }
+  } catch (e) {
+    // 可选：处理错误
+    recommendedJobs.value = []
+  } finally {
+    recommendedLoading.value = false
+  }
+}
 
 // 公司位置相关
 const companyPosition = computed(() => {
@@ -720,6 +759,8 @@ onMounted(() => {
   fetchJobDetail()
   // 检查是否已收藏
   checkIfFavorited()
+  // 获取推荐岗位
+  fetchRecommendedJobs()
 })
 </script>
 
