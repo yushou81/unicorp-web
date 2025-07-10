@@ -1,4 +1,4 @@
- export const API_BASE_URL =  'http://192.168.58.54:8081/api'
+ export const API_BASE_URL =  'http://192.168.1.4:8081/api'
 
 
 let token = ''

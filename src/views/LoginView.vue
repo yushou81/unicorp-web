@@ -58,7 +58,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { login, getMe, getGithubLoginUrl } from '@/lib/api/auth'
@@ -82,7 +81,7 @@ interface LoginResponse {
 
 // 用户信息类型
 interface UserInfo {
-  id: number; // 改为必需，与app.ts中的User类型一致
+  id?: number;
   account?: string;
   nickname?: string;
   email?: string;
